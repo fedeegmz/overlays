@@ -1,0 +1,49 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#zocalo {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  padding: 16px 28px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.88));
+  border-left: 4px solid #38bdf8;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+
+  opacity: 0;
+  transform: translateX(-120%);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.45s ease;
+}
+
+#zocalo.entrar {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+#zocalo.salir {
+  opacity: 0;
+  transform: translateX(-120%);
+}
+
+#titulo {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+#subtitulo {
+  font-size: 24px;
+  color: #d4d4d4;
+  margin-top: 4px;
+}

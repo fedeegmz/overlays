@@ -1,0 +1,7 @@
+{
+  "name": "Zócalo básico",
+  "fields": [
+    { "key": "titulo", "label": "Título", "type": "text", "default": "Título de ejemplo" },
+    { "key": "subtitulo", "label": "Subtítulo", "type": "text", "default": "Subtítulo de ejemplo" }
+  ]
+}

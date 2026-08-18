@@ -1,0 +1,6 @@
+{
+  "name": "Título centrado (intro de segmento)",
+  "fields": [
+    { "key": "texto", "label": "Texto principal", "type": "text", "default": "Texto de ejemplo" }
+  ]
+}
