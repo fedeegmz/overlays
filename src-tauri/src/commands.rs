@@ -34,9 +34,9 @@ pub fn send_overlay_update(
 }
 
 #[tauri::command]
-pub fn list_templates(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
+pub async fn list_templates(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
     let overlay_dir = state.overlay_dir.lock().unwrap().clone();
-    let manifest = crate::templates::discover_overlays(&overlay_dir)?;
+    let manifest = crate::templates::discover_overlays(&overlay_dir).await?;
     serde_json::to_value(&manifest).map_err(|e| e.to_string())
 }
 

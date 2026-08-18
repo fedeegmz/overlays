@@ -38,7 +38,7 @@ pub struct Manifest {
     pub templates: Vec<TemplateInfo>,
 }
 
-pub fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
+pub async fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
     if !overlay_dir.is_dir() {
         return Ok(Manifest {
             templates: Vec::new(),
@@ -47,22 +47,27 @@ pub fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
 
     let mut templates = Vec::new();
 
-    let entries =
-        std::fs::read_dir(overlay_dir).map_err(|e| format!("could not read {overlay_dir:?}: {e}"))?;
+    let mut entries = tokio::fs::read_dir(overlay_dir)
+        .await
+        .map_err(|e| format!("could not read {overlay_dir:?}: {e}"))?;
 
-    for entry in entries.flatten() {
+    while let Some(entry) = entries
+        .next_entry()
+        .await
+        .map_err(|e| format!("could not read {overlay_dir:?}: {e}"))?
+    {
         let path = entry.path();
         if !path.is_dir() {
             continue;
         }
 
         let meta_path = path.join("overlay.json");
-        if !meta_path.exists() {
+        if !tokio::fs::try_exists(&meta_path).await.unwrap_or(false) {
             continue;
         }
 
         let html_path = path.join("index.html");
-        if !html_path.exists() {
+        if !tokio::fs::try_exists(&html_path).await.unwrap_or(false) {
             eprintln!(
                 "[overlays] skipping {:?}: no index.html found",
                 path.file_name()
@@ -70,7 +75,7 @@ pub fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
             continue;
         }
 
-        let content = match std::fs::read_to_string(&meta_path) {
+        let content = match tokio::fs::read_to_string(&meta_path).await {
             Ok(c) => c,
             Err(e) => {
                 eprintln!("[overlays] could not read {:?}: {e}", meta_path);
@@ -109,7 +114,7 @@ pub fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
 
 pub async fn list_templates(State(state): State<Arc<AppState>>) -> Response {
     let overlay_dir = state.overlay_dir.lock().unwrap().clone();
-    match discover_overlays(&overlay_dir) {
+    match discover_overlays(&overlay_dir).await {
         Ok(manifest) => Json(manifest).into_response(),
         Err(e) => {
             (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e).into_response()

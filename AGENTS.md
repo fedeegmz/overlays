@@ -6,13 +6,12 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 
 ## Key commands
 
-| Task | Command |
-|------|---------|
-| Dev | `pnpm tauri dev` (starts Vite on :1420 + Rust backend) |
-| Frontend typecheck | `vue-tsc --noEmit` (no separate lint configured) |
-| Frontend build | `pnpm build` (runs typecheck then vite build) |
-| Rust tests | `cd src-tauri && cargo test` |
-| Overlay smoke test | `pnpm test:overlays` (requires app running) |
+| Task               | Command                                                |
+| ------------------ | ------------------------------------------------------ |
+| Dev                | `pnpm tauri dev` (starts Vite on :1420 + Rust backend) |
+| Frontend typecheck | `vue-tsc --noEmit` (no separate lint configured)       |
+| Frontend build     | `pnpm build` (runs typecheck then vite build)          |
+| Rust tests         | `cd src-tauri && cargo test`                           |
 
 ## Project structure
 
@@ -24,6 +23,7 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 ## Overlay template contract
 
 Each overlay is a directory with `overlay.json`, `index.html`, `style.css`, `script.js`. The JS must:
+
 - Filter WS messages by `TEMPLATE_ID` (matches dir name) + `instance` query param
 - Implement `show(fields)`, `update(fields)`, `hide()` handlers
 - Reconnect WS on close (2s backoff)
