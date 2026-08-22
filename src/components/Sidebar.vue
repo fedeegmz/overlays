@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useOverlayControl } from "../composables/useOverlayControl";
+import logoSvg from "../assets/logo.svg";
 
 defineProps<{
   currentPage: "overlays" | "settings";
@@ -27,7 +28,7 @@ function handleInstanceClick(id: string) {
 <template>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark"></div>
+      <img :src="logoSvg" alt="Overlays" class="brand-mark" />
       <div class="brand-name">Overlays</div>
     </div>
 
@@ -133,7 +134,6 @@ function handleInstanceClick(id: string) {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: linear-gradient(155deg, var(--accent), #A78BFA);
   flex-shrink: 0;
 }
 
