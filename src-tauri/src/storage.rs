@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate::error::CommandError;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preset {
     pub nombre: String,
@@ -19,12 +21,21 @@ pub fn load_presets(path: &Path) -> Vec<Preset> {
     }
 }
 
-pub fn save_presets(path: &Path, presets: &[Preset]) -> Result<(), String> {
+pub fn save_presets(path: &Path, presets: &[Preset]) -> Result<(), CommandError> {
     if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| format!("no se pudo crear {dir:?}: {e}"))?;
+        std::fs::create_dir_all(dir).map_err(|e| {
+            CommandError::new(CommandError::PRESET_SAVE_FAILED)
+                .param("detail", format!("could not create {dir:?}: {e}"))
+        })?;
     }
-    let json = serde_json::to_string_pretty(presets).map_err(|e| e.to_string())?;
-    std::fs::write(path, json).map_err(|e| format!("no se pudo escribir {path:?}: {e}"))
+    let json = serde_json::to_string_pretty(presets).map_err(|e| {
+        CommandError::new(CommandError::PRESET_SAVE_FAILED)
+            .param("detail", e.to_string())
+    })?;
+    std::fs::write(path, json).map_err(|e| {
+        CommandError::new(CommandError::PRESET_SAVE_FAILED)
+            .param("detail", format!("could not write {path:?}: {e}"))
+    })
 }
 
 #[cfg(test)]

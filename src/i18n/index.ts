@@ -73,3 +73,8 @@ export function translate(
   if (!instance) return String(key);
   return instance.global.t(key, params ?? {});
 }
+
+export function hasTranslation(key: string): boolean {
+  if (!instance) return false;
+  return instance.global.te(key);
+}

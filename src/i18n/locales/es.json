@@ -33,7 +33,27 @@
     "selectOverlaysDir": "Elegir directorio de overlays"
   },
   "errors": {
-    "templateMissing": "La plantilla \"{template}\" ya no existe."
+    "fallback": "Ocurrió un error inesperado.",
+    "templateMissing": "La plantilla \"{template}\" ya no existe.",
+    "common": {
+      "internal": "Error interno inesperado."
+    },
+    "preset": {
+      "empty_name": "El nombre del preset no puede estar vacío.",
+      "save_failed": "No se pudo guardar el archivo de presets."
+    },
+    "template": {
+      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays."
+    },
+    "language": {
+      "unsupported": "Idioma no soportado: {lang}."
+    },
+    "overlays_dir": {
+      "invalid": "\"{path}\" no es un directorio válido."
+    },
+    "config": {
+      "save_failed": "No se pudo guardar la configuración."
+    }
   },
   "settings": {
     "title": "Ajustes",

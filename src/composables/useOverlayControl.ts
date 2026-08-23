@@ -8,7 +8,22 @@ import type {
   Preset,
   TemplateInfo,
 } from "../types";
-import { setActiveLocale, toLocaleCode, translate } from "../i18n";
+import { isCommandError } from "../types";
+import { hasTranslation, setActiveLocale, toLocaleCode, translate } from "../i18n";
+
+type TranslateKey = Parameters<typeof translate>[0];
+
+export function commandErrorMessage(err: unknown): string {
+  if (!isCommandError(err)) return translate("errors.fallback");
+  const key = `errors.${err.code}`;
+  if (hasTranslation(key)) {
+    return translate(
+      key as TranslateKey,
+      err.params as Record<string, unknown> | undefined,
+    );
+  }
+  return translate("errors.fallback");
+}
 
 const templates = ref<TemplateInfo[] | null>(null);
 const templatesError = ref<string | null>(null);
@@ -59,7 +74,7 @@ async function refreshConfig(): Promise<void> {
   try {
     appConfig.value = await invoke<AppConfig>("get_config");
   } catch (err) {
-    configError.value = String(err);
+    configError.value = commandErrorMessage(err);
   }
 }
 
@@ -69,7 +84,7 @@ async function setOverlaysDir(path: string): Promise<void> {
     appConfig.value = await invoke<AppConfig>("set_overlays_dir", { path });
     await refreshTemplates();
   } catch (err) {
-    configError.value = String(err);
+    configError.value = commandErrorMessage(err);
     throw err;
   }
 }
@@ -90,7 +105,7 @@ async function setLanguage(lang: string): Promise<void> {
     const locale = toLocaleCode(appConfig.value.language);
     if (locale) setActiveLocale(locale);
   } catch (err) {
-    configError.value = String(err);
+    configError.value = commandErrorMessage(err);
     throw err;
   }
 }
@@ -108,7 +123,7 @@ async function pickOverlaysDir(): Promise<void> {
       await setOverlaysDir(selected as string);
     }
   } catch (err) {
-    configError.value = String(err);
+    configError.value = commandErrorMessage(err);
   }
 }
 
@@ -118,7 +133,7 @@ async function refreshTemplates(): Promise<void> {
     const manifest = await invoke<Manifest>("list_templates");
     templates.value = manifest.templates;
   } catch (err) {
-    templatesError.value = String(err);
+    templatesError.value = commandErrorMessage(err);
   }
 }
 
@@ -138,7 +153,7 @@ async function refreshPresets(): Promise<void> {
   try {
     presets.value = await invoke<Preset[]>("list_presets");
   } catch (err) {
-    presetsError.value = String(err);
+    presetsError.value = commandErrorMessage(err);
   }
 }
 
@@ -153,7 +168,7 @@ async function savePreset(nombre: string): Promise<void> {
       fields: buildFields(),
     });
   } catch (err) {
-    presetsError.value = String(err);
+    presetsError.value = commandErrorMessage(err);
     throw err;
   }
 }
@@ -176,7 +191,7 @@ async function deletePreset(nombre: string): Promise<void> {
   try {
     presets.value = await invoke<Preset[]>("delete_preset", { nombre });
   } catch (err) {
-    presetsError.value = String(err);
+    presetsError.value = commandErrorMessage(err);
   }
 }
 

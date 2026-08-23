@@ -6,6 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 
+use crate::error::CommandError;
 use crate::server::state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,7 +39,7 @@ pub struct Manifest {
     pub templates: Vec<TemplateInfo>,
 }
 
-pub async fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
+pub async fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, CommandError> {
     if !overlay_dir.is_dir() {
         return Ok(Manifest {
             templates: Vec::new(),
@@ -47,15 +48,14 @@ pub async fn discover_overlays(overlay_dir: &Path) -> Result<Manifest, String> {
 
     let mut templates = Vec::new();
 
-    let mut entries = tokio::fs::read_dir(overlay_dir)
-        .await
-        .map_err(|e| format!("could not read {overlay_dir:?}: {e}"))?;
+    let read_failed = || {
+        CommandError::new(CommandError::TEMPLATE_DISCOVERY_FAILED)
+            .param("detail", format!("could not read {overlay_dir:?}"))
+    };
 
-    while let Some(entry) = entries
-        .next_entry()
-        .await
-        .map_err(|e| format!("could not read {overlay_dir:?}: {e}"))?
-    {
+    let mut entries = tokio::fs::read_dir(overlay_dir).await.map_err(|_| read_failed())?;
+
+    while let Some(entry) = entries.next_entry().await.map_err(|_| read_failed())? {
         let path = entry.path();
         if !path.is_dir() {
             continue;
@@ -116,8 +116,6 @@ pub async fn list_templates(State(state): State<Arc<AppState>>) -> Response {
     let overlay_dir = state.overlay_dir.lock().unwrap().clone();
     match discover_overlays(&overlay_dir).await {
         Ok(manifest) => Json(manifest).into_response(),
-        Err(e) => {
-            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e).into_response()
-        }
+        Err(e) => (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(e)).into_response(),
     }
 }

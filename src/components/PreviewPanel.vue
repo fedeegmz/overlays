@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useOverlayControl } from "../composables/useOverlayControl";
+import { useOverlayControl, commandErrorMessage } from "../composables/useOverlayControl";
 
 const { t } = useI18n();
 const {
@@ -24,7 +24,7 @@ async function handleToggle() {
   try {
     await toggleVisibility();
   } catch (err) {
-    sendError.value = String(err);
+    sendError.value = commandErrorMessage(err);
   } finally {
     sending.value = null;
   }
@@ -37,7 +37,7 @@ async function runUpdate() {
   try {
     await update();
   } catch (err) {
-    sendError.value = String(err);
+    sendError.value = commandErrorMessage(err);
   } finally {
     sending.value = null;
   }

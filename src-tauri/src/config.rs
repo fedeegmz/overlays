@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
+use crate::error::CommandError;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub overlays_dir: Option<PathBuf>,
@@ -24,12 +26,20 @@ pub fn load_config(path: &Path) -> AppConfig {
     }
 }
 
-pub fn save_config(path: &Path, config: &AppConfig) -> Result<(), String> {
+pub fn save_config(path: &Path, config: &AppConfig) -> Result<(), CommandError> {
     if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| format!("could not create {dir:?}: {e}"))?;
+        std::fs::create_dir_all(dir).map_err(|e| {
+            CommandError::new(CommandError::CONFIG_SAVE_FAILED)
+                .param("detail", format!("could not create {dir:?}: {e}"))
+        })?;
     }
-    let json = serde_json::to_string_pretty(config).map_err(|e| e.to_string())?;
-    std::fs::write(path, json).map_err(|e| format!("could not write {path:?}: {e}"))
+    let json = serde_json::to_string_pretty(config).map_err(|e| {
+        CommandError::new(CommandError::CONFIG_SAVE_FAILED).param("detail", e.to_string())
+    })?;
+    std::fs::write(path, json).map_err(|e| {
+        CommandError::new(CommandError::CONFIG_SAVE_FAILED)
+            .param("detail", format!("could not write {path:?}: {e}"))
+    })
 }
 
 #[cfg(test)]

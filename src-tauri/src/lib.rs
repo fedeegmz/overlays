@@ -1,5 +1,6 @@
 mod commands;
 mod config;
+mod error;
 mod server;
 mod storage;
 mod templates;

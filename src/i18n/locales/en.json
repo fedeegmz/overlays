@@ -33,7 +33,27 @@
     "selectOverlaysDir": "Select overlays directory"
   },
   "errors": {
-    "templateMissing": "Template \"{template}\" no longer exists."
+    "fallback": "Something went wrong.",
+    "templateMissing": "Template \"{template}\" no longer exists.",
+    "common": {
+      "internal": "Unexpected internal error."
+    },
+    "preset": {
+      "empty_name": "Preset name cannot be empty.",
+      "save_failed": "Could not save the presets file."
+    },
+    "template": {
+      "discovery_failed": "Could not read templates from the overlays directory."
+    },
+    "language": {
+      "unsupported": "Unsupported language: {lang}."
+    },
+    "overlays_dir": {
+      "invalid": "\"{path}\" is not a valid directory."
+    },
+    "config": {
+      "save_failed": "Could not save the configuration."
+    }
   },
   "settings": {
     "title": "Settings",

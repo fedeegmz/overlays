@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useOverlayControl } from "../composables/useOverlayControl";
+import { useOverlayControl, commandErrorMessage } from "../composables/useOverlayControl";
 import ColorField from "./ColorField.vue";
 const { t } = useI18n();
 const {
@@ -44,7 +44,7 @@ async function handleSavePreset() {
     await savePreset(presetName.value);
     presetName.value = "";
   } catch (err) {
-    sendError.value = String(err);
+    sendError.value = commandErrorMessage(err);
   } finally {
     sending.value = false;
   }
@@ -58,7 +58,7 @@ async function handleApply(preset: { nombre: string }) {
   try {
     await applyPreset(found);
   } catch (err) {
-    sendError.value = String(err);
+    sendError.value = commandErrorMessage(err);
   } finally {
     sending.value = false;
   }

@@ -2,10 +2,20 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use serde::Serialize;
 use tauri::State;
 
+use crate::config::AppConfig;
+use crate::error::CommandError;
 use crate::server::state::{AppState, OverlayPayload};
 use crate::storage::Preset;
+use crate::templates::Manifest;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ServerStatus {
+    pub running: bool,
+    pub port: u16,
+}
 
 #[tauri::command]
 pub fn send_overlay_update(
@@ -14,7 +24,7 @@ pub fn send_overlay_update(
     template: String,
     action: String,
     fields: HashMap<String, String>,
-) -> Result<(), String> {
+) -> Result<(), CommandError> {
     let payload = OverlayPayload {
         instance_id: instance_id.clone(),
         template,
@@ -27,23 +37,28 @@ pub fn send_overlay_update(
         .lock()
         .unwrap()
         .insert(instance_id, payload.clone());
-    let json = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
+    let json = serde_json::to_string(&payload)
+        .map_err(|_| CommandError::new(CommandError::INTERNAL))?;
     let _ = state.tx.send(json);
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn list_templates(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
+pub async fn list_templates(
+    state: State<'_, Arc<AppState>>,
+) -> Result<Manifest, CommandError> {
     let overlay_dir = state.overlay_dir.lock().unwrap().clone();
-    let manifest = crate::templates::discover_overlays(&overlay_dir).await?;
-    serde_json::to_value(&manifest).map_err(|e| e.to_string())
+    crate::templates::discover_overlays(&overlay_dir).await
 }
 
 #[tauri::command]
-pub fn get_server_status(state: State<'_, Arc<AppState>>) -> serde_json::Value {
+pub fn get_server_status(state: State<'_, Arc<AppState>>) -> ServerStatus {
     let port = *state.port.lock().unwrap();
-    serde_json::json!({ "running": port.is_some(), "port": port.unwrap_or(0) })
+    ServerStatus {
+        running: port.is_some(),
+        port: port.unwrap_or(0),
+    }
 }
 
 #[tauri::command]
@@ -52,10 +67,10 @@ pub fn save_preset(
     nombre: String,
     template: String,
     fields: HashMap<String, String>,
-) -> Result<Vec<Preset>, String> {
+) -> Result<Vec<Preset>, CommandError> {
     let nombre = nombre.trim().to_string();
     if nombre.is_empty() {
-        return Err("el nombre del preset no puede estar vacío".into());
+        return Err(CommandError::new(CommandError::PRESET_EMPTY_NAME));
     }
 
     let path = state.presets_path.clone();
@@ -78,15 +93,15 @@ pub fn save_preset(
 }
 
 #[tauri::command]
-pub fn list_presets(state: State<'_, Arc<AppState>>) -> Vec<Preset> {
-    crate::storage::load_presets(&state.presets_path)
+pub fn list_presets(state: State<'_, Arc<AppState>>) -> Result<Vec<Preset>, CommandError> {
+    Ok(crate::storage::load_presets(&state.presets_path))
 }
 
 #[tauri::command]
 pub fn delete_preset(
     state: State<'_, Arc<AppState>>,
     nombre: String,
-) -> Result<Vec<Preset>, String> {
+) -> Result<Vec<Preset>, CommandError> {
     let path = state.presets_path.clone();
     let mut presets = crate::storage::load_presets(&path);
     presets.retain(|p| p.nombre != nombre);
@@ -95,36 +110,35 @@ pub fn delete_preset(
 }
 
 #[tauri::command]
-pub fn get_config(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
-    let app_config = crate::config::load_config(&state.config_path);
-    serde_json::to_value(&app_config).map_err(|e| e.to_string())
+pub fn get_config(state: State<'_, Arc<AppState>>) -> Result<AppConfig, CommandError> {
+    Ok(crate::config::load_config(&state.config_path))
 }
 
 #[tauri::command]
 pub fn set_language(
     state: State<'_, Arc<AppState>>,
     lang: String,
-) -> Result<serde_json::Value, String> {
+) -> Result<AppConfig, CommandError> {
     const SUPPORTED_LANGUAGES: [&str; 2] = ["es", "en"];
     if !SUPPORTED_LANGUAGES.contains(&lang.as_str()) {
-        return Err(format!("unsupported language: {lang}"));
+        return Err(CommandError::new(CommandError::LANGUAGE_UNSUPPORTED).param("lang", lang));
     }
 
     let mut app_config = crate::config::load_config(&state.config_path);
     app_config.set_language(&lang);
     crate::config::save_config(&state.config_path, &app_config)?;
 
-    serde_json::to_value(&app_config).map_err(|e| e.to_string())
+    Ok(app_config)
 }
 
 #[tauri::command]
 pub fn set_overlays_dir(
     state: State<'_, Arc<AppState>>,
     path: String,
-) -> Result<serde_json::Value, String> {
+) -> Result<AppConfig, CommandError> {
     let dir = PathBuf::from(&path);
     if !dir.is_dir() {
-        return Err(format!("{path} is not a valid directory"));
+        return Err(CommandError::new(CommandError::OVERLAYS_DIR_INVALID).param("path", path));
     }
 
     let mut app_config = crate::config::load_config(&state.config_path);
@@ -133,5 +147,5 @@ pub fn set_overlays_dir(
 
     *state.overlay_dir.lock().unwrap() = dir;
 
-    serde_json::to_value(&app_config).map_err(|e| e.to_string())
+    Ok(app_config)
 }
