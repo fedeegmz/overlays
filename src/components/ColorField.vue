@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   modelValue: string;
@@ -111,7 +114,7 @@ function applyPreset(hex: string) {
 <template>
   <div class="color-field">
     <div class="color-row">
-      <label class="swatch" title="Abrir selector de color">
+      <label class="swatch" :title="t('colorField.openPicker')">
         <span class="swatch-fill" :style="{ background: swatchBackground }"></span>
         <input
           class="native-picker"

@@ -1,0 +1,60 @@
+{
+  "sidebar": {
+    "overlays": "Overlays",
+    "instances": "Instances",
+    "closeInstance": "Close instance",
+    "settings": "Settings"
+  },
+  "overlaysPage": {
+    "subtitle": "Pick a template to create an instance and show it in OBS",
+    "loading": "Loading templates...",
+    "empty": "No templates available."
+  },
+  "content": {
+    "title": "Content",
+    "presets": "Presets",
+    "applyPreset": "Apply",
+    "deletePreset": "Delete",
+    "emptyPresets": "No presets for this template.",
+    "presetNamePlaceholder": "Preset name",
+    "saveCurrent": "Save current",
+    "selectTemplate": "Select a template to edit."
+  },
+  "preview": {
+    "title": "Preview",
+    "visibleInObs": "Visible in OBS",
+    "hidden": "Hidden",
+    "update": "Update"
+  },
+  "colorField": {
+    "openPicker": "Open color picker"
+  },
+  "dialog": {
+    "selectOverlaysDir": "Select overlays directory"
+  },
+  "errors": {
+    "templateMissing": "Template \"{template}\" no longer exists."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "General application settings",
+    "overlaysDir": {
+      "label": "Overlays folder",
+      "description": "Templates are read from this location",
+      "notConfigured": "Not configured",
+      "change": "Change",
+      "choose": "Choose directory"
+    },
+    "language": {
+      "label": "Language",
+      "description": "Application interface language"
+    },
+    "appearance": {
+      "label": "Appearance",
+      "description": "Application interface theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  }
+}

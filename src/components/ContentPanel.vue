@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useOverlayControl } from "../composables/useOverlayControl";
 import ColorField from "./ColorField.vue";
+const { t } = useI18n();
 const {
   activeInstance,
   activeTemplate,
@@ -79,7 +81,7 @@ function handleDelete(nombre: string) {
 
 <template>
   <div class="panel">
-    <div class="panel-header">Contenido</div>
+    <div class="panel-header">{{ t("content.title") }}</div>
     <div class="panel-body">
       <template v-if="activeInstance && activeTemplate">
         <div
@@ -109,7 +111,7 @@ function handleDelete(nombre: string) {
 
         <div class="divider"></div>
 
-        <label class="field-label">Presets</label>
+        <label class="field-label">{{ t("content.presets") }}</label>
 
         <div v-if="filteredPresets.length > 0" class="preset-list">
           <div
@@ -121,7 +123,7 @@ function handleDelete(nombre: string) {
             <div class="preset-row-actions">
               <button
                 class="icon-btn"
-                title="Aplicar"
+                :title="t('content.applyPreset')"
                 :disabled="sending"
                 @click="handleApply(preset)"
               >
@@ -141,7 +143,7 @@ function handleDelete(nombre: string) {
               <button
                 class="icon-btn"
                 :class="{ 'confirm-delete': confirmingDelete === preset.nombre }"
-                title="Eliminar"
+                :title="t('content.deletePreset')"
                 @click="handleDelete(preset.nombre)"
               >
                 <svg
@@ -160,14 +162,14 @@ function handleDelete(nombre: string) {
             </div>
           </div>
         </div>
-        <p v-else class="preset-empty">No hay presets para esta plantilla.</p>
+        <p v-else class="preset-empty">{{ t("content.emptyPresets") }}</p>
 
         <div class="save-preset-row">
           <input
             v-model="presetName"
             class="field-input"
             type="text"
-            placeholder="Nombre del preset"
+            :placeholder="t('content.presetNamePlaceholder')"
             :disabled="sending"
           />
           <button
@@ -175,12 +177,12 @@ function handleDelete(nombre: string) {
             :disabled="saveDisabled"
             @click="handleSavePreset"
           >
-            Guardar actual
+            {{ t("content.saveCurrent") }}
           </button>
         </div>
       </template>
 
-      <p v-else class="no-template">Seleccioná una plantilla para editar.</p>
+      <p v-else class="no-template">{{ t("content.selectTemplate") }}</p>
     </div>
   </div>
 </template>

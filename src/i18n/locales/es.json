@@ -1,0 +1,60 @@
+{
+  "sidebar": {
+    "overlays": "Overlays",
+    "instances": "Instancias",
+    "closeInstance": "Cerrar instancia",
+    "settings": "Ajustes"
+  },
+  "overlaysPage": {
+    "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",
+    "loading": "Cargando plantillas...",
+    "empty": "No hay plantillas disponibles."
+  },
+  "content": {
+    "title": "Contenido",
+    "presets": "Presets",
+    "applyPreset": "Aplicar",
+    "deletePreset": "Eliminar",
+    "emptyPresets": "No hay presets para esta plantilla.",
+    "presetNamePlaceholder": "Nombre del preset",
+    "saveCurrent": "Guardar actual",
+    "selectTemplate": "Seleccioná una plantilla para editar."
+  },
+  "preview": {
+    "title": "Vista previa",
+    "visibleInObs": "Visible en OBS",
+    "hidden": "Oculto",
+    "update": "Actualizar"
+  },
+  "colorField": {
+    "openPicker": "Abrir selector de color"
+  },
+  "dialog": {
+    "selectOverlaysDir": "Elegir directorio de overlays"
+  },
+  "errors": {
+    "templateMissing": "La plantilla \"{template}\" ya no existe."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Configuración general de la aplicación",
+    "overlaysDir": {
+      "label": "Carpeta de overlays",
+      "description": "Las plantillas se leen desde esta ubicación",
+      "notConfigured": "No configurado",
+      "change": "Cambiar",
+      "choose": "Elegir directorio"
+    },
+    "language": {
+      "label": "Idioma",
+      "description": "Idioma de la interfaz de la aplicación"
+    },
+    "appearance": {
+      "label": "Apariencia",
+      "description": "Tema de la interfaz de la aplicación",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    }
+  }
+}

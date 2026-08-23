@@ -1,36 +1,58 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { LOCALES } from "../i18n";
 import { useOverlayControl } from "../composables/useOverlayControl";
 const {
   appConfig,
   configError,
   pickOverlaysDir,
+  setLanguage,
 } = useOverlayControl();
+
+const { t, locale } = useI18n();
 </script>
 
 <template>
   <div class="settings-page">
     <div class="page-header">
       <div>
-        <div class="page-title">Ajustes</div>
-        <div class="page-subtitle">Configuración general de la aplicación</div>
+        <div class="page-title">{{ t("settings.title") }}</div>
+        <div class="page-subtitle">{{ t("settings.subtitle") }}</div>
       </div>
     </div>
 
     <div class="settings-section">
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Carpeta de overlays</div>
-          <div class="settings-row-desc">Las plantillas se leen desde esta ubicación</div>
+          <div class="settings-row-label">{{ t("settings.language.label") }}</div>
+          <div class="settings-row-desc">{{ t("settings.language.description") }}</div>
+        </div>
+        <div class="theme-toggle">
+          <button
+            v-for="option in LOCALES"
+            :key="option.code"
+            :class="{ active: locale === option.code }"
+            @click="setLanguage(option.code)"
+          >
+            {{ option.name }}
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">{{ t("settings.overlaysDir.label") }}</div>
+          <div class="settings-row-desc">{{ t("settings.overlaysDir.description") }}</div>
         </div>
         <div class="settings-row-right">
           <span v-if="appConfig.overlays_dir" class="settings-row-value">
             {{ appConfig.overlays_dir }}
           </span>
           <span v-else class="settings-row-value settings-row-empty">
-            No configurado
+            {{ t("settings.overlaysDir.notConfigured") }}
           </span>
           <button class="btn" @click="pickOverlaysDir">
-            {{ appConfig.overlays_dir ? 'Cambiar' : 'Elegir directorio' }}
+            {{ appConfig.overlays_dir ? t('settings.overlaysDir.change') : t('settings.overlaysDir.choose') }}
           </button>
         </div>
       </div>
@@ -40,13 +62,13 @@ const {
     <div class="settings-section">
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Apariencia</div>
-          <div class="settings-row-desc">Tema de la interfaz de la aplicación</div>
+          <div class="settings-row-label">{{ t("settings.appearance.label") }}</div>
+          <div class="settings-row-desc">{{ t("settings.appearance.description") }}</div>
         </div>
         <div class="theme-toggle">
-          <button class="active">Claro</button>
-          <button disabled>Oscuro</button>
-          <button disabled>Sistema</button>
+          <button class="active">{{ t("settings.appearance.light") }}</button>
+          <button disabled>{{ t("settings.appearance.dark") }}</button>
+          <button disabled>{{ t("settings.appearance.system") }}</button>
         </div>
       </div>
     </div>

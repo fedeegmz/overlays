@@ -61,6 +61,7 @@ pub fn run() {
             commands::delete_preset,
             commands::get_config,
             commands::set_overlays_dir,
+            commands::set_language,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -101,6 +101,23 @@ pub fn get_config(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, 
 }
 
 #[tauri::command]
+pub fn set_language(
+    state: State<'_, Arc<AppState>>,
+    lang: String,
+) -> Result<serde_json::Value, String> {
+    const SUPPORTED_LANGUAGES: [&str; 2] = ["es", "en"];
+    if !SUPPORTED_LANGUAGES.contains(&lang.as_str()) {
+        return Err(format!("unsupported language: {lang}"));
+    }
+
+    let mut app_config = crate::config::load_config(&state.config_path);
+    app_config.set_language(&lang);
+    crate::config::save_config(&state.config_path, &app_config)?;
+
+    serde_json::to_value(&app_config).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn set_overlays_dir(
     state: State<'_, Arc<AppState>>,
     path: String,

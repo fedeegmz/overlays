@@ -8,6 +8,7 @@ import type {
   Preset,
   TemplateInfo,
 } from "../types";
+import { setActiveLocale, toLocaleCode, translate } from "../i18n";
 
 const templates = ref<TemplateInfo[] | null>(null);
 const templatesError = ref<string | null>(null);
@@ -16,7 +17,7 @@ const activeInstanceId = ref<string | null>(null);
 const serverPort = ref(0);
 const presets = ref<Preset[]>([]);
 const presetsError = ref<string | null>(null);
-const appConfig = ref<AppConfig>({ overlays_dir: null });
+const appConfig = ref<AppConfig>({ overlays_dir: null, language: null });
 const configError = ref<string | null>(null);
 
 const activeInstance = computed<OverlayInstance | null>(() => {
@@ -26,7 +27,10 @@ const activeInstance = computed<OverlayInstance | null>(() => {
 
 const activeTemplate = computed<TemplateInfo | null>(() => {
   if (!activeInstance.value || !templates.value) return null;
-  return templates.value.find((t) => t.id === activeInstance.value!.templateId) ?? null;
+  return (
+    templates.value.find((t) => t.id === activeInstance.value!.templateId) ??
+    null
+  );
 });
 
 const overlayUrl = computed<string | null>(() => {
@@ -70,6 +74,27 @@ async function setOverlaysDir(path: string): Promise<void> {
   }
 }
 
+export async function loadStoredLanguage(): Promise<string | null> {
+  try {
+    appConfig.value = await invoke<AppConfig>("get_config");
+    return appConfig.value.language;
+  } catch {
+    return null;
+  }
+}
+
+async function setLanguage(lang: string): Promise<void> {
+  configError.value = null;
+  try {
+    appConfig.value = await invoke<AppConfig>("set_language", { lang });
+    const locale = toLocaleCode(appConfig.value.language);
+    if (locale) setActiveLocale(locale);
+  } catch (err) {
+    configError.value = String(err);
+    throw err;
+  }
+}
+
 async function pickOverlaysDir(): Promise<void> {
   configError.value = null;
   try {
@@ -77,7 +102,7 @@ async function pickOverlaysDir(): Promise<void> {
     const selected = await open({
       directory: true,
       multiple: false,
-      title: "Select overlays directory",
+      title: translate("dialog.selectOverlaysDir"),
     });
     if (selected) {
       await setOverlaysDir(selected as string);
@@ -136,7 +161,9 @@ async function savePreset(nombre: string): Promise<void> {
 async function applyPreset(preset: Preset): Promise<void> {
   if (!activeInstance.value) return;
   if (!templates.value?.some((t) => t.id === preset.template)) {
-    presetsError.value = `Template "${preset.template}" no longer exists.`;
+    presetsError.value = translate("errors.templateMissing", {
+      template: preset.template,
+    });
     return;
   }
   activeInstance.value.fields = { ...preset.fields };
@@ -271,6 +298,8 @@ export function useOverlayControl() {
     deletePreset,
     pickOverlaysDir,
     setOverlaysDir,
+    setLanguage,
+    loadStoredLanguage,
   };
 }
 

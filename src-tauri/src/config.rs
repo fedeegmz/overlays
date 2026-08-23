@@ -4,6 +4,14 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub overlays_dir: Option<PathBuf>,
+    #[serde(default)]
+    pub language: Option<String>,
+}
+
+impl AppConfig {
+    pub fn set_language(&mut self, lang: &str) {
+        self.language = Some(lang.to_string());
+    }
 }
 
 pub fn load_config(path: &Path) -> AppConfig {
@@ -37,6 +45,7 @@ mod tests {
         let path = std::env::temp_dir().join("overlays-test-config-does-not-exist.json");
         let config = load_config(&path);
         assert!(config.overlays_dir.is_none());
+        assert!(config.language.is_none());
     }
 
     #[test]
@@ -44,10 +53,26 @@ mod tests {
         let path = temp_path();
         let config = AppConfig {
             overlays_dir: Some(PathBuf::from("/home/user/overlays")),
+            language: Some("es".to_string()),
         };
 
         save_config(&path, &config).unwrap();
         let loaded = load_config(&path);
+        assert_eq!(
+            loaded.overlays_dir,
+            Some(PathBuf::from("/home/user/overlays"))
+        );
+        assert_eq!(loaded.language, Some("es".to_string()));
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn legacy_config_without_language_loads_default() {
+        let path = temp_path();
+        std::fs::write(&path, r#"{ "overlays_dir": "/home/user/overlays" }"#).unwrap();
+        let loaded = load_config(&path);
+        assert!(loaded.language.is_none());
         assert_eq!(
             loaded.overlays_dir,
             Some(PathBuf::from("/home/user/overlays"))

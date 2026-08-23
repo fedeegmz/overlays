@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useOverlayControl } from "../composables/useOverlayControl";
 
+const { t } = useI18n();
 const {
   activeInstance,
   update,
@@ -44,7 +46,7 @@ async function runUpdate() {
 
 <template>
   <div class="panel">
-    <div class="panel-header">Vista previa</div>
+    <div class="panel-header">{{ t("preview.title") }}</div>
     <div class="panel-body">
       <div class="stage" :class="{ 'stage-dimmed': !visible() }">
         <div class="stage-lowerthird">
@@ -70,7 +72,7 @@ async function runUpdate() {
           >
             <span class="toggle-thumb"></span>
           </button>
-          <span class="toggle-label">{{ visible() ? 'Visible en OBS' : 'Oculto' }}</span>
+          <span class="toggle-label">{{ visible() ? t("preview.visibleInObs") : t("preview.hidden") }}</span>
         </label>
 
         <button
@@ -78,7 +80,7 @@ async function runUpdate() {
           :disabled="disabled() || !visible()"
           @click="runUpdate"
         >
-          Actualizar
+          {{ t("preview.update") }}
         </button>
       </div>
     </div>

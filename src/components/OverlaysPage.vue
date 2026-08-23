@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useOverlayControl } from "../composables/useOverlayControl";
 import OverlayGrid from "./OverlayGrid.vue";
 
+const { t } = useI18n();
 const { templates, templatesError, createInstance } = useOverlayControl();
 
 const emit = defineEmits<{
@@ -19,14 +21,14 @@ function handleSelect(id: string) {
     <div class="page-header">
       <div>
         <div class="page-title">Overlays</div>
-        <div class="page-subtitle">Elegí una plantilla para crear una instancia y mostrarla en OBS</div>
+        <div class="page-subtitle">{{ t("overlaysPage.subtitle") }}</div>
       </div>
     </div>
 
     <p v-if="templatesError" class="error">{{ templatesError }}</p>
-    <p v-else-if="templates === null" class="muted">Cargando plantillas...</p>
+    <p v-else-if="templates === null" class="muted">{{ t("overlaysPage.loading") }}</p>
     <p v-else-if="templates.length === 0" class="muted">
-      No hay plantillas disponibles.
+      {{ t("overlaysPage.empty") }}
     </p>
     <OverlayGrid
       v-else
