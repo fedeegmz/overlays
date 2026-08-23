@@ -31,6 +31,9 @@ function hide() {
 function update(fields) {
   if (fields.titulo !== undefined) tituloEl.textContent = fields.titulo;
   if (fields.subtitulo !== undefined) subtituloEl.textContent = fields.subtitulo;
+  if (fields.color_titulo !== undefined) tituloEl.style.color = fields.color_titulo;
+  if (fields.color_subtitulo !== undefined) subtituloEl.style.color = fields.color_subtitulo;
+  if (fields.color_acento !== undefined) zocalo.style.borderLeftColor = fields.color_acento;
   console.log(`[overlay] ${TEMPLATE_ID} update`);
 }
 

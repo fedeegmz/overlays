@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useOverlayControl } from "../composables/useOverlayControl";
+import ColorField from "./ColorField.vue";
 const {
   activeInstance,
   activeTemplate,
@@ -82,18 +83,25 @@ function handleDelete(nombre: string) {
     <div class="panel-body">
       <template v-if="activeInstance && activeTemplate">
         <div
-          v-for="campo in activeTemplate.fields"
-          :key="campo.key"
+          v-for="field in activeTemplate.fields"
+          :key="field.key"
           class="field"
         >
-          <label class="field-label">{{ campo.label }}</label>
+          <label class="field-label">{{ field.label }}</label>
+          <ColorField
+            v-if="field.type === 'color'"
+            :model-value="activeInstance.fields[field.key] ?? ''"
+            :disabled="sending"
+            @update:model-value="updateField(field.key, $event)"
+          />
           <input
-            :value="activeInstance.fields[campo.key] ?? ''"
+            v-else
+            :value="activeInstance.fields[field.key] ?? ''"
             class="field-input"
             type="text"
-            :placeholder="campo.label"
+            :placeholder="field.label"
             :disabled="sending"
-            @input="updateField(campo.key, ($event.target as HTMLInputElement).value)"
+            @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
           />
         </div>
 

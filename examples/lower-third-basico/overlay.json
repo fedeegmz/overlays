@@ -2,6 +2,9 @@
   "name": "Zócalo básico",
   "fields": [
     { "key": "titulo", "label": "Título", "type": "text", "default": "Título de ejemplo" },
-    { "key": "subtitulo", "label": "Subtítulo", "type": "text", "default": "Subtítulo de ejemplo" }
+    { "key": "subtitulo", "label": "Subtítulo", "type": "text", "default": "Subtítulo de ejemplo" },
+    { "key": "color_titulo", "label": "Color título", "type": "color", "default": "#ffffff" },
+    { "key": "color_subtitulo", "label": "Color subtítulo", "type": "color", "default": "#d4d4d4" },
+    { "key": "color_acento", "label": "Color de acento", "type": "color", "default": "#38bdf8" }
   ]
 }

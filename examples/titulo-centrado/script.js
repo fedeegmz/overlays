@@ -28,6 +28,7 @@ function hide() {
 
 function update(fields) {
   if (fields.texto !== undefined) tituloEl.textContent = fields.texto;
+  if (fields.color_texto !== undefined) tituloEl.style.color = fields.color_texto;
   console.log(`[overlay] ${TEMPLATE_ID} update`);
 }
 
