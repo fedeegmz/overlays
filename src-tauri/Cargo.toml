@@ -1,6 +1,6 @@
 [package]
 name = "overlays"
-version = "0.1.0"
+version = "0.2.0"
 description = "Overlay controller for OBS — manage multiple overlay instances via a local WebSocket server"
 authors = ["Federico Gomez"]
 license = "MIT"
