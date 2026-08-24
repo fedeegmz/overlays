@@ -6,17 +6,19 @@ Aplicación de escritorio (Tauri + Rust + Vue 3) que sirve **overlays HTML/CSS/J
 - Plantillas listas: `lower-third-basico` (zócalo) y `titulo-centrado` (intro de segmento), con animaciones de entrada/salida.
 - Multi-instancia: cada plantilla puede tener varias instancias abiertas al mismo tiempo, cada una con su propio `instance_id`.
 - Presets: guardá combinaciones de plantilla + campos para reutilizarlas.
+- Campos de texto y color (con canal alpha), definidos por plantilla.
+- Interfaz bilingüe: español e inglés.
 
 ---
 
 ## Requisitos
 
-| Dependencia | Versión | Notas |
-| ----------- | ------- | ----- |
-| Node.js | ≥ 21 | Para el script de prueba de overlays (`WebSocket` global) |
-| pnpm | cualquier reciente | Manager de paquetes del frontend |
-| Rust | stable (toolchain actual) | Para el backend de Tauri |
-| Linux | — | Dependencias de sistema: `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `libgtk-3-dev` (ver [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/)) |
+| Dependencia | Versión                   | Notas                                                                                                                                                                        |
+| ----------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js     | ≥ 21                      | Para el script de prueba de overlays (`WebSocket` global)                                                                                                                    |
+| pnpm        | cualquier reciente        | Manager de paquetes del frontend                                                                                                                                             |
+| Rust        | stable (toolchain actual) | Para el backend de Tauri                                                                                                                                                     |
+| Linux       | —                         | Dependencias de sistema: `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `libgtk-3-dev` (ver [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/)) |
 
 ---
 
@@ -51,10 +53,10 @@ Al seleccionar una plantilla se crea una nueva instancia y se abre el **OverlayD
 
 En el **ContentPanel** de la página de detalle, completá los campos según la plantilla:
 
-| Campo | Ejemplo |
-| ----- | ------- |
-| Título | `Federico Pérez` |
-| Subtítulo | `Dev Backend` |
+| Campo     | Ejemplo          |
+| --------- | ---------------- |
+| Título    | `Federico Pérez` |
+| Subtítulo | `Dev Backend`    |
 
 ### 3. Mostrar / Actualizar / Ocultar
 
@@ -87,7 +89,7 @@ Cada plantilla puede tener varias instancias simultáneas. Las instancias aparec
 1. Abrí la app de escritorio (arranca el servidor automáticamente).
 2. En OBS: **Fuentes → + → Navegador**.
 3. Pegá la URL que aparece en el subtítulo del **OverlayDetailPage**, por ejemplo:
-   `http://localhost:4848/overlay/lower-third-basico/index.html?instance_id=<uuid>`
+   `http://localhost:4848/overlay/lower-third-basico/index.html?instance=<uuid>`
 4. Ajustá el tamaño de la fuente según el overlay (definido en el CSS de la plantilla). Para un zócalo de 1920×1080 de canvas, un ancho/alto de `1920×300` suele funcionar.
 5. Marcá **"Actualizar navegador cuando la escena se active"** si querés que se recargue al cambiar de escena.
 
@@ -129,14 +131,27 @@ No hace falta tocar el backend ni el panel de control:
      "id": "mi-plantilla",
      "name": "Mi Plantilla",
      "fields": [
-       { "key": "titulo", "label": "Título", "type": "text", "default": "Texto de ejemplo" }
+       {
+         "key": "titulo",
+         "label": "Título",
+         "type": "text",
+         "default": "Texto de ejemplo"
+       },
+       {
+         "key": "color_fondo",
+         "label": "Color de fondo",
+         "type": "color",
+         "default": "#cc241dff"
+       }
      ]
    }
    ```
 
+   Tipos de campo soportados: `text` y `color` (formato `#rrggbbaa`, con alpha).
+
 3. En `script.js`:
    - `const TEMPLATE_ID = "mi-plantilla"` — id que matchea con `overlay.json`.
-   - `const INSTANCE_ID = new URLSearchParams(window.location.search).get("instance_id")` — para filtrar mensajes de esta instancia.
+   - `const INSTANCE_ID = new URLSearchParams(window.location.search).get("instance")` — para filtrar mensajes de esta instancia.
    - WebSocket: `ws://${location.host}/ws`, con reconexión cada 2s.
    - Implementar `show(fields)`, `update(fields)` y `hide()`.
    - Fondo transparente en `body` (crítico para OBS).
@@ -148,8 +163,8 @@ No hace falta tocar el backend ni el panel de control:
 ## Arquitectura
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Tauri Window (Vue 3)                           │
+┌──────────────────────────────────────────────────┐
+│  Tauri Window (Vue 3)                            │
 │  ┌──────────┐ ┌────────────────────────────────┐ │
 │  │ Sidebar  │ │  OverlaysPage / OverlayDetail  │ │
 │  │ (nav +   │ │  ┌──────────┐ ┌─────────────┐  │ │
@@ -162,7 +177,7 @@ No hace falta tocar el backend ni el panel de control:
 │  ┌──────────┐                                    │
 │  │ Settings │                                    │
 │  └──────────┘                                    │
-└─────────────────────┬───────────────────────────┘
+└─────────────────────┬────────────────────────────┘
                       │ Tauri IPC (invoke)
                       ▼
 ┌─────────────────────────────────────────────────┐
@@ -186,23 +201,12 @@ No hace falta tocar el backend ni el panel de control:
 
 ---
 
-## Empaquetado (pendiente — F5)
-
-El instalador de escritorio aún no está configurado: `bundle.resources` no está declarado en `tauri.conf.json`, así que los overlays no viajan todavía en el build. Hasta que se cierre esa fase, usá la app en modo desarrollo (`pnpm tauri dev`).
-
-Cuando esté listo, el flujo será: `pnpm tauri build` → instalar → abrir la app → usar exactamente como en modo dev.
-
----
-
 ## Notas técnicas
 
 - **Puerto**: fijo `4848`, con fallback automático a `4849–4851` si está ocupado. La app muestra la URL y el puerto real en el detalle de cada overlay.
 - **Protocolo**: la UI envía comandos Tauri al backend; este publica un payload JSON por WebSocket (broadcast channel, capacidad 128 mensajes) a todos los overlays conectados. Cada plantilla filtra los mensajes por `TEMPLATE_ID` + `INSTANCE_ID`.
 - **Descubrimiento**: el backend escanea el directorio de overlays buscando subdirectorios con `overlay.json` + `index.html`. No hay un manifiesto centralizado.
 - **Persistencia**: presets en `presets.json` y config en `config.json`, ambos en el directorio de datos de la app.
-- **Tauri plugins**: `opener`, `clipboard-manager`, `dialog`.
-
-## Referencia
-
-- Plan general de la app: `plan-overlay-app.md`
-- Plan de implementación por fases: `plan-fases.md`
+- **Arquitectura del backend**: capas `domain/` (modelos y errores), `application/` (servicios y puertos) e `infrastructure/` (HTTP/WebSocket, comandos Tauri, stores JSON, filesystem). Los comandos IPC responden con un error estructurado (`CommandError`) que la UI mapea a mensajes traducidos.
+- **Frontend**: componentes Vue en `src/components/`; acceso a Tauri encapsulado en `src/services/`, estado en stores Pinia (`src/stores/`), tipos compartidos en `src/types/` y textos i18n en `src/i18n/locales/{es,en}.json`.
+- **Tauri plugins**: `dialog`.
