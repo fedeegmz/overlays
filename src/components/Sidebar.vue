@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { useOverlayControl } from "../composables/useOverlayControl";
+import { storeToRefs } from "pinia";
+import { useInstanceStore } from "../stores/instances";
 import logoSvg from "../assets/logo.svg";
 
 defineProps<{
@@ -14,13 +15,9 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const {
-  instances,
-  activeInstanceId,
-  instanceDisplayName,
-  selectInstance,
-  removeInstance,
-} = useOverlayControl();
+const instanceStore = useInstanceStore();
+const { instances, activeInstanceId } = storeToRefs(instanceStore);
+const { instanceDisplayName, selectInstance, removeInstance } = instanceStore;
 
 function handleInstanceClick(id: string) {
   selectInstance(id);

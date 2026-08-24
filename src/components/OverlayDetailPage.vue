@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useOverlayControl } from "../composables/useOverlayControl";
+import { storeToRefs } from "pinia";
+import { useInstanceStore } from "../stores/instances";
 import PreviewPanel from "./PreviewPanel.vue";
 import ContentPanel from "./ContentPanel.vue";
 
-const { activeInstance, activeTemplate, overlayUrl } = useOverlayControl();
+const { activeInstance, activeTemplate, overlayUrl } = storeToRefs(
+  useInstanceStore(),
+);
 
 const emit = defineEmits<{
   back: [];

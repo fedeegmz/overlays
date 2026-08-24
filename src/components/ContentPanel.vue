@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useOverlayControl, commandErrorMessage } from "../composables/useOverlayControl";
+import { storeToRefs } from "pinia";
+import { commandErrorMessage } from "../lib/errors";
+import { useInstanceStore } from "../stores/instances";
+import { usePresetStore } from "../stores/presets";
 import ColorField from "./ColorField.vue";
+
 const { t } = useI18n();
-const {
-  activeInstance,
-  activeTemplate,
-  presets,
-  savePreset,
-  applyPreset,
-  deletePreset,
-} = useOverlayControl();
+const instanceStore = useInstanceStore();
+const presetStore = usePresetStore();
+const { activeInstance, activeTemplate } = storeToRefs(instanceStore);
+const { presets } = storeToRefs(presetStore);
+const { savePreset, applyPreset, deletePreset } = presetStore;
 
 const presetName = ref("");
 const sending = ref(false);
@@ -50,8 +51,8 @@ async function handleSavePreset() {
   }
 }
 
-async function handleApply(preset: { nombre: string }) {
-  const found = presets.value.find((p) => p.nombre === preset.nombre);
+async function handleApply(preset: { name: string }) {
+  const found = presets.value.find((p) => p.name === preset.name);
   if (!found) return;
   sendError.value = null;
   sending.value = true;
@@ -64,9 +65,9 @@ async function handleApply(preset: { nombre: string }) {
   }
 }
 
-function handleDelete(nombre: string) {
-  if (confirmingDelete.value !== nombre) {
-    confirmingDelete.value = nombre;
+function handleDelete(name: string) {
+  if (confirmingDelete.value !== name) {
+    confirmingDelete.value = name;
     if (confirmTimer) clearTimeout(confirmTimer);
     confirmTimer = setTimeout(() => {
       confirmingDelete.value = null;
@@ -75,7 +76,7 @@ function handleDelete(nombre: string) {
   }
   if (confirmTimer) clearTimeout(confirmTimer);
   confirmingDelete.value = null;
-  void deletePreset(nombre);
+  void deletePreset(name);
 }
 </script>
 
@@ -116,10 +117,10 @@ function handleDelete(nombre: string) {
         <div v-if="filteredPresets.length > 0" class="preset-list">
           <div
             v-for="preset in filteredPresets"
-            :key="preset.nombre"
+            :key="preset.name"
             class="preset-row"
           >
-            <span class="preset-row-name">{{ preset.nombre }}</span>
+            <span class="preset-row-name">{{ preset.name }}</span>
             <div class="preset-row-actions">
               <button
                 class="icon-btn"
@@ -142,9 +143,9 @@ function handleDelete(nombre: string) {
               </button>
               <button
                 class="icon-btn"
-                :class="{ 'confirm-delete': confirmingDelete === preset.nombre }"
+                :class="{ 'confirm-delete': confirmingDelete === preset.name }"
                 :title="t('content.deletePreset')"
-                @click="handleDelete(preset.nombre)"
+                @click="handleDelete(preset.name)"
               >
                 <svg
                   width="14"

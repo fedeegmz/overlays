@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useOverlayControl, commandErrorMessage } from "../composables/useOverlayControl";
+import { storeToRefs } from "pinia";
+import { commandErrorMessage } from "../lib/errors";
+import { useInstanceStore } from "../stores/instances";
 
 const { t } = useI18n();
-const {
-  activeInstance,
-  update,
-  toggleVisibility,
-} = useOverlayControl();
+const instanceStore = useInstanceStore();
+const { activeInstance } = storeToRefs(instanceStore);
+const { update, toggleVisibility } = instanceStore;
 
 const sending = ref<"toggle" | "update" | null>(null);
 const sendError = ref<string | null>(null);

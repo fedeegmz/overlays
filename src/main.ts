@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import "./styles/variables.css";
 import "./styles/components.css";
 import App from "./App.vue";
@@ -8,11 +9,13 @@ import {
   setActiveLocale,
   toLocaleCode,
 } from "./i18n";
-import { loadStoredLanguage } from "./composables/useOverlayControl";
+import { getConfig } from "./services/configApi";
 
 async function resolveInitialLocale() {
-  const stored = toLocaleCode(await loadStoredLanguage());
-  const locale = stored ?? detectSystemLocale();
+  const language = await getConfig()
+    .then((config) => config.language)
+    .catch(() => null);
+  const locale = toLocaleCode(language) ?? detectSystemLocale();
   setActiveLocale(locale);
   return locale;
 }
@@ -20,7 +23,7 @@ async function resolveInitialLocale() {
 async function bootstrap(): Promise<void> {
   const locale = await resolveInitialLocale();
   const i18n = createAppI18n(locale);
-  createApp(App).use(i18n).mount("#app");
+  createApp(App).use(i18n).use(createPinia()).mount("#app");
 }
 
 void bootstrap();

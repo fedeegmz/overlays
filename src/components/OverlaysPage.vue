@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { useOverlayControl } from "../composables/useOverlayControl";
+import { storeToRefs } from "pinia";
+import { useInstanceStore } from "../stores/instances";
+import { useTemplateStore } from "../stores/templates";
 import OverlayGrid from "./OverlayGrid.vue";
 
 const { t } = useI18n();
-const { templates, templatesError, createInstance } = useOverlayControl();
+const templateStore = useTemplateStore();
+const instanceStore = useInstanceStore();
+const { templates, templatesError } = storeToRefs(templateStore);
+const { createInstance } = instanceStore;
 
 const emit = defineEmits<{
   openDetail: [];

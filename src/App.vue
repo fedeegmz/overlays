@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { initOverlayControl, useOverlayControl } from "./composables/useOverlayControl";
+import { bootstrapStores } from "./bootstrap";
+import { useInstanceStore } from "./stores/instances";
 import AppShell from "./components/AppShell.vue";
 import OverlaysPage from "./components/OverlaysPage.vue";
 import OverlayDetailPage from "./components/OverlayDetailPage.vue";
 import SettingsPage from "./components/SettingsPage.vue";
 
-initOverlayControl();
+bootstrapStores();
 
-const { instances } = useOverlayControl();
+const { instances } = useInstanceStore();
 
 type Page = "overlays" | "detail" | "settings";
 

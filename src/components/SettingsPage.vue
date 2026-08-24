@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
 import { LOCALES } from "../i18n";
-import { useOverlayControl } from "../composables/useOverlayControl";
-const {
-  appConfig,
-  configError,
-  pickOverlaysDir,
-  setLanguage,
-} = useOverlayControl();
+import { useConfigStore } from "../stores/config";
+
+const configStore = useConfigStore();
+const { appConfig, configError } = storeToRefs(configStore);
+const { pickOverlaysDir, setLanguage } = configStore;
 
 const { t, locale } = useI18n();
 </script>
