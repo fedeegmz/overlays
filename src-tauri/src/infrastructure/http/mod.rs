@@ -3,13 +3,13 @@ pub mod state;
 pub mod ws;
 
 use std::net::SocketAddr;
-use std::path::PathBuf;
 use std::sync::Arc;
+
 use tokio::net::TcpListener;
 
-use state::AppState;
+use state::HttpState;
 
-pub async fn start_server(state: Arc<AppState>) -> anyhow::Result<()> {
+pub async fn start_server(state: Arc<HttpState>) -> anyhow::Result<()> {
     let router = routes::build_router(state.clone());
 
     let mut last_err: Option<std::io::Error> = None;
@@ -35,42 +35,47 @@ pub async fn start_server(state: Arc<AppState>) -> anyhow::Result<()> {
     ))
 }
 
-pub fn new_state(overlay_dir: PathBuf, presets_path: PathBuf, config_path: PathBuf) -> AppState {
-    let (tx, _rx) = tokio::sync::broadcast::channel(128);
-    AppState {
-        tx,
-        current: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
-        connected: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
-        port: Arc::new(std::sync::Mutex::new(None)),
-        overlay_dir: Arc::new(std::sync::Mutex::new(overlay_dir)),
-        presets_path,
-        config_path,
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::path::PathBuf;
+    use std::sync::atomic::Ordering;
+    use std::sync::Arc;
+    use tokio::net::TcpListener;
+
     use axum::body::Body;
     use axum::http::Request;
     use futures_util::StreamExt;
-    use std::sync::atomic::Ordering;
     use tower::ServiceExt;
 
-    fn test_state() -> Arc<AppState> {
+    use super::routes::build_router;
+    use super::state::HttpState;
+    use crate::application::ports::OverlayBus;
+    use crate::application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
+    use crate::domain::overlay::{OverlayAction, OverlayPayload};
+    use crate::infrastructure::fs_template_source::FsTemplateSource;
+    use crate::infrastructure::overlay_bus::BroadcastOverlayBus;
+    use std::collections::HashMap;
+
+    fn test_state() -> Arc<HttpState> {
         let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
             .join("examples");
-        let presets_path = std::env::temp_dir().join("overlays-test-presets.json");
-        let config_path = std::env::temp_dir().join("overlays-test-config.json");
-        Arc::new(new_state(dir, presets_path, config_path))
+        HttpState::new(
+            Arc::new(BroadcastOverlayBus::new()),
+            Arc::new(TemplateCatalog::new(
+                Arc::new(FsTemplateSource),
+                OverlaysDirHandle::new(dir),
+            )),
+            OverlaysDirHandle::default(),
+        )
+        .into()
     }
 
     #[tokio::test]
     async fn templates_endpoint_returns_manifest() {
         let state = test_state();
-        let router = routes::build_router(state);
+        let router = build_router(state);
         let res = router
             .oneshot(
                 Request::builder()
@@ -91,8 +96,20 @@ mod tests {
 
     #[tokio::test]
     async fn static_overlay_is_served() {
-        let state = test_state();
-        let router = routes::build_router(state);
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("examples");
+        let state = HttpState::new(
+            Arc::new(BroadcastOverlayBus::new()),
+            Arc::new(TemplateCatalog::new(
+                Arc::new(FsTemplateSource),
+                OverlaysDirHandle::default(),
+            )),
+            OverlaysDirHandle::new(dir),
+        )
+        .into();
+        let router = build_router(state);
         let res = router
             .oneshot(
                 Request::builder()
@@ -114,7 +131,7 @@ mod tests {
     #[tokio::test]
     async fn ws_receives_broadcast_payload() {
         let state = test_state();
-        let router = routes::build_router(state.clone());
+        let router = build_router(state.clone());
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -126,13 +143,15 @@ mod tests {
             .await
             .unwrap();
 
-        let payload = serde_json::json!({
-            "instance_id": "test-1",
-            "template": "lower-third-basico",
-            "action": "show",
-            "fields": { "titulo": "Fede", "subtitulo": "Dev" }
+        state.bus.publish(&OverlayPayload {
+            instance_id: "test-1".into(),
+            template: "lower-third-basico".into(),
+            action: OverlayAction::Show,
+            fields: HashMap::from([
+                ("titulo".to_string(), "Fede".to_string()),
+                ("subtitulo".to_string(), "Dev".to_string()),
+            ]),
         });
-        state.tx.send(payload.to_string()).unwrap();
 
         let msg = ws.next().await.unwrap().unwrap();
         let text = match msg {
@@ -149,7 +168,7 @@ mod tests {
     #[tokio::test]
     async fn ws_counts_connections() {
         let state = test_state();
-        let router = routes::build_router(state.clone());
+        let router = build_router(state.clone());
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();

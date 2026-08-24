@@ -4,16 +4,17 @@ use axum::extract::{Path, State};
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
 
-use super::state::AppState;
+use super::state::HttpState;
 use super::ws;
+use crate::infrastructure::error::CommandError;
 
 async fn serve_overlay(
-    State(state): State<Arc<AppState>>,
+    State(state): State<Arc<HttpState>>,
     Path(path): Path<String>,
 ) -> Result<Response, StatusCode> {
-    let overlay_dir = state.overlay_dir.lock().unwrap().clone();
+    let overlay_dir = state.overlays_dir.get();
     let file_path = overlay_dir.join(&path);
 
     let canonical_file =
@@ -41,17 +42,24 @@ async fn serve_overlay(
         _ => "application/octet-stream",
     };
 
-    Ok((
-        [(header::CONTENT_TYPE, mime)],
-        content,
-    )
-        .into_response())
+    Ok(([(header::CONTENT_TYPE, mime)], content).into_response())
 }
 
-pub fn build_router(state: Arc<AppState>) -> Router {
+async fn list_templates(State(state): State<Arc<HttpState>>) -> Response {
+    match state.catalog.manifest() {
+        Ok(manifest) => Json(manifest).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(CommandError::from(e)),
+        )
+            .into_response(),
+    }
+}
+
+pub fn build_router(state: Arc<HttpState>) -> Router {
     Router::new()
         .route("/overlay/{*path}", get(serve_overlay))
-        .route("/api/templates", get(crate::templates::list_templates))
+        .route("/api/templates", get(list_templates))
         .route("/ws", get(ws::ws_handler))
         .with_state(state)
 }
