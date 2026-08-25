@@ -38,6 +38,31 @@ El primer build de Rust tarda un rato. Al terminar se abre la ventana de la app 
 
 ---
 
+## Desarrollo
+
+| Tarea                    | Comando                                       |
+| ------------------------ | --------------------------------------------- |
+| Lint + format (frontend) | `pnpm check` / auto-fix con `pnpm check:fix`  |
+| Typecheck (frontend)     | `pnpm exec vue-tsc --noEmit`                  |
+| Tests (backend)          | `cd src-tauri && cargo test`                  |
+| Formato (backend)        | `cd src-tauri && cargo fmt --all`             |
+| Lint (backend)           | `cd src-tauri && cargo clippy -- -D warnings` |
+
+### Git hooks
+
+Los hooks se gestionan con [lefthook](https://lefthook.dev) (`lefthook.yml`) y se instalan automáticamente con `pnpm install`:
+
+- **pre-commit** (en paralelo): `pnpm check` (frontend), `cargo fmt --check --all` y `cargo clippy -- -D warnings` (backend — solo si hay archivos `.rs` stageados).
+- **pre-push**: `cargo test` del backend.
+
+Si modificás `lefthook.yml`, re-sincronizá los hooks con:
+
+```bash
+pnpm exec lefthook install
+```
+
+---
+
 ## Uso de la app — paso a paso
 
 ### 1. Elegir la plantilla

@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      run: pnpm check
+    cargo-fmt:
+      root: src-tauri/
+      run: cargo fmt --check --all
+    clippy:
+      root: src-tauri/
+      run: cargo clippy -- -D warnings
+
+pre-push:
+  commands:
+    cargo-test:
+      root: src-tauri/
+      run: cargo test

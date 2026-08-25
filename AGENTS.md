@@ -14,6 +14,15 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 | Frontend build     | `pnpm build` (runs Biome check, typecheck, vite build) |
 | Rust tests         | `cd src-tauri && cargo test`                           |
 
+## Git hooks (lefthook)
+
+Hooks managed with [lefthook](https://lefthook.dev) (`lefthook.yml`, installed via pnpm postinstall):
+
+- `pre-commit` (parallel): `pnpm check` (front), `cargo fmt --check --all` + `cargo clippy -- -D warnings` (back, only when `.rs` files are staged).
+- `pre-push`: `cargo test` (back).
+
+After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks.
+
 ## Project structure
 
 - `src/` — Vue 3 frontend (TypeScript strict, no JSX, no router lib)
