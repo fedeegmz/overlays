@@ -17,10 +17,8 @@ async fn serve_overlay(
     let overlay_dir = state.overlays_dir.get();
     let file_path = overlay_dir.join(&path);
 
-    let canonical_file =
-        dunce::canonicalize(&file_path).map_err(|_| StatusCode::FORBIDDEN)?;
-    let canonical_dir =
-        dunce::canonicalize(&overlay_dir).map_err(|_| StatusCode::FORBIDDEN)?;
+    let canonical_file = dunce::canonicalize(&file_path).map_err(|_| StatusCode::FORBIDDEN)?;
+    let canonical_dir = dunce::canonicalize(&overlay_dir).map_err(|_| StatusCode::FORBIDDEN)?;
     if !canonical_file.starts_with(&canonical_dir) {
         return Err(StatusCode::FORBIDDEN);
     }

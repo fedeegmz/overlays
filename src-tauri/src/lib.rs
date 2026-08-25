@@ -49,11 +49,7 @@ pub fn run() {
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
             let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
-            let http_state = Arc::new(HttpState::new(
-                bus,
-                catalog.clone(),
-                overlays_dir.clone(),
-            ));
+            let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
 
             app.manage(http_state.clone());
             app.manage(catalog);

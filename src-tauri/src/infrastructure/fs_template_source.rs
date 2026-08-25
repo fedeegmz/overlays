@@ -19,15 +19,12 @@ impl TemplateSource for FsTemplateSource {
             return Ok(Vec::new());
         }
 
-        let read_failed = || {
-            DomainError::TemplateDiscoveryFailed {
-                detail: format!("could not read {overlay_dir:?}"),
-            }
+        let read_failed = || DomainError::TemplateDiscoveryFailed {
+            detail: format!("could not read {overlay_dir:?}"),
         };
 
         let mut templates = Vec::new();
-        let entries =
-            std::fs::read_dir(overlay_dir).map_err(|_| read_failed())?;
+        let entries = std::fs::read_dir(overlay_dir).map_err(|_| read_failed())?;
 
         for entry in entries {
             let path = entry.map_err(|_| read_failed())?.path();

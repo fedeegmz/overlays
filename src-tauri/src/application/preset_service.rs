@@ -79,8 +79,10 @@ mod tests {
     #[test]
     fn save_upserts_by_name() {
         let svc = service();
-        svc.save("Fede".into(), "t1".into(), HashMap::new()).unwrap();
-        svc.save("Fede".into(), "t2".into(), HashMap::new()).unwrap();
+        svc.save("Fede".into(), "t1".into(), HashMap::new())
+            .unwrap();
+        svc.save("Fede".into(), "t2".into(), HashMap::new())
+            .unwrap();
 
         let presets = svc.list();
         assert_eq!(presets.len(), 1);

@@ -61,7 +61,10 @@ mod tests {
 
     fn service() -> (ConfigService, OverlaysDirHandle) {
         let dir = OverlaysDirHandle::default();
-        let svc = ConfigService::new(Arc::new(InMemoryRepo(Mutex::new(AppConfig::default()))), dir.clone());
+        let svc = ConfigService::new(
+            Arc::new(InMemoryRepo(Mutex::new(AppConfig::default()))),
+            dir.clone(),
+        );
         (svc, dir)
     }
 
