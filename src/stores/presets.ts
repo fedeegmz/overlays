@@ -1,14 +1,13 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-
+import { translate } from "../i18n";
 import { commandErrorMessage } from "../lib/errors";
+import { sendOverlayUpdate } from "../services/overlayApi";
 import {
   deletePreset as deletePresetCommand,
   listPresets,
   savePreset as savePresetCommand,
 } from "../services/presetsApi";
-import { sendOverlayUpdate } from "../services/overlayApi";
-import { translate } from "../i18n";
 import type { Preset } from "../types";
 import { useInstanceStore } from "./instances";
 import { useTemplateStore } from "./templates";

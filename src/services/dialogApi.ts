@@ -1,6 +1,4 @@
-export async function pickOverlaysDir(
-  title: string,
-): Promise<string | null> {
+export async function pickOverlaysDir(title: string): Promise<string | null> {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const selected = await open({
     directory: true,

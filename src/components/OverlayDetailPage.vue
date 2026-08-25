@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { storeToRefs } from "pinia";
+import { computed } from "vue";
 import { useInstanceStore } from "../stores/instances";
-import PreviewPanel from "./PreviewPanel.vue";
 import ContentPanel from "./ContentPanel.vue";
+import PreviewPanel from "./PreviewPanel.vue";
 
 const { activeInstance, activeTemplate, overlayUrl } = storeToRefs(
   useInstanceStore(),
@@ -21,8 +21,16 @@ const instanceLabel = computed(() => {
 
 <template>
   <div class="detail-page" v-if="activeInstance && activeTemplate">
-    <div class="breadcrumb" @click="emit('back')">
+    <!-- biome-ignore lint/a11y/useSemanticElements: kept as div to inherit breadcrumb styling without extra CSS reset -->
+    <div
+      class="breadcrumb"
+      role="button"
+      tabindex="0"
+      @click="emit('back')"
+      @keydown.enter.prevent="emit('back')"
+    >
       <svg
+        aria-hidden="true"
         width="14"
         height="14"
         viewBox="0 0 24 24"

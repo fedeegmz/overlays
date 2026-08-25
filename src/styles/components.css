@@ -78,7 +78,9 @@
   color: var(--text);
   background: var(--surface);
   font-family: inherit;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .field-input:focus {
@@ -136,7 +138,9 @@
   background: transparent;
   color: var(--text-faint);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .icon-btn:hover {

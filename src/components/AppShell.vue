@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Sidebar from "./Sidebar.vue";
+import SideNav from "./SideNav.vue";
 
 defineProps<{
   currentPage: "overlays" | "settings";
@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="app-shell">
-    <Sidebar
+    <SideNav
       :current-page="currentPage"
       @navigate="(p) => emit('navigate', p)"
       @open-detail="emit('openDetail')"

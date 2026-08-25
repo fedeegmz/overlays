@@ -19,7 +19,11 @@ function show(fields) {
 }
 
 function hide() {
-  if (tituloEl.classList.contains("salir") || !tituloEl.classList.contains("entrar")) return;
+  if (
+    tituloEl.classList.contains("salir") ||
+    !tituloEl.classList.contains("entrar")
+  )
+    return;
   tituloEl.classList.remove("entrar");
   tituloEl.classList.add("salir");
   tituloEl.addEventListener("transitionend", onTransitionEnd, { once: true });
@@ -28,7 +32,8 @@ function hide() {
 
 function update(fields) {
   if (fields.texto !== undefined) tituloEl.textContent = fields.texto;
-  if (fields.color_texto !== undefined) tituloEl.style.color = fields.color_texto;
+  if (fields.color_texto !== undefined)
+    tituloEl.style.color = fields.color_texto;
   console.log(`[overlay] ${TEMPLATE_ID} update`);
 }
 

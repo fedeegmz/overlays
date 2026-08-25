@@ -1,6 +1,6 @@
 import { createI18n } from "vue-i18n";
-import es from "./locales/es.json";
 import en from "./locales/en.json";
+import es from "./locales/es.json";
 
 export type LocaleCode = "es" | "en";
 export type MessageSchema = typeof es;
@@ -31,7 +31,9 @@ function isLocaleCode(value: string | null | undefined): value is LocaleCode {
   return value === "es" || value === "en";
 }
 
-export function toLocaleCode(value: string | null | undefined): LocaleCode | null {
+export function toLocaleCode(
+  value: string | null | undefined,
+): LocaleCode | null {
   return isLocaleCode(value) ? value : null;
 }
 
@@ -57,7 +59,9 @@ export function createAppI18n(locale: LocaleCode = FALLBACK_LOCALE): AppI18n {
 
 export function getActiveLocale(): LocaleCode {
   if (!instance) return FALLBACK_LOCALE;
-  return toLocaleCode(instance.global.locale.value as string) ?? FALLBACK_LOCALE;
+  return (
+    toLocaleCode(instance.global.locale.value as string) ?? FALLBACK_LOCALE
+  );
 }
 
 export function setActiveLocale(locale: LocaleCode): void {

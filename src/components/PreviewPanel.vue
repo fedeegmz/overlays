@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { storeToRefs } from "pinia";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 
@@ -53,7 +53,9 @@ async function runUpdate() {
           <div class="lt-title">
             {{ activeInstance?.fields?.titulo || activeInstance?.fields?.texto || '...' }}
           </div>
-          <div class="lt-sub">{{ activeInstance?.fields?.subtitulo || '' }}</div>
+          <div class="lt-sub">
+            {{ activeInstance?.fields?.subtitulo || '' }}
+          </div>
         </div>
       </div>
 
@@ -72,10 +74,13 @@ async function runUpdate() {
           >
             <span class="toggle-thumb"></span>
           </button>
-          <span class="toggle-label">{{ visible() ? t("preview.visibleInObs") : t("preview.hidden") }}</span>
+          <span class="toggle-label"
+            >{{ visible() ? t("preview.visibleInObs") : t("preview.hidden") }}</span
+          >
         </label>
 
         <button
+          type="button"
           class="btn"
           :disabled="disabled() || !visible()"
           @click="runUpdate"
@@ -141,7 +146,7 @@ async function runUpdate() {
 }
 
 .lt-sub {
-  color: #C9C9D1;
+  color: #c9c9d1;
   font-size: 12.5px;
   margin-top: 2px;
 }

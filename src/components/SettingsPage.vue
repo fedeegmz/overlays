@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
+import { useI18n } from "vue-i18n";
 import { LOCALES } from "../i18n";
 import { useConfigStore } from "../stores/config";
 
@@ -23,13 +23,18 @@ const { t, locale } = useI18n();
     <div class="settings-section">
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">{{ t("settings.language.label") }}</div>
-          <div class="settings-row-desc">{{ t("settings.language.description") }}</div>
+          <div class="settings-row-label">
+            {{ t("settings.language.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.language.description") }}
+          </div>
         </div>
         <div class="theme-toggle">
           <button
             v-for="option in LOCALES"
             :key="option.code"
+            type="button"
             :class="{ active: locale === option.code }"
             @click="setLanguage(option.code)"
           >
@@ -40,8 +45,12 @@ const { t, locale } = useI18n();
 
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">{{ t("settings.overlaysDir.label") }}</div>
-          <div class="settings-row-desc">{{ t("settings.overlaysDir.description") }}</div>
+          <div class="settings-row-label">
+            {{ t("settings.overlaysDir.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.overlaysDir.description") }}
+          </div>
         </div>
         <div class="settings-row-right">
           <span v-if="appConfig.overlays_dir" class="settings-row-value">
@@ -50,7 +59,7 @@ const { t, locale } = useI18n();
           <span v-else class="settings-row-value settings-row-empty">
             {{ t("settings.overlaysDir.notConfigured") }}
           </span>
-          <button class="btn" @click="pickOverlaysDir">
+          <button type="button" class="btn" @click="pickOverlaysDir">
             {{ appConfig.overlays_dir ? t('settings.overlaysDir.change') : t('settings.overlaysDir.choose') }}
           </button>
         </div>
@@ -61,13 +70,23 @@ const { t, locale } = useI18n();
     <div class="settings-section">
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">{{ t("settings.appearance.label") }}</div>
-          <div class="settings-row-desc">{{ t("settings.appearance.description") }}</div>
+          <div class="settings-row-label">
+            {{ t("settings.appearance.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.appearance.description") }}
+          </div>
         </div>
         <div class="theme-toggle">
-          <button class="active">{{ t("settings.appearance.light") }}</button>
-          <button disabled>{{ t("settings.appearance.dark") }}</button>
-          <button disabled>{{ t("settings.appearance.system") }}</button>
+          <button type="button" class="active">
+            {{ t("settings.appearance.light") }}
+          </button>
+          <button type="button" disabled>
+            {{ t("settings.appearance.dark") }}
+          </button>
+          <button type="button" disabled>
+            {{ t("settings.appearance.system") }}
+          </button>
         </div>
       </div>
     </div>
@@ -169,7 +188,9 @@ const { t, locale } = useI18n();
   cursor: pointer;
   color: var(--text-secondary);
   font-family: inherit;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .theme-toggle button.active {

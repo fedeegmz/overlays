@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-
+import { setActiveLocale, toLocaleCode, translate } from "../i18n";
 import { commandErrorMessage } from "../lib/errors";
 import {
   getConfig,
@@ -8,11 +8,6 @@ import {
   setOverlaysDir as setOverlaysDirCommand,
 } from "../services/configApi";
 import { pickOverlaysDir as pickOverlaysDirDialog } from "../services/dialogApi";
-import {
-  setActiveLocale,
-  toLocaleCode,
-  translate,
-} from "../i18n";
 import type { AppConfig } from "../types";
 import { useTemplateStore } from "./templates";
 

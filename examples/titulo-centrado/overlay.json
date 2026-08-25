@@ -1,7 +1,17 @@
 {
   "name": "Título centrado (intro de segmento)",
   "fields": [
-    { "key": "texto", "label": "Texto principal", "type": "text", "default": "Texto de ejemplo" },
-    { "key": "color_texto", "label": "Color del texto", "type": "color", "default": "#ffffff" }
+    {
+      "key": "texto",
+      "label": "Texto principal",
+      "type": "text",
+      "default": "Texto de ejemplo"
+    },
+    {
+      "key": "color_texto",
+      "label": "Color del texto",
+      "type": "color",
+      "default": "#ffffff"
+    }
   ]
 }

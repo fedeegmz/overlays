@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { bootstrapStores } from "./bootstrap";
-import { useInstanceStore } from "./stores/instances";
 import AppShell from "./components/AppShell.vue";
-import OverlaysPage from "./components/OverlaysPage.vue";
 import OverlayDetailPage from "./components/OverlayDetailPage.vue";
+import OverlaysPage from "./components/OverlaysPage.vue";
 import SettingsPage from "./components/SettingsPage.vue";
+import { useInstanceStore } from "./stores/instances";
 
 bootstrapStores();
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
+import { useI18n } from "vue-i18n";
 import { useInstanceStore } from "../stores/instances";
 import { useTemplateStore } from "../stores/templates";
 import OverlayGrid from "./OverlayGrid.vue";
@@ -31,15 +31,13 @@ function handleSelect(id: string) {
     </div>
 
     <p v-if="templatesError" class="error">{{ templatesError }}</p>
-    <p v-else-if="templates === null" class="muted">{{ t("overlaysPage.loading") }}</p>
+    <p v-else-if="templates === null" class="muted">
+      {{ t("overlaysPage.loading") }}
+    </p>
     <p v-else-if="templates.length === 0" class="muted">
       {{ t("overlaysPage.empty") }}
     </p>
-    <OverlayGrid
-      v-else
-      :templates="templates"
-      @select="handleSelect"
-    />
+    <OverlayGrid v-else :templates="templates" @select="handleSelect" />
   </div>
 </template>
 

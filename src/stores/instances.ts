@@ -3,8 +3,8 @@ import { computed, ref } from "vue";
 
 import {
   getServerStatus,
-  sendOverlayUpdate,
   type OverlayAction,
+  sendOverlayUpdate,
 } from "../services/overlayApi";
 import type { OverlayInstance } from "../types";
 import { useTemplateStore } from "./templates";
@@ -116,7 +116,7 @@ export const useInstanceStore = defineStore("instances", () => {
 
   function removeInstance(id: string): void {
     const instance = instances.value.find((i) => i.id === id);
-    if (instance && instance.visible) {
+    if (instance?.visible) {
       void sendToInstance(id, "hide", {});
       instance.visible = false;
     }

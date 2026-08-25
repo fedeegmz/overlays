@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
-import { useInstanceStore } from "../stores/instances";
+import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
+import { useInstanceStore } from "../stores/instances";
 
 defineProps<{
   currentPage: "overlays" | "settings";
@@ -28,17 +28,19 @@ function handleInstanceClick(id: string) {
 <template>
   <aside class="sidebar">
     <div class="brand">
-      <img :src="logoSvg" alt="Overlays" class="brand-mark" />
+      <img :src="logoSvg" alt="Overlays" class="brand-mark">
       <div class="brand-name">Overlays</div>
     </div>
 
     <nav class="nav">
       <button
+        type="button"
         class="nav-item"
         :class="{ active: currentPage === 'overlays' }"
         @click="emit('navigate', 'overlays')"
       >
         <svg
+          aria-hidden="true"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -60,21 +62,24 @@ function handleInstanceClick(id: string) {
     <div v-if="instances.length > 0" class="instances-section">
       <div class="instances-header">{{ t("sidebar.instances") }}</div>
       <div class="instances-list">
+        <!-- biome-ignore lint/a11y/useSemanticElements: row contains a nested close button, so a real button element would be invalid HTML -->
         <div
           v-for="instance in instances"
           :key="instance.id"
           class="instance-item"
           :class="{ active: instance.id === activeInstanceId }"
+          role="button"
+          tabindex="0"
           @click="handleInstanceClick(instance.id)"
+          @keydown.enter.prevent="handleInstanceClick(instance.id)"
         >
           <span
             class="instance-dot"
             :class="instance.visible ? 'dot-live' : 'dot-idle'"
           ></span>
-          <span class="instance-name">{{
-            instanceDisplayName(instance)
-          }}</span>
+          <span class="instance-name">{{ instanceDisplayName(instance) }}</span>
           <button
+            type="button"
             class="instance-close"
             :title="t('sidebar.closeInstance')"
             @click.stop="removeInstance(instance.id)"
@@ -88,11 +93,13 @@ function handleInstanceClick(id: string) {
     <div class="sidebar-spacer"></div>
 
     <button
+      type="button"
       class="nav-item"
       :class="{ active: currentPage === 'settings' }"
       @click="emit('navigate', 'settings')"
     >
       <svg
+        aria-hidden="true"
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -163,7 +170,9 @@ function handleInstanceClick(id: string) {
   background: none;
   text-align: left;
   width: 100%;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .nav-item svg {
@@ -222,7 +231,9 @@ function handleInstanceClick(id: string) {
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .instance-item:hover {
@@ -272,7 +283,10 @@ function handleInstanceClick(id: string) {
   line-height: 1;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .instance-item:hover .instance-close {

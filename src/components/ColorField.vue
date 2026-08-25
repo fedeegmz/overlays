@@ -6,12 +6,11 @@ const { t } = useI18n();
 
 const props = defineProps<{
   modelValue: string;
+  inputId?: string;
   disabled?: boolean;
 }>();
 
-const emit = defineEmits<{
-  (e: "update:modelValue", value: string): void;
-}>();
+const emit = defineEmits<(e: "update:modelValue", value: string) => void>();
 
 const PRESETS = [
   "#ffffff",
@@ -59,23 +58,17 @@ const expanded = computed(() => normalize(text.value));
 const isValid = computed(() => expanded.value !== null);
 const showInvalid = computed(() => touched.value && !isValid.value);
 
-const rgbHex = computed(() =>
-  isValid.value ? expanded.value!.slice(1, 7) : "000000",
-);
+const rgbHex = computed(() => expanded.value?.slice(1, 7) ?? "000000");
 
 const alphaByte = computed(() =>
-  isValid.value && expanded.value!.length === 9
-    ? expanded.value!.slice(7, 9)
-    : "ff",
+  expanded.value?.length === 9 ? expanded.value.slice(7, 9) : "ff",
 );
 
 const opacityPct = computed(() =>
   Math.round((parseInt(alphaByte.value, 16) / 255) * 100),
 );
 
-const swatchBackground = computed(() =>
-  isValid.value ? expanded.value! : "transparent",
-);
+const swatchBackground = computed(() => expanded.value ?? "transparent");
 
 function handleInput() {
   touched.value = true;
@@ -114,8 +107,11 @@ function applyPreset(hex: string) {
 <template>
   <div class="color-field">
     <div class="color-row">
-      <label class="swatch" :title="t('colorField.openPicker')">
-        <span class="swatch-fill" :style="{ background: swatchBackground }"></span>
+      <div class="swatch" :title="t('colorField.openPicker')">
+        <span
+          class="swatch-fill"
+          :style="{ background: swatchBackground }"
+        ></span>
         <input
           class="native-picker"
           type="color"
@@ -123,9 +119,10 @@ function applyPreset(hex: string) {
           :disabled="disabled"
           tabindex="-1"
           @input="handlePicker"
-        />
-      </label>
+        >
+      </div>
       <input
+        :id="inputId"
         ref="inputEl"
         :value="text"
         class="field-input hex-input"
@@ -137,7 +134,7 @@ function applyPreset(hex: string) {
         :disabled="disabled"
         @input="handleInput"
         @blur="handleBlur"
-      />
+      >
     </div>
 
     <div class="alpha-row">
@@ -150,7 +147,7 @@ function applyPreset(hex: string) {
         :value="opacityPct"
         :disabled="disabled"
         @input="handleOpacity"
-      />
+      >
       <span class="alpha-pct">{{ opacityPct }}%</span>
     </div>
 

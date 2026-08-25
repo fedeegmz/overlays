@@ -14,9 +14,7 @@ export interface SendOverlayUpdateArgs {
   fields: Record<string, string>;
 }
 
-export function sendOverlayUpdate(
-  args: SendOverlayUpdateArgs,
-): Promise<void> {
+export function sendOverlayUpdate(args: SendOverlayUpdateArgs): Promise<void> {
   return invoke("send_overlay_update", {
     instanceId: args.instanceId,
     template: args.template,

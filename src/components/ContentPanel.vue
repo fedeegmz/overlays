@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { storeToRefs } from "pinia";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
@@ -90,29 +90,33 @@ function handleDelete(name: string) {
           :key="field.key"
           class="field"
         >
-          <label class="field-label">{{ field.label }}</label>
+          <label class="field-label" :for="`field-${field.key}`"
+            >{{ field.label }}</label
+          >
           <ColorField
             v-if="field.type === 'color'"
             :model-value="activeInstance.fields[field.key] ?? ''"
+            :input-id="`field-${field.key}`"
             :disabled="sending"
             @update:model-value="updateField(field.key, $event)"
           />
           <input
             v-else
+            :id="`field-${field.key}`"
             :value="activeInstance.fields[field.key] ?? ''"
             class="field-input"
             type="text"
             :placeholder="field.label"
             :disabled="sending"
             @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
-          />
+          >
         </div>
 
         <p v-if="sendError" class="send-error">{{ sendError }}</p>
 
         <div class="divider"></div>
 
-        <label class="field-label">{{ t("content.presets") }}</label>
+        <div class="field-label">{{ t("content.presets") }}</div>
 
         <div v-if="filteredPresets.length > 0" class="preset-list">
           <div
@@ -123,12 +127,14 @@ function handleDelete(name: string) {
             <span class="preset-row-name">{{ preset.name }}</span>
             <div class="preset-row-actions">
               <button
+                type="button"
                 class="icon-btn"
                 :title="t('content.applyPreset')"
                 :disabled="sending"
                 @click="handleApply(preset)"
               >
                 <svg
+                  aria-hidden="true"
                   width="14"
                   height="14"
                   viewBox="0 0 24 24"
@@ -142,12 +148,14 @@ function handleDelete(name: string) {
                 </svg>
               </button>
               <button
+                type="button"
                 class="icon-btn"
                 :class="{ 'confirm-delete': confirmingDelete === preset.name }"
                 :title="t('content.deletePreset')"
                 @click="handleDelete(preset.name)"
               >
                 <svg
+                  aria-hidden="true"
                   width="14"
                   height="14"
                   viewBox="0 0 24 24"
@@ -157,7 +165,9 @@ function handleDelete(name: string) {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
-                  <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+                  <path
+                    d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"
+                  />
                 </svg>
               </button>
             </div>
@@ -172,8 +182,9 @@ function handleDelete(name: string) {
             type="text"
             :placeholder="t('content.presetNamePlaceholder')"
             :disabled="sending"
-          />
+          >
           <button
+            type="button"
             class="btn"
             :disabled="saveDisabled"
             @click="handleSavePreset"
@@ -247,9 +258,10 @@ function handleDelete(name: string) {
   gap: 4px;
 }
 
-.confirm-delete {
-  color: var(--danger) !important;
-  background: var(--danger-soft) !important;
+.icon-btn.confirm-delete,
+.icon-btn.confirm-delete:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .preset-empty {

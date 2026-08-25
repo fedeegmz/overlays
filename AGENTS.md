@@ -9,8 +9,9 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 | Task               | Command                                                |
 | ------------------ | ------------------------------------------------------ |
 | Dev                | `pnpm tauri dev` (starts Vite on :1420 + Rust backend) |
-| Frontend typecheck | `vue-tsc --noEmit` (no separate lint configured)       |
-| Frontend build     | `pnpm build` (runs typecheck then vite build)          |
+| Lint + format      | `pnpm check` / auto-fix with `pnpm check:fix` (Biome)  |
+| Frontend typecheck | `vue-tsc --noEmit`                                     |
+| Frontend build     | `pnpm build` (runs Biome check, typecheck, vite build) |
 | Rust tests         | `cd src-tauri && cargo test`                           |
 
 ## Project structure
@@ -48,7 +49,7 @@ WS payload shape: `{ instance_id, template, action: "show"|"update"|"hide", fiel
 - First `pnpm tauri dev` compiles Rust from scratch — slow initial build.
 - `overlay.json` has no `id` field; the **directory name** is the template identifier.
 - Overlay discovery is filesystem-based (no central manifest) — add a template by creating a folder in the overlays dir.
-- No linting tool is configured for frontend or backend. Typecheck is the only gate.
+- Biome handles frontend lint + format (`biome.json`); Vue SFC full support is enabled via `html.experimentalFullSupportEnabled` (still experimental upstream). SVG assets are excluded from linting. The Rust backend has no linter — `cargo test` and clippy are the only Rust gates.
 - CSP is disabled (`null`) in `tauri.conf.json` — needed for local WS connections.
 - `bundle.resources` is not set in tauri.conf.json — overlay files are NOT bundled in builds yet (a CI release workflow builds installers, but they lack the overlay templates).
 - UI text goes through i18n (`src/i18n/locales/{es,en}.json`) — add new strings to both locales.

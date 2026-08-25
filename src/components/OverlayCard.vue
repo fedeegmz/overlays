@@ -15,7 +15,10 @@ const emit = defineEmits<{
     <div class="overlay-preview">
       <div class="preview-lowerthird">
         <div class="lt-title">{{ template.name }}</div>
-        <div class="lt-sub">{{ template.fields.length }} campo{{ template.fields.length === 1 ? '' : 's' }}</div>
+        <div class="lt-sub">
+          {{ template.fields.length }}
+          campo{{ template.fields.length === 1 ? '' : 's' }}
+        </div>
       </div>
     </div>
     <div class="overlay-card-body">
@@ -32,7 +35,10 @@ const emit = defineEmits<{
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-card);
-  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease,
+    border-color 0.15s ease;
   text-align: left;
   font-family: inherit;
 }
@@ -45,7 +51,7 @@ const emit = defineEmits<{
 
 .overlay-preview {
   height: 118px;
-  background: #1C1C22
+  background: #1c1c22
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='none'/%3E%3Cpath d='M0 40L40 0' stroke='%232A2A32' stroke-width='1'/%3E%3C/svg%3E");
   position: relative;
   display: flex;
@@ -69,7 +75,7 @@ const emit = defineEmits<{
 }
 
 .lt-sub {
-  color: #C9C9D1;
+  color: #c9c9d1;
   font-size: 9.5px;
   margin-top: 1px;
 }

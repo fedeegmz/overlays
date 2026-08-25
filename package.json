@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "biome check . && vue-tsc --noEmit && vite build",
     "preview": "vite preview",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -17,6 +19,7 @@
     "vue-i18n": "^11.4.9"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
     "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^6.0.7",
     "typescript": "~6.0.3",
