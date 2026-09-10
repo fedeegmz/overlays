@@ -78,3 +78,7 @@ jobs:
       - name: Cargo test
         working-directory: src-tauri
         run: cargo test
+
+      - name: Cargo test (ignored — keyring/CI-runtime gates)
+        working-directory: src-tauri
+        run: cargo test -- --ignored

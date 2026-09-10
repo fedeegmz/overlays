@@ -1,14 +1,46 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { LOCALES } from "../i18n";
 import { useConfigStore } from "../stores/config";
+import GenericModal from "./GenericModal.vue";
 
 const configStore = useConfigStore();
-const { appConfig, configError } = storeToRefs(configStore);
-const { pickOverlaysDir, setLanguage } = configStore;
+const { appConfig, configError, providerKeys, keyringAvailable, keysError } =
+  storeToRefs(configStore);
+const {
+  pickOverlaysDir,
+  setLanguage,
+  refreshProviderKeys,
+  addProviderKey,
+  deleteProviderKey,
+} = configStore;
 
 const { t, locale } = useI18n();
+
+const addKeyModalOpen = ref(false);
+const newKey = ref("");
+
+function openAddKeyModal(): void {
+  newKey.value = "";
+  addKeyModalOpen.value = true;
+}
+
+async function submitNewKey(): Promise<void> {
+  const key = newKey.value.trim();
+  if (!key) return;
+  try {
+    await addProviderKey("anthropic", key);
+    addKeyModalOpen.value = false;
+  } catch {
+    // error surfaced via keysError
+  }
+}
+
+onMounted(() => {
+  refreshProviderKeys();
+});
 </script>
 
 <template>
@@ -66,6 +98,83 @@ const { t, locale } = useI18n();
       </div>
       <p v-if="configError" class="config-error">{{ configError }}</p>
     </div>
+
+    <div class="settings-section">
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">
+            {{ t("settings.apiKeys.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.apiKeys.description") }}
+          </div>
+        </div>
+        <div class="settings-row-right">
+          <template v-if="providerKeys.length > 0">
+            <span
+              v-for="key in providerKeys"
+              :key="key.provider"
+              class="settings-row-value"
+              data-testid="provider-key-mask"
+            >
+              {{ key.last4 ? `sk-…${key.last4}` : "" }}
+            </span>
+            <button
+              type="button"
+              class="btn"
+              @click="deleteProviderKey('anthropic')"
+            >
+              {{ t("settings.apiKeys.delete") }}
+            </button>
+          </template>
+          <span v-else class="settings-row-value settings-row-empty">
+            {{ t("settings.apiKeys.notConfigured") }}
+          </span>
+          <button type="button" class="btn" @click="openAddKeyModal">
+            {{ t("settings.apiKeys.add") }}
+          </button>
+        </div>
+      </div>
+      <p v-if="keyringAvailable === false" class="config-error">
+        {{ t("settings.apiKeys.keyringUnavailable") }}
+      </p>
+      <p v-if="keysError" class="config-error">{{ keysError }}</p>
+    </div>
+
+    <GenericModal
+      :title="t('settings.apiKeys.addTitle')"
+      :open="addKeyModalOpen"
+      @close="addKeyModalOpen = false"
+    >
+      <label class="key-form-label" for="new-api-key">
+        {{ t("settings.apiKeys.provider") }}: Anthropic
+      </label>
+      <input
+        id="new-api-key"
+        v-model="newKey"
+        type="password"
+        class="key-form-input"
+        :placeholder="t('settings.apiKeys.keyPlaceholder')"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        data-testid="new-api-key-input"
+        @keyup.enter="submitNewKey"
+      >
+      <template #footer>
+        <button type="button" @click="addKeyModalOpen = false">
+          {{ t("settings.apiKeys.cancel") }}
+        </button>
+        <button
+          type="button"
+          class="primary"
+          :disabled="!newKey.trim()"
+          @click="submitNewKey"
+        >
+          {{ t("settings.apiKeys.save") }}
+        </button>
+      </template>
+    </GenericModal>
 
     <div class="settings-section">
       <div class="settings-row">
@@ -208,5 +317,30 @@ const { t, locale } = useI18n();
   padding: 0 18px 14px;
   color: var(--danger);
   font-size: 12.5px;
+}
+
+.key-form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.key-form-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text);
+  outline: none;
+}
+
+.key-form-input:focus {
+  border-color: var(--accent);
 }
 </style>

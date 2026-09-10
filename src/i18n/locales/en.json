@@ -29,6 +29,9 @@
   "colorField": {
     "openPicker": "Open color picker"
   },
+  "common": {
+    "close": "Close"
+  },
   "dialog": {
     "selectOverlaysDir": "Select overlays directory"
   },
@@ -43,21 +46,60 @@
       "save_failed": "Could not save the presets file."
     },
     "template": {
-      "discovery_failed": "Could not read templates from the overlays directory."
+      "discovery_failed": "Could not read templates from the overlays directory.",
+      "exists": "A template named \"{name}\" already exists.",
+      "write_failed": "Could not write the template files."
     },
     "language": {
       "unsupported": "Unsupported language: {lang}."
     },
     "overlays_dir": {
-      "invalid": "\"{path}\" is not a valid directory."
+      "invalid": "\"{path}\" is not a valid directory.",
+      "missing": "The overlays directory is not configured."
     },
     "config": {
       "save_failed": "Could not save the configuration."
+    },
+    "keyring": {
+      "unavailable": "The system keyring is not available on this device.",
+      "failed": "The system keyring reported an error.",
+      "delete_failed": "Could not delete the key from the system keyring."
+    },
+    "provider": {
+      "unauthorized": "The AI provider rejected the API key.",
+      "rate_limited": "The AI provider rate limit was exceeded. Try again in a moment.",
+      "timeout": "The AI provider request timed out.",
+      "network": "Could not reach the AI provider.",
+      "invalid_response": "The AI provider returned an invalid response.",
+      "unknown": "Unknown AI provider."
+    },
+    "model": {
+      "unknown": "Unknown model for this provider."
+    },
+    "generation": {
+      "invalid_output": "The generated overlay is invalid and could not be fixed.",
+      "empty_prompt": "Write a description of the overlay first."
+    },
+    "staged": {
+      "missing": "The generated overlay is no longer available."
     }
   },
   "settings": {
     "title": "Settings",
     "subtitle": "General application settings",
+    "apiKeys": {
+      "label": "API keys",
+      "description": "Provider keys are stored in the system keyring",
+      "add": "Add key",
+      "delete": "Delete",
+      "notConfigured": "No keys configured",
+      "keyringUnavailable": "The system keyring is not available — provider keys can't be managed.",
+      "addTitle": "Add API key",
+      "provider": "Provider",
+      "keyPlaceholder": "sk-ant-...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
     "overlaysDir": {
       "label": "Overlays folder",
       "description": "Templates are read from this location",
