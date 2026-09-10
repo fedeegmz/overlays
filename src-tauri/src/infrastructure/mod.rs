@@ -4,5 +4,6 @@ pub mod http;
 pub mod json_store;
 pub mod keyring;
 pub mod overlay_bus;
+pub mod overlay_writer;
 pub mod tauri;
 pub mod validator;
