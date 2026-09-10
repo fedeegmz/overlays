@@ -24,6 +24,7 @@ futures-util = "0.3"
 anyhow = "1"
 dunce = "1"
 unicode-normalization = "0.1.25"
+keyring = { version = "4", features = ["apple-native-keyring-store", "windows-native-keyring-store", "zbus-secret-service-keyring-store"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

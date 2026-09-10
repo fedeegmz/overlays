@@ -12,9 +12,12 @@ pub enum ProviderKind {
 }
 
 impl ProviderKind {
+    pub const ANTHROPIC: &'static str = "anthropic";
+    pub const ALL: &'static [&'static str] = &[Self::ANTHROPIC];
+
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::Anthropic => "anthropic",
+            Self::Anthropic => Self::ANTHROPIC,
         }
     }
 }

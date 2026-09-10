@@ -6,12 +6,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use application::config_service::ConfigService;
+use application::key_service::KeyService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::json_store::{JsonConfigRepository, JsonPresetRepository};
+use infrastructure::keyring::KeyringStore;
 use infrastructure::overlay_bus::BroadcastOverlayBus;
 use tauri::Manager;
 
@@ -48,13 +50,18 @@ pub fn run() {
                 overlays_dir.clone(),
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
-            let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
+            let config_service = Arc::new(ConfigService::new(
+                config_repo.clone(),
+                overlays_dir.clone(),
+            ));
+            let key_service = Arc::new(KeyService::new(config_repo, Arc::new(KeyringStore)));
             let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
 
             app.manage(http_state.clone());
             app.manage(catalog);
             app.manage(presets);
             app.manage(config_service);
+            app.manage(key_service);
 
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = start_server(http_state).await {
@@ -74,6 +81,9 @@ pub fn run() {
             infrastructure::tauri::commands::get_config,
             infrastructure::tauri::commands::set_overlays_dir,
             infrastructure::tauri::commands::set_language,
+            infrastructure::tauri::commands::list_configured_providers,
+            infrastructure::tauri::commands::add_provider_key,
+            infrastructure::tauri::commands::delete_provider_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
