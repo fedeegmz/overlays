@@ -18,15 +18,11 @@ const DEFAULT_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_s
 /// the `model` argument of `generate`).
 pub const DEFAULT_MODEL: &str = "claude-sonnet-4-5";
 
-// Consumed by the generation service; wired later in PR3.
-#[allow(dead_code)]
 pub struct AnthropicProvider {
     endpoint: String,
     client: reqwest::blocking::Client,
 }
 
-// Consumed by the generation service; wired later in PR3.
-#[allow(dead_code)]
 impl AnthropicProvider {
     pub fn new() -> Self {
         Self::with_endpoint_and_timeout(DEFAULT_ENDPOINT.to_string(), DEFAULT_REQUEST_TIMEOUT)

@@ -1,6 +1,3 @@
-// Consumed by keyring/generation/commands; wired in PR2/PR3 (ai.rs stays green in the interim).
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 
 use super::template::OverlayField;
@@ -16,12 +13,6 @@ pub enum ProviderKind {
 impl ProviderKind {
     pub const ANTHROPIC: &'static str = "anthropic";
     pub const ALL: &'static [&'static str] = &[Self::ANTHROPIC];
-
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Anthropic => Self::ANTHROPIC,
-        }
-    }
 }
 
 /// Presence-only key metadata. Carries NO secret — only this crosses IPC (K1).
@@ -105,8 +96,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn provider_kind_maps_anthropic_lowercase() {
-        assert_eq!(ProviderKind::Anthropic.as_str(), "anthropic");
+    fn provider_kind_serializes_lowercase() {
+        assert_eq!(ProviderKind::ANTHROPIC, "anthropic");
         assert_eq!(
             serde_json::to_value(ProviderKind::Anthropic).unwrap(),
             serde_json::json!("anthropic")

@@ -3,6 +3,6 @@
 
 pub mod anthropic;
 
-// Consumed by the generation service; wired later in PR3.
-#[allow(dead_code)]
+/// The fixed system prompt every generation uses (overlay contract). Embedded
+/// at compile time from the repo root — the file lives next to the docs.
 pub const BASE_PROMPT: &str = include_str!("../../../../prompt-base-overlays.md");

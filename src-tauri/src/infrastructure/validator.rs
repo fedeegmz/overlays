@@ -8,11 +8,7 @@
 //! template directory name exactly, and `overlay.json` MUST NOT carry a
 //! top-level `id` field (the directory name is the identifier).
 
-//! #![allow(dead_code)] at the top guards the interim between this module and
-//! its consumers (generation service, committed right after in PR3).
-// Consumed by the generation service; wired in PR3.
-#![allow(dead_code)]
-
+//!
 use std::collections::HashSet;
 
 use serde_json::Value;

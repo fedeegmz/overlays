@@ -33,10 +33,12 @@ pub enum DomainError {
     ProviderRateLimited,
     #[allow(dead_code)]
     ProviderTimeout,
-    #[allow(dead_code)]
-    ProviderNetwork,
-    #[allow(dead_code)]
-    ProviderInvalidResponse,
+    ProviderNetwork {
+        detail: String,
+    },
+    ProviderInvalidResponse {
+        detail: String,
+    },
     #[allow(dead_code)]
     GenerationInvalidOutput {
         issues: Vec<String>,
@@ -82,8 +84,10 @@ impl fmt::Display for DomainError {
             Self::ProviderUnauthorized => write!(f, "provider rejected the API key"),
             Self::ProviderRateLimited => write!(f, "provider rate limit exceeded"),
             Self::ProviderTimeout => write!(f, "provider request timed out"),
-            Self::ProviderNetwork => write!(f, "provider network error"),
-            Self::ProviderInvalidResponse => write!(f, "provider returned an invalid response"),
+            Self::ProviderNetwork { detail } => write!(f, "provider network error: {detail}"),
+            Self::ProviderInvalidResponse { detail } => {
+                write!(f, "provider invalid response: {detail}")
+            }
             Self::GenerationInvalidOutput { issues } => {
                 write!(f, "generated output is invalid: {:?}", issues)
             }

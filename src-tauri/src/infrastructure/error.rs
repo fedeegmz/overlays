@@ -80,8 +80,12 @@ impl From<DomainError> for CommandError {
             DomainError::ProviderUnauthorized => Self::new(Self::PROVIDER_UNAUTHORIZED),
             DomainError::ProviderRateLimited => Self::new(Self::PROVIDER_RATE_LIMITED),
             DomainError::ProviderTimeout => Self::new(Self::PROVIDER_TIMEOUT),
-            DomainError::ProviderNetwork => Self::new(Self::PROVIDER_NETWORK),
-            DomainError::ProviderInvalidResponse => Self::new(Self::PROVIDER_INVALID_RESPONSE),
+            DomainError::ProviderNetwork { detail } => {
+                Self::new(Self::PROVIDER_NETWORK).param("detail", detail)
+            }
+            DomainError::ProviderInvalidResponse { detail } => {
+                Self::new(Self::PROVIDER_INVALID_RESPONSE).param("detail", detail)
+            }
             DomainError::GenerationInvalidOutput { issues } => {
                 Self::new(Self::GENERATION_INVALID_OUTPUT)
                     .param("issues", serde_json::to_string(&issues).unwrap_or_default())

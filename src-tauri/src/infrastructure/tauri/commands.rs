@@ -5,11 +5,12 @@ use serde::Serialize;
 use tauri::State;
 
 use crate::application::config_service::ConfigService;
+use crate::application::generation_service::GenerationService;
 use crate::application::key_service::KeyService;
 use crate::application::ports::OverlayBus;
 use crate::application::preset_service::PresetService;
 use crate::application::template_catalog::TemplateCatalog;
-use crate::domain::ai::ApiKeyPresence;
+use crate::domain::ai::{ApiKeyPresence, GeneratedOverlaySummary};
 use crate::domain::config::AppConfig;
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::preset::Preset;
@@ -156,4 +157,48 @@ pub async fn delete_provider_key(
         .map_err(|e| {
             CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string())
         })?
+}
+
+/// Run the generation pipeline (AI call + validation + staging). Blocking
+/// work — the API call can take tens of seconds, so it runs off the async
+/// runtime (long task, never awaited on the main thread).
+#[tauri::command]
+pub async fn generate_overlay(
+    generation: State<'_, Arc<GenerationService>>,
+    prompt: String,
+) -> Result<GeneratedOverlaySummary, CommandError> {
+    let generation = generation.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        generation.generate(&prompt).map_err(CommandError::from)
+    })
+    .await
+    .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
+}
+
+/// Promote a staged overlay into the template tree (no-clobber).
+#[tauri::command]
+pub async fn accept_overlay(
+    generation: State<'_, Arc<GenerationService>>,
+    staging_id: String,
+) -> Result<(), CommandError> {
+    let generation = generation.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        generation.accept(&staging_id).map_err(CommandError::from)
+    })
+    .await
+    .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
+}
+
+/// Discard a staged overlay (user rejected it).
+#[tauri::command]
+pub async fn discard_overlay(
+    generation: State<'_, Arc<GenerationService>>,
+    staging_id: String,
+) -> Result<(), CommandError> {
+    let generation = generation.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        generation.discard(&staging_id).map_err(CommandError::from)
+    })
+    .await
+    .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
 }

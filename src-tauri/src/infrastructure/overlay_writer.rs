@@ -29,8 +29,6 @@ pub struct OverlayWriter {
     root: PathBuf,
 }
 
-// Consumed by the generation service + commands; wired later in PR3.
-#[allow(dead_code)]
 impl OverlayWriter {
     pub fn new(root: PathBuf) -> Self {
         Self { root }

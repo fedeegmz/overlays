@@ -1,6 +1,3 @@
-// Consumed by the generation service + FE mirror; wired in PR3 (name.rs stays green in the interim).
-#![allow(dead_code)]
-
 use unicode_normalization::UnicodeNormalization;
 
 use super::error::{DomainError, DomainResult};

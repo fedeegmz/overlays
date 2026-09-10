@@ -38,9 +38,10 @@ pub trait KeyStore: Send + Sync {
 
 /// AI provider adapter (D1). `generate` returns raw text plus a truncated
 /// flag (`stop_reason == "max_tokens"`); normalization happens in the service.
-// Consumed by generation service; wired in PR3.
-#[allow(dead_code)]
 pub trait AiProvider: Send + Sync {
+    /// Adapter identity — unused until multi-provider support lands (the
+    /// service pins `ProviderKind::ANTHROPIC` today).
+    #[allow(dead_code)]
     fn kind(&self) -> ProviderKind;
     fn models(&self) -> Vec<String>;
     fn generate(
