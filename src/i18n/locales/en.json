@@ -2,8 +2,29 @@
   "sidebar": {
     "overlays": "Overlays",
     "instances": "Instances",
-    "closeInstance": "Close instance",
-    "settings": "Settings"
+    "settings": "Settings",
+    "generate": "Generate",
+    "closeInstance": "Close instance"
+  },
+  "generatePage": {
+    "title": "Generate overlay",
+    "subtitle": "Describe the overlay and the AI will build the template",
+    "promptLabel": "Description",
+    "promptPlaceholder": "e.g. lower third with title, subtitle and an accent bar, sliding in from the left",
+    "generate": "Generate",
+    "generating": "Generating…",
+    "noProviderKey": "Add an Anthropic API key in Settings to generate overlays.",
+    "staged": {
+      "title": "Generated overlay",
+      "name": "Name",
+      "directory": "Folder",
+      "files": "Files",
+      "fields": "Fields"
+    },
+    "accept": "Save template",
+    "discard": "Discard",
+    "saving": "Saving…",
+    "accepted": "Template saved — it's now available in Overlays."
   },
   "overlaysPage": {
     "subtitle": "Pick a template to create an instance and show it in OBS",

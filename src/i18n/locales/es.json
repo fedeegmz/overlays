@@ -3,7 +3,28 @@
     "overlays": "Overlays",
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "generate": "Generar"
+  },
+  "generatePage": {
+    "title": "Generar overlay",
+    "subtitle": "Describí el overlay y la IA armará la plantilla",
+    "promptLabel": "Descripción",
+    "promptPlaceholder": "ej: zócalo inferior con título, subtítulo y barra de acento, entrando desde la izquierda",
+    "generate": "Generar",
+    "generating": "Generando…",
+    "noProviderKey": "Agregá una clave de API de Anthropic en Ajustes para generar overlays.",
+    "staged": {
+      "title": "Overlay generado",
+      "name": "Nombre",
+      "directory": "Carpeta",
+      "files": "Archivos",
+      "fields": "Campos"
+    },
+    "accept": "Guardar plantilla",
+    "discard": "Descartar",
+    "saving": "Guardando…",
+    "accepted": "Plantilla guardada — ya está disponible en Overlays."
   },
   "overlaysPage": {
     "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",

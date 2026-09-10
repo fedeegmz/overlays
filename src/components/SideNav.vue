@@ -5,11 +5,11 @@ import logoSvg from "../assets/logo.svg";
 import { useInstanceStore } from "../stores/instances";
 
 defineProps<{
-  currentPage: "overlays" | "settings";
+  currentPage: "overlays" | "settings" | "generate";
 }>();
 
 const emit = defineEmits<{
-  navigate: [page: "overlays" | "settings"];
+  navigate: [page: "overlays" | "settings" | "generate"];
   openDetail: [];
 }>();
 
@@ -56,6 +56,30 @@ function handleInstanceClick(id: string) {
           <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
         {{ t("sidebar.overlays") }}
+      </button>
+
+      <button
+        type="button"
+        class="nav-item"
+        :class="{ active: currentPage === 'generate' }"
+        @click="emit('navigate', 'generate')"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"
+          />
+        </svg>
+        {{ t("sidebar.generate") }}
       </button>
     </nav>
 

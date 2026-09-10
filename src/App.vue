@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { bootstrapStores } from "./bootstrap";
 import AppShell from "./components/AppShell.vue";
+import GeneratePage from "./components/GeneratePage.vue";
 import OverlayDetailPage from "./components/OverlayDetailPage.vue";
 import OverlaysPage from "./components/OverlaysPage.vue";
 import SettingsPage from "./components/SettingsPage.vue";
@@ -11,11 +12,11 @@ bootstrapStores();
 
 const { instances } = useInstanceStore();
 
-type Page = "overlays" | "detail" | "settings";
+type Page = "overlays" | "detail" | "settings" | "generate";
 
 const currentPage = ref<Page>("overlays");
 
-function navigate(page: "overlays" | "settings") {
+function navigate(page: "overlays" | "settings" | "generate") {
   currentPage.value = page;
 }
 
@@ -46,5 +47,6 @@ watch(instances, (list) => {
       @back="backToOverlays"
     />
     <SettingsPage v-else-if="currentPage === 'settings'" />
+    <GeneratePage v-else-if="currentPage === 'generate'" />
   </AppShell>
 </template>
