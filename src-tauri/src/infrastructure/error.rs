@@ -22,6 +22,23 @@ impl CommandError {
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
     pub const CONFIG_SAVE_FAILED: &str = "config.save_failed";
+    pub const KEYRING_UNAVAILABLE: &str = "keyring.unavailable";
+    pub const KEYRING_FAILED: &str = "keyring.failed";
+    pub const KEYRING_DELETE_FAILED: &str = "keyring.delete_failed";
+    pub const PROVIDER_UNAUTHORIZED: &str = "provider.unauthorized";
+    pub const PROVIDER_RATE_LIMITED: &str = "provider.rate_limited";
+    pub const PROVIDER_TIMEOUT: &str = "provider.timeout";
+    pub const PROVIDER_NETWORK: &str = "provider.network";
+    pub const PROVIDER_INVALID_RESPONSE: &str = "provider.invalid_response";
+    pub const PROVIDER_UNKNOWN: &str = "provider.unknown";
+    pub const MODEL_UNKNOWN: &str = "model.unknown";
+    pub const GENERATION_INVALID_OUTPUT: &str = "generation.invalid_output";
+    pub const GENERATION_EMPTY_PROMPT: &str = "generation.empty_prompt";
+    pub const OVERLAYS_DIR_MISSING: &str = "overlays_dir.missing";
+    pub const TEMPLATE_EXISTS: &str = "template.exists";
+    pub const TEMPLATE_WRITE_FAILED: &str = "template.write_failed";
+    pub const STAGED_MISSING: &str = "staged.missing";
+    pub const COMMON_INTERNAL: &str = "common.internal";
 
     pub fn new(code: &str) -> Self {
         Self {
@@ -54,6 +71,34 @@ impl From<DomainError> for CommandError {
             }
             DomainError::ConfigSaveFailed { detail } => {
                 Self::new(Self::CONFIG_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::KeyringUnavailable => Self::new(Self::KEYRING_UNAVAILABLE),
+            DomainError::KeyringFailed { detail } => {
+                Self::new(Self::KEYRING_FAILED).param("detail", detail)
+            }
+            DomainError::KeyringDeleteFailed => Self::new(Self::KEYRING_DELETE_FAILED),
+            DomainError::ProviderUnauthorized => Self::new(Self::PROVIDER_UNAUTHORIZED),
+            DomainError::ProviderRateLimited => Self::new(Self::PROVIDER_RATE_LIMITED),
+            DomainError::ProviderTimeout => Self::new(Self::PROVIDER_TIMEOUT),
+            DomainError::ProviderNetwork => Self::new(Self::PROVIDER_NETWORK),
+            DomainError::ProviderInvalidResponse => Self::new(Self::PROVIDER_INVALID_RESPONSE),
+            DomainError::GenerationInvalidOutput { issues } => {
+                Self::new(Self::GENERATION_INVALID_OUTPUT)
+                    .param("issues", serde_json::to_string(&issues).unwrap_or_default())
+            }
+            DomainError::GenerationEmptyPrompt => Self::new(Self::GENERATION_EMPTY_PROMPT),
+            DomainError::OverlaysDirMissing => Self::new(Self::OVERLAYS_DIR_MISSING),
+            DomainError::TemplateExists { name } => {
+                Self::new(Self::TEMPLATE_EXISTS).param("name", name)
+            }
+            DomainError::TemplateWriteFailed { detail } => {
+                Self::new(Self::TEMPLATE_WRITE_FAILED).param("detail", detail)
+            }
+            DomainError::StagedOverlayMissing => Self::new(Self::STAGED_MISSING),
+            DomainError::UnknownProvider => Self::new(Self::PROVIDER_UNKNOWN),
+            DomainError::UnknownModel => Self::new(Self::MODEL_UNKNOWN),
+            DomainError::InvalidName { reason } => {
+                Self::new(Self::COMMON_INTERNAL).param("reason", reason)
             }
         }
     }

@@ -23,6 +23,7 @@ tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 anyhow = "1"
 dunce = "1"
+unicode-normalization = "0.1.25"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
