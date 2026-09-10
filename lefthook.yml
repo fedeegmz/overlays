@@ -3,6 +3,8 @@ pre-commit:
   commands:
     biome:
       run: pnpm check
+    frontend-test:
+      run: pnpm test
     cargo-fmt:
       root: src-tauri/
       run: cargo fmt --check --all

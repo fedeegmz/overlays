@@ -39,6 +39,9 @@ jobs:
       - name: Biome check (lint & format)
         run: pnpm check
 
+      - name: Frontend tests
+        run: pnpm test
+
       - name: Typecheck
         run: pnpm exec vue-tsc --noEmit
 
