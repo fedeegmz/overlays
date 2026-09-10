@@ -3,6 +3,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::template::OverlayField;
+
 /// AI provider identity (only Anthropic ships in this change; the port is
 /// ready for more adapters).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,6 +87,17 @@ pub enum AiError {
     Timeout,
     Network { detail: String },
     InvalidResponse { detail: String },
+}
+
+/// What crosses IPC after a generation: the staging id (so the UI can
+/// accept/discard), the template identity, and the editable fields for the
+/// preview panel.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedOverlaySummary {
+    pub staging_id: String,
+    pub directory: String,
+    pub name: String,
+    pub fields: Vec<OverlayField>,
 }
 
 #[cfg(test)]

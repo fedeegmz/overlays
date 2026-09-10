@@ -86,6 +86,17 @@ impl KeyService {
     pub fn probe(&self, provider: &str) -> bool {
         self.keystore.get(provider).is_ok()
     }
+
+    /// Read the raw secret for a provider (used only by the generation
+    /// service; the secret goes straight from the keyring to the AI call).
+    // Unused until commands wire GenerationService (PR3, next commit).
+    #[allow(dead_code)]
+    pub fn secret(&self, provider: &str) -> DomainResult<String> {
+        if !ProviderKind::ALL.contains(&provider) {
+            return Err(DomainError::UnknownProvider);
+        }
+        self.keystore.get(provider)
+    }
 }
 
 #[cfg(test)]
