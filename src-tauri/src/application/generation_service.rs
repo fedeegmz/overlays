@@ -8,10 +8,6 @@
 //! D4) and derive the template id from the STAGED manifest, never from a
 //! caller-supplied path segment.
 
-//! #![allow(dead_code)] at the top guards the interim between this module and
-//! its consumers (tauri commands, committed right after in PR3).
-#![allow(dead_code)]
-
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;

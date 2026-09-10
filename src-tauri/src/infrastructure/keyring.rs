@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn maps_no_storage_access_to_unavailable() {
-        let platform = Box::new(std::io::Error::new(std::io::ErrorKind::Other, "locked"));
+        let platform = Box::new(std::io::Error::other("locked"));
         let err = map_keyring_error("anthropic", keyring::Error::NoStorageAccess(platform));
         assert!(matches!(err, DomainError::KeyringUnavailable));
     }

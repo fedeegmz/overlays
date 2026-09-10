@@ -28,8 +28,6 @@ pub trait OverlayBus: Send + Sync {
 
 /// OS keyring access. Secrets never touch config.json, State, logs, or error
 /// params (K1/K4) — only presence metadata crosses IPC.
-// Consumed by keyring infra + commands; wired in PR2.
-#[allow(dead_code)]
 pub trait KeyStore: Send + Sync {
     fn set(&self, provider: &str, secret: &str) -> DomainResult<()>;
     fn get(&self, provider: &str) -> DomainResult<String>;
