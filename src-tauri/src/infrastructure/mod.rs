@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod error;
 pub mod fs_template_source;
 pub mod http;
