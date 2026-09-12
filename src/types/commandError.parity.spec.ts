@@ -19,6 +19,8 @@ const RUST_COMMAND_ERROR_CODES = [
   "keyring.unavailable",
   "keyring.failed",
   "keyring.delete_failed",
+  "keyring.entry_missing",
+  "keyring.empty_secret",
   "provider.unauthorized",
   "provider.rate_limited",
   "provider.timeout",

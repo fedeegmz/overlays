@@ -36,9 +36,7 @@ impl KeyService {
             return Err(DomainError::UnknownProvider);
         }
         if secret.trim().is_empty() {
-            return Err(DomainError::KeyringFailed {
-                detail: "secret is empty".into(),
-            });
+            return Err(DomainError::KeyringEmptySecret);
         }
 
         // 1. Secret goes to the keyring first (D13 order: set → upsert → save).
@@ -82,9 +80,20 @@ impl KeyService {
         Ok(config.provider_keys)
     }
 
-    /// Gate probe: is the keyring entry for this provider actually readable?
-    pub fn probe(&self, provider: &str) -> bool {
-        self.keystore.get(provider).is_ok()
+    /// Independent keyring availability probe: distinct from the provider
+    /// list, so "no keys configured" and "keyring unavailable" are separate
+    /// UI states (G2). Reads a throwaway probe id — never a real provider.
+    pub fn keyring_available(&self) -> bool {
+        match self
+            .keystore
+            .get(&crate::domain::ai::keyring_probe_provider_id())
+        {
+            Ok(_) => true,
+            Err(DomainError::KeyringUnavailable) => false,
+            // A missing probe entry, or any other store error, means the
+            // keyring itself responded — it is reachable.
+            Err(_) => true,
+        }
     }
 
     /// Read the raw secret for a provider (used only by the generation
@@ -100,77 +109,12 @@ impl KeyService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::config::AppConfig;
-    use std::collections::HashMap;
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Mutex;
-
-    #[derive(Default)]
-    struct MemoryKeyStore {
-        entries: Mutex<HashMap<String, String>>,
-    }
-
-    impl KeyStore for MemoryKeyStore {
-        fn set(&self, provider: &str, secret: &str) -> DomainResult<()> {
-            self.entries
-                .lock()
-                .unwrap()
-                .insert(provider.to_string(), secret.to_string());
-            Ok(())
-        }
-
-        fn get(&self, provider: &str) -> DomainResult<String> {
-            self.entries
-                .lock()
-                .unwrap()
-                .get(provider)
-                .cloned()
-                .ok_or(DomainError::KeyringFailed {
-                    detail: "no entry".into(),
-                })
-        }
-
-        fn delete(&self, provider: &str) -> DomainResult<()> {
-            match self.entries.lock().unwrap().remove(provider) {
-                Some(_) => Ok(()),
-                None => Err(DomainError::KeyringDeleteFailed),
-            }
-        }
-    }
-
-    struct MemoryConfigRepo {
-        config: Mutex<AppConfig>,
-        fail_on_save: AtomicBool,
-    }
-
-    impl Default for MemoryConfigRepo {
-        fn default() -> Self {
-            Self {
-                config: Mutex::new(AppConfig::default()),
-                fail_on_save: AtomicBool::new(false),
-            }
-        }
-    }
-
-    impl ConfigRepository for MemoryConfigRepo {
-        fn load(&self) -> AppConfig {
-            self.config.lock().unwrap().clone()
-        }
-
-        fn save(&self, config: &AppConfig) -> DomainResult<()> {
-            if self.fail_on_save.load(Ordering::SeqCst) {
-                return Err(DomainError::ConfigSaveFailed {
-                    detail: "injected failure".into(),
-                });
-            }
-            *self.config.lock().unwrap() = config.clone();
-            Ok(())
-        }
-    }
+    use crate::application::test_utils::{MemoryConfigRepo, MemoryKeyStore};
+    use crate::domain::ai::ApiKeyPresence;
 
     fn service() -> (KeyService, Arc<MemoryKeyStore>, Arc<MemoryConfigRepo>) {
-        let keystore = Arc::new(MemoryKeyStore::default());
-        let config_repo = Arc::new(MemoryConfigRepo::default());
+        let keystore = Arc::new(MemoryKeyStore::new());
+        let config_repo = Arc::new(MemoryConfigRepo::new());
         let service = KeyService::new(config_repo.clone(), keystore.clone());
         (service, keystore, config_repo)
     }
@@ -213,21 +157,21 @@ mod tests {
         let (service, _, _) = service();
         assert!(matches!(
             service.add("anthropic", "   "),
-            Err(DomainError::KeyringFailed { .. })
+            Err(DomainError::KeyringEmptySecret)
         ));
     }
 
     #[test]
     fn add_compensates_keyring_when_metadata_save_fails() {
         let (service, keystore, config_repo) = service();
-        config_repo.fail_on_save.store(true, Ordering::SeqCst);
+        config_repo.set_fail_on_save(true);
 
         let result = service.add("anthropic", SECRET);
         assert!(matches!(result, Err(DomainError::ConfigSaveFailed { .. })));
         // D13: the secret must be rolled back from the keyring.
         assert!(matches!(
             keystore.get("anthropic"),
-            Err(DomainError::KeyringFailed { .. })
+            Err(DomainError::KeyringEntryMissing { .. })
         ));
     }
 
@@ -240,7 +184,7 @@ mod tests {
         assert!(list.is_empty());
         assert!(matches!(
             keystore.get("anthropic"),
-            Err(DomainError::KeyringFailed { .. })
+            Err(DomainError::KeyringEntryMissing { .. })
         ));
     }
 
@@ -255,7 +199,7 @@ mod tests {
 
     #[test]
     fn delete_with_orphaned_metadata_surfaces_delete_failed() {
-        let (service, keystore, config_repo) = service();
+        let (service, _, config_repo) = service();
         // Presence metadata exists, but the keyring entry is gone (orphaned).
         let mut config = config_repo.load();
         config.provider_keys.push(ApiKeyPresence {
@@ -269,15 +213,25 @@ mod tests {
         assert!(matches!(result, Err(DomainError::KeyringDeleteFailed)));
         // Metadata was already removed (K2 order: remove+save first).
         assert!(service.list().is_empty());
-        let _ = keystore;
     }
 
     #[test]
-    fn probe_reflects_entry_readability() {
-        let (service, keystore, _) = service();
-        assert!(!service.probe("anthropic"));
-        keystore.set("anthropic", SECRET).unwrap();
-        assert!(service.probe("anthropic"));
+    fn keyring_available_is_independent_of_provider_list() {
+        let (service, _, _) = service();
+        // Empty provider list, but the keyring store itself answers — the
+        // keyring is available and the gate must not conflate the two.
+        assert!(service.keyring_available());
+        assert!(service.list().is_empty());
+    }
+
+    #[test]
+    fn secret_surfaces_missing_entry_clearly() {
+        let (service, _, _) = service();
+        assert!(matches!(
+            service.secret("anthropic"),
+            Err(DomainError::KeyringEntryMissing { provider })
+                if provider == "anthropic"
+        ));
     }
 
     #[test]

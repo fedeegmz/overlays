@@ -103,8 +103,9 @@ pub fn set_overlays_dir(
     config.set_overlays_dir(path).map_err(CommandError::from)
 }
 
-/// Presence metadata for configured providers plus a keyring availability
-/// probe for the generate gate. Probes only when provider keys exist.
+/// Presence metadata for configured providers plus an INDEPENDENT keyring
+/// availability probe for the generate gate — "keyring unavailable" and
+/// "no keys configured" are distinct UI states (G2).
 #[derive(Debug, Clone, Serialize)]
 pub struct ConfiguredProviders {
     pub providers: Vec<ApiKeyPresence>,
@@ -118,11 +119,7 @@ pub async fn list_configured_providers(
     let keys = keys.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         let providers = keys.list();
-        let keyring_available = if providers.is_empty() {
-            true // nothing configured — the gate short-circuits before probing
-        } else {
-            providers.iter().any(|p| keys.probe(&p.provider))
-        };
+        let keyring_available = keys.keyring_available();
         ConfiguredProviders {
             providers,
             keyring_available,

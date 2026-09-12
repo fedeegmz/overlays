@@ -15,6 +15,13 @@ impl ProviderKind {
     pub const ALL: &'static [&'static str] = &[Self::ANTHROPIC];
 }
 
+/// A provider id guaranteed NOT to collide with a real configured provider:
+/// used by keyring probes (availability checks, integration tests) so a probe
+/// can never read or clobber a genuine key entry.
+pub fn keyring_probe_provider_id() -> String {
+    format!("probe-{}", std::process::id())
+}
+
 /// Presence-only key metadata. Carries NO secret — only this crosses IPC (K1).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiKeyPresence {

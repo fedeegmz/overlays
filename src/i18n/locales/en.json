@@ -84,7 +84,9 @@
     "keyring": {
       "unavailable": "The system keyring is not available on this device.",
       "failed": "The system keyring reported an error.",
-      "delete_failed": "Could not delete the key from the system keyring."
+      "delete_failed": "Could not delete the key from the system keyring.",
+      "entry_missing": "No API key is stored for this provider.",
+      "empty_secret": "The API key cannot be empty."
     },
     "provider": {
       "unauthorized": "The AI provider rejected the API key.",

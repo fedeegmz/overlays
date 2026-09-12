@@ -11,6 +11,8 @@ pub enum DomainError {
     KeyringUnavailable,
     KeyringFailed { detail: String },
     KeyringDeleteFailed,
+    KeyringEntryMissing { provider: String },
+    KeyringEmptySecret,
     ProviderUnauthorized,
     ProviderRateLimited,
     ProviderTimeout,
@@ -42,6 +44,10 @@ impl fmt::Display for DomainError {
             Self::KeyringUnavailable => write!(f, "keyring is not available"),
             Self::KeyringFailed { detail } => write!(f, "keyring operation failed: {detail}"),
             Self::KeyringDeleteFailed => write!(f, "keyring delete failed"),
+            Self::KeyringEntryMissing { provider } => {
+                write!(f, "no keyring entry for provider: {provider}")
+            }
+            Self::KeyringEmptySecret => write!(f, "API key is empty"),
             Self::ProviderUnauthorized => write!(f, "provider rejected the API key"),
             Self::ProviderRateLimited => write!(f, "provider rate limit exceeded"),
             Self::ProviderTimeout => write!(f, "provider request timed out"),

@@ -25,6 +25,8 @@ impl CommandError {
     pub const KEYRING_UNAVAILABLE: &str = "keyring.unavailable";
     pub const KEYRING_FAILED: &str = "keyring.failed";
     pub const KEYRING_DELETE_FAILED: &str = "keyring.delete_failed";
+    pub const KEYRING_ENTRY_MISSING: &str = "keyring.entry_missing";
+    pub const KEYRING_EMPTY_SECRET: &str = "keyring.empty_secret";
     pub const PROVIDER_UNAUTHORIZED: &str = "provider.unauthorized";
     pub const PROVIDER_RATE_LIMITED: &str = "provider.rate_limited";
     pub const PROVIDER_TIMEOUT: &str = "provider.timeout";
@@ -79,6 +81,10 @@ impl From<DomainError> for CommandError {
                 Self::new(Self::KEYRING_FAILED).param("detail", detail)
             }
             DomainError::KeyringDeleteFailed => Self::new(Self::KEYRING_DELETE_FAILED),
+            DomainError::KeyringEntryMissing { provider } => {
+                Self::new(Self::KEYRING_ENTRY_MISSING).param("provider", provider)
+            }
+            DomainError::KeyringEmptySecret => Self::new(Self::KEYRING_EMPTY_SECRET),
             DomainError::ProviderUnauthorized => Self::new(Self::PROVIDER_UNAUTHORIZED),
             DomainError::ProviderRateLimited => Self::new(Self::PROVIDER_RATE_LIMITED),
             DomainError::ProviderTimeout => Self::new(Self::PROVIDER_TIMEOUT),
@@ -140,6 +146,8 @@ mod tests {
             CommandError::KEYRING_UNAVAILABLE,
             CommandError::KEYRING_FAILED,
             CommandError::KEYRING_DELETE_FAILED,
+            CommandError::KEYRING_ENTRY_MISSING,
+            CommandError::KEYRING_EMPTY_SECRET,
             CommandError::PROVIDER_UNAUTHORIZED,
             CommandError::PROVIDER_RATE_LIMITED,
             CommandError::PROVIDER_TIMEOUT,

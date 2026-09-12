@@ -14,6 +14,8 @@ export const COMMAND_ERROR_CODES = {
   KEYRING_UNAVAILABLE: "keyring.unavailable",
   KEYRING_FAILED: "keyring.failed",
   KEYRING_DELETE_FAILED: "keyring.delete_failed",
+  KEYRING_ENTRY_MISSING: "keyring.entry_missing",
+  KEYRING_EMPTY_SECRET: "keyring.empty_secret",
   PROVIDER_UNAUTHORIZED: "provider.unauthorized",
   PROVIDER_RATE_LIMITED: "provider.rate_limited",
   PROVIDER_TIMEOUT: "provider.timeout",

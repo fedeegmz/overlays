@@ -84,7 +84,9 @@
     "keyring": {
       "unavailable": "El llavero del sistema no está disponible en este equipo.",
       "failed": "El llavero del sistema reportó un error.",
-      "delete_failed": "No se pudo eliminar la clave del llavero del sistema."
+      "delete_failed": "No se pudo eliminar la clave del llavero del sistema.",
+      "entry_missing": "No hay ninguna clave de API guardada para este proveedor.",
+      "empty_secret": "La clave de API no puede estar vacía."
     },
     "provider": {
       "unauthorized": "El proveedor de IA rechazó la clave de API.",

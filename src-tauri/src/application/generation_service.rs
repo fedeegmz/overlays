@@ -284,63 +284,8 @@ fn extract_fields(overlay_json: &str) -> Vec<OverlayField> {
 mod tests {
     use super::*;
     use crate::application::ports::KeyStore;
+    use crate::application::test_utils::{unique_temp_dir, MemoryConfigRepo, MemoryKeyStore};
     use crate::domain::ai::{AiText, ProviderKind};
-    use crate::domain::config::AppConfig;
-    use std::collections::HashMap;
-    use std::sync::{Mutex, RwLock};
-
-    struct MemoryKeyStore(Mutex<HashMap<String, String>>);
-
-    impl MemoryKeyStore {
-        fn new() -> Self {
-            Self(Mutex::new(HashMap::new()))
-        }
-    }
-
-    impl KeyStore for MemoryKeyStore {
-        fn set(&self, provider: &str, secret: &str) -> DomainResult<()> {
-            self.0
-                .lock()
-                .unwrap()
-                .insert(provider.into(), secret.into());
-            Ok(())
-        }
-
-        fn get(&self, provider: &str) -> DomainResult<String> {
-            self.0
-                .lock()
-                .unwrap()
-                .get(provider)
-                .cloned()
-                .ok_or(DomainError::KeyringFailed {
-                    detail: "missing".into(),
-                })
-        }
-
-        fn delete(&self, provider: &str) -> DomainResult<()> {
-            self.0.lock().unwrap().remove(provider);
-            Ok(())
-        }
-    }
-
-    struct MemoryConfigRepo(RwLock<AppConfig>);
-
-    impl MemoryConfigRepo {
-        fn new() -> Self {
-            Self(RwLock::new(AppConfig::default()))
-        }
-    }
-
-    impl crate::application::ports::ConfigRepository for MemoryConfigRepo {
-        fn load(&self) -> AppConfig {
-            self.0.read().unwrap().clone()
-        }
-
-        fn save(&self, config: &AppConfig) -> DomainResult<()> {
-            *self.0.write().unwrap() = config.clone();
-            Ok(())
-        }
-    }
 
     struct StubProvider {
         reply: Result<AiText, AiError>,
@@ -384,7 +329,8 @@ mod tests {
     }
 
     // Unique dir per test: parallel tests share the pid (flaky-race class
-    // already fixed in fs_template_source/http/overlay_writer tests).
+    // already fixed in fs_template_source/http/overlay_writer tests); the
+    // shared counter in test_utils makes every tag unique too.
     fn service_with(
         tag: &str,
         reply: Result<AiText, AiError>,
@@ -396,7 +342,7 @@ mod tests {
             reply,
             model: "claude-test".into(),
         });
-        let dir = std::env::temp_dir().join(format!("overlays-gen-{tag}-{}", std::process::id()));
+        let dir = unique_temp_dir(&format!("gen-{tag}"));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let handle = OverlaysDirHandle::new(dir.clone());
@@ -477,13 +423,13 @@ mod tests {
             }),
             model: "m".into(),
         });
-        let dir = std::env::temp_dir().join(format!("overlays-gen-nokey-{}", std::process::id()));
+        let dir = unique_temp_dir("gen-nokey");
         fs::create_dir_all(&dir).unwrap();
         let service = GenerationService::new(keys, provider, OverlaysDirHandle::new(dir.clone()));
 
         assert!(matches!(
             service.generate("algo"),
-            Err(DomainError::KeyringFailed { .. })
+            Err(DomainError::KeyringEntryMissing { .. })
         ));
         let _ = fs::remove_dir_all(&dir);
     }
