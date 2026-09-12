@@ -18,7 +18,9 @@ use uuid::{Uuid, Version};
 use crate::application::key_service::KeyService;
 use crate::application::ports::AiProvider;
 use crate::application::template_catalog::OverlaysDirHandle;
-use crate::domain::ai::{AiError, GeneratedFiles, GeneratedOverlay, GeneratedOverlaySummary};
+use crate::domain::ai::{
+    AiError, GeneratedFiles, GeneratedOverlay, GeneratedOverlaySummary, ValidationIssue,
+};
 use crate::domain::error::{DomainError, DomainResult};
 use crate::domain::name::{normalize_name, validate_name};
 use crate::domain::template::OverlayField;
@@ -103,10 +105,7 @@ impl GenerationService {
 
         if response.truncated {
             return Err(DomainError::GenerationInvalidOutput {
-                issues: vec![
-                    "la respuesta de la IA quedó truncada — probá con una descripción más corta"
-                        .into(),
-                ],
+                issues: vec![ValidationIssue::new("truncated")],
             });
         }
 
@@ -114,7 +113,7 @@ impl GenerationService {
         let report = validate_generated_overlay(&overlay.files, &overlay.directory);
         if !report.valid {
             return Err(DomainError::GenerationInvalidOutput {
-                issues: report.errors,
+                issues: report.issues,
             });
         }
 
@@ -183,17 +182,17 @@ fn map_ai_error(e: AiError) -> DomainError {
 /// if any, is ignored (D3).
 fn normalize_generated(text: &str) -> DomainResult<GeneratedOverlay> {
     let json = extract_json(text).ok_or_else(|| DomainError::GenerationInvalidOutput {
-        issues: vec!["la respuesta de la IA no contiene un objeto JSON válido".into()],
+        issues: vec![ValidationIssue::new("no_json_object")],
     })?;
     let value: Value =
         serde_json::from_str(&json).map_err(|e| DomainError::GenerationInvalidOutput {
-            issues: vec![format!("JSON inválido: {e}")],
+            issues: vec![ValidationIssue::new("invalid_json").param("error", e.to_string())],
         })?;
     let name = value["name"]
         .as_str()
         .filter(|n| !n.trim().is_empty())
         .ok_or_else(|| DomainError::GenerationInvalidOutput {
-            issues: vec!["falta el campo \"name\" en la respuesta".into()],
+            issues: vec![ValidationIssue::new("missing_name")],
         })?
         .to_string();
     let directory = normalize_name(&name);
@@ -202,7 +201,7 @@ fn normalize_generated(text: &str) -> DomainResult<GeneratedOverlay> {
     let files = value["files"]
         .as_object()
         .ok_or_else(|| DomainError::GenerationInvalidOutput {
-            issues: vec!["falta el objeto \"files\" en la respuesta".into()],
+            issues: vec![ValidationIssue::new("missing_files")],
         })?;
     let read_str = |key: &str| {
         files
@@ -213,17 +212,17 @@ fn normalize_generated(text: &str) -> DomainResult<GeneratedOverlay> {
     let generated_files = GeneratedFiles {
         overlay_json: read_str("overlay_json").ok_or_else(|| {
             DomainError::GenerationInvalidOutput {
-                issues: vec!["falta files.overlay_json".into()],
+                issues: vec![ValidationIssue::new("missing_file").param("file", "overlay_json")],
             }
         })?,
         index_html: read_str("index_html").ok_or_else(|| DomainError::GenerationInvalidOutput {
-            issues: vec!["falta files.index_html".into()],
+            issues: vec![ValidationIssue::new("missing_file").param("file", "index_html")],
         })?,
         style_css: read_str("style_css").ok_or_else(|| DomainError::GenerationInvalidOutput {
-            issues: vec!["falta files.style_css".into()],
+            issues: vec![ValidationIssue::new("missing_file").param("file", "style_css")],
         })?,
         script_js: read_str("script_js").ok_or_else(|| DomainError::GenerationInvalidOutput {
-            issues: vec!["falta files.script_js".into()],
+            issues: vec![ValidationIssue::new("missing_file").param("file", "script_js")],
         })?,
     };
 
@@ -446,7 +445,7 @@ mod tests {
         assert!(matches!(
             service.generate("algo"),
             Err(DomainError::GenerationInvalidOutput { ref issues })
-                if issues.iter().any(|i| i.contains("truncada"))
+                if issues.iter().any(|i| i.code == "truncated")
         ));
         assert!(!dir.get().join(".staging").exists());
         cleanup(&dir);
@@ -478,7 +477,7 @@ mod tests {
         assert!(matches!(
             service.generate("algo"),
             Err(DomainError::GenerationInvalidOutput { ref issues })
-                if issues.iter().any(|i| i.contains("transparent"))
+                if issues.iter().any(|i| i.code == "style_not_transparent")
         ));
         cleanup(&dir);
     }

@@ -1,5 +1,7 @@
 use std::fmt;
 
+use super::ai::ValidationIssue;
+
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
@@ -19,7 +21,7 @@ pub enum DomainError {
     ProviderNetwork { detail: String },
     ProviderUnavailable { detail: String },
     ProviderInvalidResponse { detail: String },
-    GenerationInvalidOutput { issues: Vec<String> },
+    GenerationInvalidOutput { issues: Vec<ValidationIssue> },
     GenerationEmptyPrompt,
     OverlaysDirMissing,
     TemplateExists { name: String },

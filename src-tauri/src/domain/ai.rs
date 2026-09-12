@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::template::OverlayField;
 
@@ -47,25 +48,48 @@ pub struct GeneratedOverlay {
     pub files: GeneratedFiles,
 }
 
+/// A single validation failure with a machine-readable `code` (i18n key:
+/// `errors.generation.issue.<code>`) and interpolation `params`. Backend
+/// layers never emit user-facing text — the UI renders the message.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationIssue {
+    pub code: String,
+    pub params: HashMap<String, String>,
+}
+
+impl ValidationIssue {
+    pub fn new(code: &str) -> Self {
+        Self {
+            code: code.to_string(),
+            params: HashMap::new(),
+        }
+    }
+
+    pub fn param(mut self, key: &str, value: impl Into<String>) -> Self {
+        self.params.insert(key.to_string(), value.into());
+        self
+    }
+}
+
 /// Deterministic validation outcome.
 #[derive(Debug, Clone, Serialize)]
 pub struct ValidationReport {
     pub valid: bool,
-    pub errors: Vec<String>,
+    pub issues: Vec<ValidationIssue>,
 }
 
 impl ValidationReport {
     pub fn valid() -> Self {
         Self {
             valid: true,
-            errors: Vec::new(),
+            issues: Vec::new(),
         }
     }
 
-    pub fn invalid(errors: Vec<String>) -> Self {
+    pub fn invalid(issues: Vec<ValidationIssue>) -> Self {
         Self {
             valid: false,
-            errors,
+            issues,
         }
     }
 }
@@ -137,10 +161,10 @@ mod tests {
     #[test]
     fn validation_report_constructors() {
         assert!(ValidationReport::valid().valid);
-        assert!(ValidationReport::valid().errors.is_empty());
-        let report = ValidationReport::invalid(vec!["missing hide".into()]);
+        assert!(ValidationReport::valid().issues.is_empty());
+        let report = ValidationReport::invalid(vec![ValidationIssue::new("missing_hide")]);
         assert!(!report.valid);
-        assert_eq!(report.errors, vec!["missing hide"]);
+        assert_eq!(report.issues[0].code, "missing_hide");
     }
 
     #[test]

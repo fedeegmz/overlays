@@ -101,9 +101,38 @@
       "unknown": "Modelo desconocido para este proveedor."
     },
     "generation": {
-      "invalid_output": "El overlay generado es inválido y no se pudo corregir.",
+      "invalid_output": "El overlay generado es inválido.",
       "invalid_name": "El nombre del overlay es inválido: {reason}",
-      "empty_prompt": "Escriba una descripción del overlay primero."
+      "empty_prompt": "Escriba una descripción del overlay primero.",
+      "issue": {
+        "truncated": "La respuesta se cortó antes de terminar.",
+        "no_json_object": "La respuesta no contenía un objeto JSON.",
+        "invalid_json": "El JSON de la respuesta no se pudo analizar: {error}",
+        "missing_name": "A la respuesta le falta el nombre del overlay.",
+        "missing_files": "A la respuesta le falta el objeto files.",
+        "missing_file": "A la respuesta le falta el archivo {file}.",
+        "empty_file": "{file} está vacío.",
+        "manifest_invalid_json": "overlay.json no es JSON válido: {error}",
+        "manifest_not_object": "overlay.json debe ser un objeto JSON.",
+        "manifest_top_level_id": "overlay.json no debe incluir un campo id de nivel superior.",
+        "manifest_missing_name": "overlay.json debe tener un nombre no vacío.",
+        "manifest_fields_missing": "overlay.json debe tener un arreglo fields.",
+        "manifest_fields_not_array": "fields de overlay.json debe ser un arreglo.",
+        "manifest_field_not_object": "El campo {index} de overlay.json no es un objeto.",
+        "manifest_field_missing": "Al campo {index} de overlay.json le falta {key}.",
+        "manifest_field_empty_key": "El campo {index} de overlay.json tiene un key vacío.",
+        "manifest_duplicate_key": "El campo {index} de overlay.json duplica el key {key}.",
+        "manifest_unknown_type": "El campo {index} de overlay.json tiene el tipo desconocido {type}.",
+        "script_template_id": "script.js debe declarar TEMPLATE_ID = \"{template_id}\" exactamente.",
+        "script_missing_handler": "script.js debe definir el manejador {handler}(...).",
+        "script_no_instance_filter": "script.js debe filtrar los mensajes por instancia.",
+        "script_no_reconnect": "A script.js le falta la lógica de reconexión ({needle}).",
+        "style_not_transparent": "style.css debe mantener el fondo del body transparente.",
+        "html_missing_ref": "index.html debe referenciar el archivo local {ref}.",
+        "remote_asset": "{file} referencia un recurso remoto o absoluto ({ref}) — solo se permiten archivos locales relativos.",
+        "js_remote_fetch": "script.js usa fetch() con una dirección no relativa ({ref}).",
+        "js_ws_not_loopback": "script.js debe usar location.host en la URL de WebSocket ({ref})."
+      }
     },
     "staged": {
       "missing": "El overlay generado ya no está disponible."
