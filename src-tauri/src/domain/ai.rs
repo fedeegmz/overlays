@@ -76,8 +76,17 @@ pub enum AiError {
     Unauthorized,
     RateLimited,
     Timeout,
-    Network { detail: String },
-    InvalidResponse { detail: String },
+    Network {
+        detail: String,
+    },
+    /// 5xx — the provider is reachable but unhealthy; distinct from a malformed
+    /// 2xx payload (`InvalidResponse`).
+    ServerError {
+        detail: String,
+    },
+    InvalidResponse {
+        detail: String,
+    },
 }
 
 /// What crosses IPC after a generation: the staging id (so the UI can

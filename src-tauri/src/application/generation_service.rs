@@ -173,6 +173,7 @@ fn map_ai_error(e: AiError) -> DomainError {
         AiError::RateLimited => DomainError::ProviderRateLimited,
         AiError::Timeout => DomainError::ProviderTimeout,
         AiError::Network { detail } => DomainError::ProviderNetwork { detail },
+        AiError::ServerError { detail } => DomainError::ProviderUnavailable { detail },
         AiError::InvalidResponse { detail } => DomainError::ProviderInvalidResponse { detail },
     }
 }
@@ -545,6 +546,10 @@ mod tests {
             (
                 AiError::Network { detail: "x".into() },
                 DomainError::ProviderNetwork { detail: "x".into() },
+            ),
+            (
+                AiError::ServerError { detail: "x".into() },
+                DomainError::ProviderUnavailable { detail: "x".into() },
             ),
             (
                 AiError::InvalidResponse { detail: "x".into() },

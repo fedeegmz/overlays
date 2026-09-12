@@ -12,7 +12,9 @@ use crate::domain::ai::{AiError, AiText, ProviderKind};
 const DEFAULT_ENDPOINT: &str = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION: &str = "2023-06-01";
 const DEFAULT_MAX_TOKENS: u32 = 4096;
-const DEFAULT_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
+/// Pinned by design (D6): default request timeout. 120s — a single generation
+/// can legitimately take over a minute on a long prompt.
+const DEFAULT_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 
 /// Default generation model (Anthropic naming; overridable per request via
 /// the `model` argument of `generate`).
@@ -33,6 +35,9 @@ impl AnthropicProvider {
         let client = reqwest::blocking::Client::builder()
             .timeout(timeout)
             .no_proxy()
+            // Never follow a 3xx: the x-api-key header must not be forwarded
+            // to a third host (D6).
+            .redirect(reqwest::redirect::Policy::none())
             .build()
             .expect("reqwest client build must not fail");
         Self { endpoint, client }
@@ -78,8 +83,13 @@ impl AiProvider for AnthropicProvider {
 
         match response.status().as_u16() {
             200 => {}
-            401 => return Err(AiError::Unauthorized),
+            401 | 403 => return Err(AiError::Unauthorized),
             429 => return Err(AiError::RateLimited),
+            status @ 500..=599 => {
+                return Err(AiError::ServerError {
+                    detail: format!("provider returned HTTP {status}"),
+                })
+            }
             status => {
                 return Err(AiError::InvalidResponse {
                     detail: format!("unexpected HTTP status {status}"),
@@ -164,7 +174,9 @@ mod tests {
 
         let result = p.generate("model-x", "mi prompt", "system rules", "sk-test-1234");
 
-        let req = rx.recv().unwrap();
+        let req = rx
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .expect("request must arrive within 5s");
         assert!(
             req.contains("x-api-key: sk-test-1234"),
             "missing key header"
@@ -213,6 +225,70 @@ mod tests {
             p.generate("m", "p", "s", "k"),
             Err(AiError::RateLimited)
         ));
+    }
+
+    #[test]
+    fn forbidden_maps_to_unauthorized() {
+        // 403 must be treated exactly like 401: the key is rejected (D6).
+        let (port, _rx) = start_server(
+            403,
+            r#"{"type":"error","error":{"type":"permission_error"}}"#.to_string(),
+        );
+        let p = provider(format!("http://127.0.0.1:{port}/v1/messages"), 2000);
+
+        assert!(matches!(
+            p.generate("m", "p", "s", "wrong-key"),
+            Err(AiError::Unauthorized)
+        ));
+    }
+
+    #[test]
+    fn server_error_maps_to_unavailable() {
+        // 5xx is a distinct failure mode (provider reachable but unhealthy),
+        // NOT a malformed 2xx payload.
+        let (port, _rx) = start_server(500, "boom".to_string());
+        let p = provider(format!("http://127.0.0.1:{port}/v1/messages"), 2000);
+
+        assert!(matches!(
+            p.generate("m", "p", "s", "k"),
+            Err(AiError::ServerError { .. })
+        ));
+    }
+
+    #[test]
+    fn redirects_are_never_followed() {
+        // If the client followed the 302, the x-api-key header would be
+        // forwarded to the target host. A 302 must surface as an invalid
+        // response and the target must never receive a connection.
+        let target = TcpListener::bind("127.0.0.1:0").unwrap();
+        let target_addr = target.local_addr().unwrap();
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        thread::spawn(move || {
+            if let Ok((mut stream, _)) = listener.accept() {
+                let mut buf = [0u8; 8192];
+                let _ = stream.read(&mut buf);
+                let head = format!(
+                    "HTTP/1.1 302 Found\r\nlocation: http://{target_addr}/redirect\r\ncontent-length: 0\r\nconnection: close\r\n\r\n"
+                );
+                let _ = stream.write_all(head.as_bytes());
+            }
+        });
+
+        let p = provider(format!("http://127.0.0.1:{port}/v1/messages"), 2000);
+        let result = p.generate("m", "p", "s", "sk-test-1234");
+        assert!(
+            matches!(result, Err(AiError::InvalidResponse { .. })),
+            "a 302 response must not be followed or accepted"
+        );
+
+        // The redirect target must stay unconnected — the key never leaves.
+        target.set_nonblocking(true).unwrap();
+        match target.accept() {
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+            other => panic!("redirect target must receive no connection, got {other:?}"),
+        }
     }
 
     #[test]

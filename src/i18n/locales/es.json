@@ -88,9 +88,10 @@
     },
     "provider": {
       "unauthorized": "El proveedor de IA rechazó la clave de API.",
-      "rate_limited": "Se superó el límite de peticiones del proveedor. Probá de nuevo en un momento.",
+      "rate_limited": "Se superó el límite de peticiones del proveedor. Intente de nuevo en un momento.",
       "timeout": "La petición al proveedor de IA expiró.",
       "network": "No se pudo conectar con el proveedor de IA.",
+      "unavailable": "El proveedor de IA no está disponible en este momento. Intente de nuevo en unos instantes.",
       "invalid_response": "El proveedor de IA devolvió una respuesta inválida.",
       "unknown": "Proveedor de IA desconocido."
     },
@@ -99,7 +100,8 @@
     },
     "generation": {
       "invalid_output": "El overlay generado es inválido y no se pudo corregir.",
-      "empty_prompt": "Escribí una descripción del overlay primero."
+      "invalid_name": "El nombre del overlay es inválido: {reason}",
+      "empty_prompt": "Escriba una descripción del overlay primero."
     },
     "staged": {
       "missing": "El overlay generado ya no está disponible."

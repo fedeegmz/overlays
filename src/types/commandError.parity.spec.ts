@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { COMMAND_ERROR_CODES } from "./commandError";
 
 /**
- * Parity guard (task 5.1): the FE error-code map must mirror EXACTLY the Rust
+ * Parity guard: the FE error-code map must mirror EXACTLY the Rust
  * `CommandError` constants in src-tauri/src/infrastructure/error.rs.
  * Update both sides together when a new code is added.
+ *
+ * The reverse direction (every Rust constant exists in both locale files) is
+ * enforced by the Rust `include_str!` test in infrastructure/error.rs.
  */
 const RUST_COMMAND_ERROR_CODES = [
   "preset.empty_name",
@@ -20,10 +23,12 @@ const RUST_COMMAND_ERROR_CODES = [
   "provider.rate_limited",
   "provider.timeout",
   "provider.network",
+  "provider.unavailable",
   "provider.invalid_response",
   "provider.unknown",
   "model.unknown",
   "generation.invalid_output",
+  "generation.invalid_name",
   "generation.empty_prompt",
   "overlays_dir.missing",
   "template.exists",

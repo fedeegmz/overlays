@@ -8,7 +8,6 @@ pub enum DomainError {
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
     ConfigSaveFailed { detail: String },
-    // Constructed by keyring/generation infra; wired in PR2/PR3.
     KeyringUnavailable,
     KeyringFailed { detail: String },
     KeyringDeleteFailed,
@@ -16,6 +15,7 @@ pub enum DomainError {
     ProviderRateLimited,
     ProviderTimeout,
     ProviderNetwork { detail: String },
+    ProviderUnavailable { detail: String },
     ProviderInvalidResponse { detail: String },
     GenerationInvalidOutput { issues: Vec<String> },
     GenerationEmptyPrompt,
@@ -46,6 +46,9 @@ impl fmt::Display for DomainError {
             Self::ProviderRateLimited => write!(f, "provider rate limit exceeded"),
             Self::ProviderTimeout => write!(f, "provider request timed out"),
             Self::ProviderNetwork { detail } => write!(f, "provider network error: {detail}"),
+            Self::ProviderUnavailable { detail } => {
+                write!(f, "provider unavailable: {detail}")
+            }
             Self::ProviderInvalidResponse { detail } => {
                 write!(f, "provider invalid response: {detail}")
             }

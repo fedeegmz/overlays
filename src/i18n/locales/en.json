@@ -91,6 +91,7 @@
       "rate_limited": "The AI provider rate limit was exceeded. Try again in a moment.",
       "timeout": "The AI provider request timed out.",
       "network": "Could not reach the AI provider.",
+      "unavailable": "The AI provider is unavailable right now. Try again in a moment.",
       "invalid_response": "The AI provider returned an invalid response.",
       "unknown": "Unknown AI provider."
     },
@@ -99,6 +100,7 @@
     },
     "generation": {
       "invalid_output": "The generated overlay is invalid and could not be fixed.",
+      "invalid_name": "The overlay name is invalid: {reason}",
       "empty_prompt": "Write a description of the overlay first."
     },
     "staged": {
