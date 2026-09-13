@@ -21,10 +21,25 @@ const { t, locale } = useI18n();
 
 const addKeyModalOpen = ref(false);
 const newKey = ref("");
+const deleteConfirmOpen = ref(false);
 
 function openAddKeyModal(): void {
   newKey.value = "";
   addKeyModalOpen.value = true;
+}
+
+/** K3: the key is only deleted after an explicit confirm (GenericModal). */
+function requestDelete(): void {
+  deleteConfirmOpen.value = true;
+}
+
+async function confirmDelete(): Promise<void> {
+  deleteConfirmOpen.value = false;
+  try {
+    await deleteProviderKey("anthropic");
+  } catch {
+    // error surfaced via keysError
+  }
 }
 
 async function submitNewKey(): Promise<void> {
@@ -122,7 +137,8 @@ onMounted(() => {
             <button
               type="button"
               class="btn"
-              @click="deleteProviderKey('anthropic')"
+              data-testid="delete-key-button"
+              @click="requestDelete"
             >
               {{ t("settings.apiKeys.delete") }}
             </button>
@@ -172,6 +188,29 @@ onMounted(() => {
           @click="submitNewKey"
         >
           {{ t("settings.apiKeys.save") }}
+        </button>
+      </template>
+    </GenericModal>
+
+    <GenericModal
+      :title="t('settings.apiKeys.deleteConfirmTitle')"
+      :open="deleteConfirmOpen"
+      @close="deleteConfirmOpen = false"
+    >
+      <p class="delete-confirm-body">
+        {{ t("settings.apiKeys.deleteConfirmBody") }}
+      </p>
+      <template #footer>
+        <button type="button" @click="deleteConfirmOpen = false">
+          {{ t("settings.apiKeys.cancel") }}
+        </button>
+        <button
+          type="button"
+          class="primary delete-confirm"
+          data-testid="confirm-delete"
+          @click="confirmDelete"
+        >
+          {{ t("settings.apiKeys.confirm") }}
         </button>
       </template>
     </GenericModal>
@@ -342,5 +381,17 @@ onMounted(() => {
 
 .key-form-input:focus {
   border-color: var(--accent);
+}
+
+.delete-confirm-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.delete-confirm {
+  border-color: var(--danger) !important;
+  background: var(--danger) !important;
 }
 </style>

@@ -2,6 +2,7 @@
 import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
+import { useConfigStore } from "../stores/config";
 import { useInstanceStore } from "../stores/instances";
 
 defineProps<{
@@ -14,6 +15,9 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const configStore = useConfigStore();
+const { appConfig } = storeToRefs(configStore);
 
 const instanceStore = useInstanceStore();
 const { instances, activeInstanceId } = storeToRefs(instanceStore);
@@ -59,6 +63,7 @@ function handleInstanceClick(id: string) {
       </button>
 
       <button
+        v-if="appConfig.ai_generator_enabled !== false"
         type="button"
         class="nav-item"
         :class="{ active: currentPage === 'generate' }"

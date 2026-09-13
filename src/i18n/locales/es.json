@@ -8,17 +8,24 @@
   },
   "generatePage": {
     "title": "Generar overlay",
-    "subtitle": "Describí el overlay y la IA armará la plantilla",
+    "subtitle": "Describa el overlay y la IA armará la plantilla",
     "promptLabel": "Descripción",
     "promptPlaceholder": "ej: zócalo inferior con título, subtítulo y barra de acento, entrando desde la izquierda",
+    "provider": "Proveedor",
+    "model": "Modelo",
+    "nameLabel": "Nombre del overlay",
+    "namePlaceholder": "ej: zocalo-inferior",
+    "nameHint": "Minúsculas, números y guiones simples.",
+    "nameInvalid": "Use minúsculas, números y guiones simples.",
     "generate": "Generar",
     "generating": "Generando…",
-    "noProviderKey": "Agregá una clave de API de Anthropic en Ajustes para generar overlays.",
     "staged": {
       "title": "Overlay generado",
-      "name": "Nombre",
       "directory": "Carpeta",
       "files": "Archivos",
+      "nameEdit": "Nombre de la plantilla",
+      "nameEditHint": "Minúsculas, números y guiones simples.",
+      "nameEditInvalid": "Nombre inválido — use minúsculas, números y guiones simples.",
       "fields": "Campos"
     },
     "accept": "Guardar plantilla",
@@ -26,10 +33,21 @@
     "saving": "Guardando…",
     "accepted": "Plantilla guardada — ya está disponible en Overlays."
   },
+  "gate": {
+    "noKeyTitle": "No hay clave de API configurada",
+    "noKeyBody": "Agregue una clave de API de Anthropic en Ajustes para generar overlays.",
+    "keyringTitle": "Llavero del sistema no disponible",
+    "keyringBody": "El llavero del sistema no está disponible, por lo que no se pueden guardar ni leer claves de API. Active el llavero del sistema e intente de nuevo.",
+    "noDirTitle": "Carpeta de overlays no configurada",
+    "noDirBody": "Elija la carpeta donde se guardan los overlays antes de generar.",
+    "openSettings": "Abrir ajustes",
+    "close": "Cerrar"
+  },
   "overlaysPage": {
-    "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",
+    "subtitle": "Elija una plantilla para crear una instancia y mostrarla en OBS",
     "loading": "Cargando plantillas...",
-    "empty": "No hay plantillas disponibles."
+    "empty": "No hay plantillas disponibles.",
+    "generateButton": "Generar con IA"
   },
   "content": {
     "title": "Contenido",
@@ -131,7 +149,9 @@
         "html_missing_ref": "index.html debe referenciar el archivo local {ref}.",
         "remote_asset": "{file} referencia un recurso remoto o absoluto ({ref}) — solo se permiten archivos locales relativos.",
         "js_remote_fetch": "script.js usa fetch() con una dirección no relativa ({ref}).",
-        "js_ws_not_loopback": "script.js debe usar location.host en la URL de WebSocket ({ref})."
+        "js_ws_not_loopback": "script.js debe usar location.host en la URL de WebSocket ({ref}).",
+        "rewrite_template_id_absent": "No se pudo renombrar: script.js debe fijar exactamente un TEMPLATE_ID (se encontraron {occurrences}).",
+        "rewrite_name_mismatch": "No se pudo renombrar: el nombre del manifiesto no coincide con el id de plantilla del script ({expected})."
       }
     },
     "staged": {
@@ -152,7 +172,10 @@
       "provider": "Proveedor",
       "keyPlaceholder": "sk-ant-...",
       "save": "Guardar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "deleteConfirmTitle": "¿Eliminar la clave de API?",
+      "deleteConfirmBody": "Esto elimina de forma permanente la clave de Anthropic guardada en el llavero del sistema.",
+      "confirm": "Eliminar"
     },
     "overlaysDir": {
       "label": "Carpeta de overlays",

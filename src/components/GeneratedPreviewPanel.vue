@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { isKebabName } from "../lib/names";
 import { useGenerateStore } from "../stores/generate";
 
 const { t } = useI18n();
@@ -9,7 +11,42 @@ const generateStore = useGenerateStore();
 const { pending, saving, error } = storeToRefs(generateStore);
 const { accept, discard } = generateStore;
 
-const FILES = ["overlay.json", "index.html", "style.css", "script.js"] as const;
+/**
+ * Escaped code-only preview (D14) — never a live render: CSP is null and
+ * the files are untrusted LLM output, so the contents go through Vue's
+ * default escaping into a `<pre>`.
+ */
+const FILE_TABS = [
+  "overlay_json",
+  "index_html",
+  "style_css",
+  "script_js",
+] as const;
+type FileKey = (typeof FILE_TABS)[number];
+
+const FILE_LABELS: Record<FileKey, string> = {
+  overlay_json: "overlay.json",
+  index_html: "index.html",
+  style_css: "style.css",
+  script_js: "script.js",
+};
+
+const activeFile = ref<FileKey>("overlay_json");
+const editedName = ref("");
+
+watch(pending, (p) => {
+  editedName.value = p?.name ?? "";
+  activeFile.value = "overlay_json";
+});
+
+/** Client-side kebab mirror (D8) — the backend re-validates on accept. */
+const nameValid = computed(() => isKebabName(editedName.value));
+
+function fileContent(key: FileKey): string {
+  const files = pending.value?.files;
+  if (!files) return "";
+  return files[key];
+}
 </script>
 
 <template>
@@ -18,20 +55,56 @@ const FILES = ["overlay.json", "index.html", "style.css", "script.js"] as const;
     <div class="panel-body">
       <dl class="staged-meta">
         <div class="meta-row">
-          <dt>{{ t("generatePage.staged.name") }}</dt>
-          <dd>{{ pending.name }}</dd>
-        </div>
-        <div class="meta-row">
           <dt>{{ t("generatePage.staged.directory") }}</dt>
           <dd class="mono">{{ pending.directory }}</dd>
         </div>
       </dl>
 
-      <div class="staged-files">
-        <span v-for="file in FILES" :key="file" class="file-chip"
-          >{{ file }}</span
+      <div class="staged-name">
+        <label class="fields-title" for="edited-name">
+          {{ t("generatePage.staged.nameEdit") }}
+        </label>
+        <input
+          id="edited-name"
+          v-model="editedName"
+          class="form-input"
+          maxlength="64"
+          :disabled="saving"
+          :aria-invalid="!nameValid"
+          data-testid="generate-name-input"
         >
+        <p
+          class="form-hint"
+          :class="{ 'hint-error': !nameValid }"
+          data-testid="name-hint"
+        >
+          {{ nameValid
+              ? t("generatePage.staged.nameEditHint")
+              : t("generatePage.staged.nameEditInvalid") }}
+        </p>
       </div>
+
+      <div
+        class="file-tabs"
+        role="tablist"
+        :aria-label="t('generatePage.staged.files')"
+      >
+        <button
+          v-for="key in FILE_TABS"
+          :key="key"
+          type="button"
+          role="tab"
+          :aria-selected="activeFile === key"
+          :class="{ active: activeFile === key }"
+          :data-testid="`file-tab-${FILE_LABELS[key]}`"
+          @click="activeFile = key"
+        >
+          {{ FILE_LABELS[key] }}
+        </button>
+      </div>
+      <pre class="file-view" data-testid="file-view"><code>{{
+        fileContent(activeFile)
+      }}</code></pre>
 
       <div class="staged-fields">
         <div class="fields-title">{{ t("generatePage.staged.fields") }}</div>
@@ -51,9 +124,9 @@ const FILES = ["overlay.json", "index.html", "style.css", "script.js"] as const;
         <button
           type="button"
           class="btn primary"
-          :disabled="saving"
+          :disabled="saving || !nameValid"
           data-testid="accept-button"
-          @click="accept()"
+          @click="accept(editedName)"
         >
           {{ saving ? t("generatePage.saving") : t("generatePage.accept") }}
         </button>
@@ -116,20 +189,76 @@ const FILES = ["overlay.json", "index.html", "style.css", "script.js"] as const;
   font-size: 12.5px;
 }
 
-.staged-files {
+.staged-name {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
 }
 
-.file-chip {
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--surface-sunken);
+.form-input {
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text);
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+}
+
+.form-input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.form-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.hint-error {
+  color: var(--danger);
+}
+
+.file-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.file-tabs button {
+  border: none;
+  background: none;
   font-family: var(--font-mono);
   font-size: 11.5px;
+  padding: 7px 10px;
+  border-radius: 6px 6px 0 0;
   color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.file-tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.file-view {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  overflow: auto;
+  max-height: 320px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 .staged-fields {
@@ -165,6 +294,15 @@ const FILES = ["overlay.json", "index.html", "style.css", "script.js"] as const;
 .fields-empty {
   margin: 0;
   color: var(--text-faint);
+}
+
+.gen-error {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  white-space: pre-line;
 }
 
 .staged-actions {

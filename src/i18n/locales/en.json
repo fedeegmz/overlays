@@ -11,14 +11,21 @@
     "subtitle": "Describe the overlay and the AI will build the template",
     "promptLabel": "Description",
     "promptPlaceholder": "e.g. lower third with title, subtitle and an accent bar, sliding in from the left",
+    "provider": "Provider",
+    "model": "Model",
+    "nameLabel": "Overlay name",
+    "namePlaceholder": "e.g. zocalo-inferior",
+    "nameHint": "Lowercase letters, numbers and single dashes.",
+    "nameInvalid": "Use lowercase letters, numbers and single dashes.",
     "generate": "Generate",
     "generating": "Generating…",
-    "noProviderKey": "Add an Anthropic API key in Settings to generate overlays.",
     "staged": {
       "title": "Generated overlay",
-      "name": "Name",
       "directory": "Folder",
       "files": "Files",
+      "nameEdit": "Template name",
+      "nameEditHint": "Lowercase letters, numbers and single dashes.",
+      "nameEditInvalid": "Invalid name — use lowercase letters, numbers and single dashes.",
       "fields": "Fields"
     },
     "accept": "Save template",
@@ -26,10 +33,21 @@
     "saving": "Saving…",
     "accepted": "Template saved — it's now available in Overlays."
   },
+  "gate": {
+    "noKeyTitle": "No API key configured",
+    "noKeyBody": "Add an Anthropic API key in Settings to generate overlays.",
+    "keyringTitle": "System keyring unavailable",
+    "keyringBody": "The system keyring is not available, so API keys can't be stored or read. Enable your system keyring and try again.",
+    "noDirTitle": "Overlays folder not configured",
+    "noDirBody": "Choose the folder where overlays are stored before generating overlays.",
+    "openSettings": "Open Settings",
+    "close": "Close"
+  },
   "overlaysPage": {
     "subtitle": "Pick a template to create an instance and show it in OBS",
     "loading": "Loading templates...",
-    "empty": "No templates available."
+    "empty": "No templates available.",
+    "generateButton": "Generate with AI"
   },
   "content": {
     "title": "Content",
@@ -131,7 +149,9 @@
         "html_missing_ref": "index.html must reference the local {ref}.",
         "remote_asset": "{file} references a remote or absolute asset ({ref}) — only relative local files are allowed.",
         "js_remote_fetch": "script.js uses fetch() with a non-relative address ({ref}).",
-        "js_ws_not_loopback": "script.js WebSocket URL must use location.host ({ref})."
+        "js_ws_not_loopback": "script.js WebSocket URL must use location.host ({ref}).",
+        "rewrite_template_id_absent": "Cannot rename: script.js must pin exactly one TEMPLATE_ID ({occurrences} found).",
+        "rewrite_name_mismatch": "Cannot rename: the manifest name does not match the script's template id ({expected})."
       }
     },
     "staged": {
@@ -152,7 +172,10 @@
       "provider": "Provider",
       "keyPlaceholder": "sk-ant-...",
       "save": "Save",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "deleteConfirmTitle": "Delete API key?",
+      "deleteConfirmBody": "This permanently removes the stored Anthropic key from the system keyring.",
+      "confirm": "Delete"
     },
     "overlaysDir": {
       "label": "Overlays folder",
