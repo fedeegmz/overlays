@@ -107,6 +107,7 @@ pub fn run() {
             infrastructure::tauri::commands::add_provider_key,
             infrastructure::tauri::commands::delete_provider_key,
             infrastructure::tauri::commands::generate_overlay,
+            infrastructure::tauri::commands::list_provider_models,
             infrastructure::tauri::commands::accept_overlay,
             infrastructure::tauri::commands::discard_overlay,
         ])

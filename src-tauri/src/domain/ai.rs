@@ -121,14 +121,15 @@ pub enum AiError {
 }
 
 /// What crosses IPC after a generation: the staging id (so the UI can
-/// accept/discard), the template identity, and the editable fields for the
-/// preview panel.
+/// accept/discard), the template identity, the editable fields AND the four
+/// file contents (so the preview panel can show them without re-reading).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneratedOverlaySummary {
     pub staging_id: String,
     pub directory: String,
     pub name: String,
     pub fields: Vec<OverlayField>,
+    pub files: GeneratedFiles,
 }
 
 #[cfg(test)]

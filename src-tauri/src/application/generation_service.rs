@@ -54,13 +54,39 @@ impl GenerationService {
         }
     }
 
-    /// Generate, normalize, validate and stage an overlay from a free-text
-    /// description. Returns the staging summary for the UI.
-    pub fn generate(&self, prompt: &str) -> DomainResult<GeneratedOverlaySummary> {
+    /// Generate, normalize, validate and stage an overlay. The provider must
+    /// be a supported adapter (`ProviderKind::ALL`), the model one of that
+    /// adapter's `models()`, and the requested name MUST normalize to a valid
+    /// kebab-case id — the backend never trusts the UI. Returns the staging
+    /// summary (with the four file contents) for the preview panel.
+    pub fn generate(
+        &self,
+        provider: &str,
+        model: &str,
+        name: &str,
+        prompt: &str,
+    ) -> DomainResult<GeneratedOverlaySummary> {
         let prompt = prompt.trim();
         if prompt.is_empty() {
             return Err(DomainError::GenerationEmptyPrompt);
         }
+        // Param gates run BEFORE any keyring access: unknown provider/model
+        // or an unrevalidatable name fail fast without touching the store.
+        if !crate::domain::ai::ProviderKind::ALL.contains(&provider) {
+            return Err(DomainError::UnknownProvider);
+        }
+        if !self.provider.models().iter().any(|m| m == model) {
+            return Err(DomainError::UnknownModel);
+        }
+        let name = name.trim();
+        if name.is_empty() {
+            return Err(DomainError::InvalidName {
+                reason: "name must not be empty".into(),
+            });
+        }
+        let requested_directory = normalize_name(name);
+        validate_name(&requested_directory)?;
+
         let root = self.overlays_dir.get();
         if root.as_os_str().is_empty() {
             return Err(DomainError::OverlaysDirMissing);
@@ -68,22 +94,17 @@ impl GenerationService {
         // The writer must track config changes, so rebuild it per call.
         let writer = OverlayWriter::new(root);
 
-        let secret = self
-            .keys
-            .secret(crate::domain::ai::ProviderKind::ANTHROPIC)?;
-        let model = self
-            .provider
-            .models()
-            .first()
-            .cloned()
-            .ok_or(DomainError::UnknownModel)?;
+        let secret = self.keys.secret(provider)?;
+        let full_prompt = format!(
+            "The requested overlay name is \"{name}\". Use it as the visible name.\n\n{prompt}"
+        );
 
         // Exactly one retry on content-quality failures (truncated/invalid
         // output), embedding the collected issues into the second prompt.
         // Transport errors are returned immediately and never retried.
         let first = self
             .provider
-            .generate(&model, prompt, &self.system, &secret)
+            .generate(model, &full_prompt, &self.system, &secret)
             .map_err(map_ai_error)?;
         let overlay = match self.to_overlay(&first) {
             Ok(overlay) => overlay,
@@ -92,8 +113,8 @@ impl GenerationService {
                 let second = self
                     .provider
                     .generate(
-                        &model,
-                        &format!("{prompt}\n\n{feedback}"),
+                        model,
+                        &format!("{full_prompt}\n\n{feedback}"),
                         &self.system,
                         &secret,
                     )
@@ -115,7 +136,17 @@ impl GenerationService {
             directory: overlay.directory,
             name: overlay.name,
             fields,
+            files: overlay.files,
         })
+    }
+
+    /// Models available for a provider (front of the UI model picker). The
+    /// provider is validated the same way `generate` validates it.
+    pub fn models(&self, provider: &str) -> DomainResult<Vec<String>> {
+        if !crate::domain::ai::ProviderKind::ALL.contains(&provider) {
+            return Err(DomainError::UnknownProvider);
+        }
+        Ok(self.provider.models())
     }
 
     /// Fail-closed conversion (D3/D8): truncation or contract violations
@@ -438,11 +469,24 @@ mod tests {
             })],
         );
 
-        let summary = service.generate("zócalo inferior minimalista").unwrap();
+        let summary = service
+            .generate(
+                "anthropic",
+                "claude-test",
+                "Mi Overlay",
+                "zócalo inferior minimalista",
+            )
+            .unwrap();
         assert_eq!(summary.directory, "mi-overlay");
         assert_eq!(summary.name, "Mi Overlay");
         assert_eq!(summary.fields.len(), 1);
         assert_eq!(summary.fields[0].key, "titulo");
+        // The four file contents cross IPC for the preview panel.
+        assert!(summary
+            .files
+            .script_js
+            .contains("const TEMPLATE_ID = \"mi-overlay\";"));
+        assert!(summary.files.overlay_json.contains("\"titulo\""));
         assert!(dir
             .get()
             .join(".staging")
@@ -461,7 +505,7 @@ mod tests {
             })],
         );
         assert!(matches!(
-            service.generate("   "),
+            service.generate("anthropic", "claude-test", "X", "   "),
             Err(DomainError::GenerationEmptyPrompt)
         ));
         assert_eq!(stub.call_count(), 0, "provider must not be called");
@@ -479,7 +523,7 @@ mod tests {
         );
         dir.set(PathBuf::new());
         assert!(matches!(
-            service.generate("algo"),
+            service.generate("anthropic", "claude-test", "X", "algo"),
             Err(DomainError::OverlaysDirMissing)
         ));
         cleanup(&dir);
@@ -506,7 +550,7 @@ mod tests {
         );
 
         assert!(matches!(
-            service.generate("algo"),
+            service.generate("anthropic", "m", "X", "algo"),
             Err(DomainError::KeyringEntryMissing { .. })
         ));
         let _ = fs::remove_dir_all(&dir);
@@ -522,7 +566,7 @@ mod tests {
             })],
         );
         assert!(matches!(
-            service.generate("algo"),
+            service.generate("anthropic", "claude-test", "X", "algo"),
             Err(DomainError::GenerationInvalidOutput { ref issues })
                 if issues.iter().any(|i| i.code == "truncated")
         ));
@@ -540,7 +584,7 @@ mod tests {
             })],
         );
         assert!(matches!(
-            service.generate("algo"),
+            service.generate("anthropic", "claude-test", "X", "algo"),
             Err(DomainError::GenerationInvalidOutput { .. })
         ));
         cleanup(&dir);
@@ -554,7 +598,7 @@ mod tests {
             truncated: false,
         })]);
         assert!(matches!(
-            service.generate("algo"),
+            service.generate("anthropic", "claude-test", "X", "algo"),
             Err(DomainError::GenerationInvalidOutput { ref issues })
                 if issues.iter().any(|i| i.code == "style_not_transparent")
         ));
@@ -583,7 +627,7 @@ mod tests {
         for (ai, domain) in cases {
             let (service, dir, stub) = service_with("perr", vec![Err(ai)]);
             assert!(
-                matches!(service.generate("algo"), Err(e) if std::mem::discriminant(&e) == std::mem::discriminant(&domain))
+                matches!(service.generate("anthropic", "claude-test", "X", "algo"), Err(e) if std::mem::discriminant(&e) == std::mem::discriminant(&domain))
             );
             assert_eq!(
                 stub.call_count(),
@@ -612,7 +656,9 @@ mod tests {
             ],
         );
 
-        let summary = service.generate("un contador").unwrap();
+        let summary = service
+            .generate("anthropic", "claude-test", "Mi Overlay", "un contador")
+            .unwrap();
         assert_eq!(summary.directory, "mi-overlay");
         assert_eq!(stub.call_count(), 2, "exactly one retry");
         let prompts = stub.prompts();
@@ -622,7 +668,10 @@ mod tests {
             prompts[1]
         );
         assert!(prompts[1].contains("The previous response was rejected"));
-        assert!(prompts[0].starts_with("un contador"));
+        assert!(
+            prompts[0].ends_with("un contador"),
+            "user prompt must be preserved in the first call"
+        );
         cleanup(&dir);
     }
 
@@ -642,7 +691,9 @@ mod tests {
             ],
         );
 
-        service.generate("algo").unwrap();
+        service
+            .generate("anthropic", "claude-test", "X", "algo")
+            .unwrap();
         assert_eq!(stub.call_count(), 2);
         assert!(stub.prompts()[1].contains("truncated"));
         cleanup(&dir);
@@ -658,7 +709,9 @@ mod tests {
             })],
         );
 
-        service.generate("algo").unwrap();
+        service
+            .generate("anthropic", "claude-test", "X", "algo")
+            .unwrap();
         assert_eq!(stub.call_count(), 1, "valid output must not be retried");
         cleanup(&dir);
     }
@@ -681,7 +734,9 @@ mod tests {
             ],
         );
 
-        let err = service.generate("algo").unwrap_err();
+        let err = service
+            .generate("anthropic", "claude-test", "X", "algo")
+            .unwrap_err();
         assert!(
             matches!(&err, DomainError::GenerationInvalidOutput { ref issues }
                 if issues.iter().any(|i| i.code == "style_not_transparent")),
@@ -704,7 +759,14 @@ mod tests {
                 truncated: false,
             })],
         );
-        let summary = service.generate("zócalo de deportes").unwrap();
+        let summary = service
+            .generate(
+                "anthropic",
+                "claude-test",
+                "Zócalo Deportes",
+                "zócalo de deportes",
+            )
+            .unwrap();
 
         service.accept(&summary.staging_id).unwrap();
         assert!(dir
@@ -750,7 +812,9 @@ mod tests {
                 truncated: false,
             })],
         );
-        let summary = service.generate("algo").unwrap();
+        let summary = service
+            .generate("anthropic", "claude-test", "X", "algo")
+            .unwrap();
 
         service.discard(&summary.staging_id).unwrap();
         assert!(!dir
@@ -787,7 +851,9 @@ mod tests {
                 truncated: false,
             })],
         );
-        let summary = service.generate("algo").unwrap();
+        let summary = service
+            .generate("anthropic", "claude-test", "X", "algo")
+            .unwrap();
 
         let other = unique_temp_dir("gen-other");
         fs::create_dir_all(&other).unwrap();
@@ -802,5 +868,107 @@ mod tests {
         );
         cleanup(&dir);
         let _ = fs::remove_dir_all(&other);
+    }
+
+    #[test]
+    fn generate_rejects_unknown_provider_without_calling_it() {
+        let (service, dir, stub) = service_with(
+            "gen-prov",
+            vec![Ok(AiText {
+                text: valid_ai_json("X"),
+                truncated: false,
+            })],
+        );
+        assert!(matches!(
+            service.generate("openai", "claude-test", "X", "algo"),
+            Err(DomainError::UnknownProvider)
+        ));
+        assert_eq!(
+            stub.call_count(),
+            0,
+            "unknown provider fails before the AI call"
+        );
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn generate_rejects_unknown_model_without_calling_it() {
+        let (service, dir, stub) = service_with(
+            "gen-model",
+            vec![Ok(AiText {
+                text: valid_ai_json("X"),
+                truncated: false,
+            })],
+        );
+        assert!(matches!(
+            service.generate("anthropic", "gpt-4", "X", "algo"),
+            Err(DomainError::UnknownModel)
+        ));
+        assert_eq!(
+            stub.call_count(),
+            0,
+            "unknown model fails before the AI call"
+        );
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn generate_revalidates_the_requested_name() {
+        let (service, dir, stub) = service_with(
+            "gen-name",
+            vec![Ok(AiText {
+                text: valid_ai_json("X"),
+                truncated: false,
+            })],
+        );
+        // Empty name → invalid name (mandatory param, backend-revalidated).
+        assert!(matches!(
+            service.generate("anthropic", "claude-test", "   ", "algo"),
+            Err(DomainError::InvalidName { .. })
+        ));
+        // A name that normalizes to nothing is not a valid id either.
+        assert!(matches!(
+            service.generate("anthropic", "claude-test", "!!!", "algo"),
+            Err(DomainError::InvalidName { .. })
+        ));
+        assert_eq!(stub.call_count(), 0, "bad names never reach the AI call");
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn generate_embeds_the_requested_name_in_the_prompt() {
+        let (service, dir, stub) = service_with(
+            "gen-nameprompt",
+            vec![Ok(AiText {
+                text: valid_ai_json("Mi Contador"),
+                truncated: false,
+            })],
+        );
+        service
+            .generate("anthropic", "claude-test", "Mi Contador", "algo")
+            .unwrap();
+        assert!(
+            stub.prompts()[0].contains("Mi Contador"),
+            "requested name must reach the model, got: {}",
+            stub.prompts()[0]
+        );
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn models_are_listed_only_for_supported_providers() {
+        let (service, dir, _stub) = service_with(
+            "gen-models",
+            vec![Ok(AiText {
+                text: valid_ai_json("X"),
+                truncated: false,
+            })],
+        );
+        assert_eq!(service.models("anthropic").unwrap(), vec!["claude-test"]);
+        assert!(matches!(
+            service.models("mistral"),
+            Err(DomainError::UnknownProvider)
+        ));
+        cleanup(&dir);
     }
 }

@@ -162,11 +162,31 @@ pub async fn delete_provider_key(
 #[tauri::command]
 pub async fn generate_overlay(
     generation: State<'_, Arc<GenerationService>>,
+    provider: String,
+    model: String,
+    name: String,
     prompt: String,
 ) -> Result<GeneratedOverlaySummary, CommandError> {
     let generation = generation.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        generation.generate(&prompt).map_err(CommandError::from)
+        generation
+            .generate(&provider, &model, &name, &prompt)
+            .map_err(CommandError::from)
+    })
+    .await
+    .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
+}
+
+/// Models available for a provider — feeds the UI model picker before
+/// generation (the backend still revalidates the chosen model on generate).
+#[tauri::command]
+pub async fn list_provider_models(
+    generation: State<'_, Arc<GenerationService>>,
+    provider: String,
+) -> Result<Vec<String>, CommandError> {
+    let generation = generation.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        generation.models(&provider).map_err(CommandError::from)
     })
     .await
     .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
