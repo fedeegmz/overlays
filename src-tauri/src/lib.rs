@@ -17,6 +17,7 @@ use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::json_store::{JsonConfigRepository, JsonPresetRepository};
 use infrastructure::keyring::KeyringStore;
 use infrastructure::overlay_bus::BroadcastOverlayBus;
+use infrastructure::overlay_writer::OverlayWriter;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -45,6 +46,16 @@ pub fn run() {
                 OverlaysDirHandle::new(app_config.overlays_dir.clone().unwrap_or_default());
 
             eprintln!("[overlays] overlays_dir = {:?}", overlays_dir.get());
+
+            // D4: sweep any `.staging/<uuid4>` dirs left by a crashed run —
+            // only when the overlays dir is configured. The writer only ever
+            // touches uuid4-shaped direct children of `.staging/`.
+            if !overlays_dir.get().as_os_str().is_empty() {
+                let swept = OverlayWriter::new(overlays_dir.get()).sweep_orphans();
+                if swept > 0 {
+                    eprintln!("[overlays] swept {swept} orphaned staging dirs");
+                }
+            }
 
             let bus = Arc::new(BroadcastOverlayBus::new());
             let catalog = Arc::new(TemplateCatalog::new(
