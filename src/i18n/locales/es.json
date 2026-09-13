@@ -3,12 +3,51 @@
     "overlays": "Overlays",
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "generate": "Generar"
+  },
+  "generatePage": {
+    "title": "Generar overlay",
+    "subtitle": "Describa el overlay y la IA armará la plantilla",
+    "promptLabel": "Descripción",
+    "promptPlaceholder": "ej: zócalo inferior con título, subtítulo y barra de acento, entrando desde la izquierda",
+    "provider": "Proveedor",
+    "model": "Modelo",
+    "nameLabel": "Nombre del overlay",
+    "namePlaceholder": "ej: zocalo-inferior",
+    "nameHint": "Minúsculas, números y guiones simples.",
+    "nameInvalid": "Use minúsculas, números y guiones simples.",
+    "generate": "Generar",
+    "generating": "Generando…",
+    "staged": {
+      "title": "Overlay generado",
+      "directory": "Carpeta",
+      "files": "Archivos",
+      "nameEdit": "Nombre de la plantilla",
+      "nameEditHint": "Minúsculas, números y guiones simples.",
+      "nameEditInvalid": "Nombre inválido — use minúsculas, números y guiones simples.",
+      "fields": "Campos"
+    },
+    "accept": "Guardar plantilla",
+    "discard": "Descartar",
+    "saving": "Guardando…",
+    "accepted": "Plantilla guardada — ya está disponible en Overlays."
+  },
+  "gate": {
+    "noKeyTitle": "No hay clave de API configurada",
+    "noKeyBody": "Agregue una clave de API de Anthropic en Ajustes para generar overlays.",
+    "keyringTitle": "Llavero del sistema no disponible",
+    "keyringBody": "El llavero del sistema no está disponible, por lo que no se pueden guardar ni leer claves de API. Active el llavero del sistema e intente de nuevo.",
+    "noDirTitle": "Carpeta de overlays no configurada",
+    "noDirBody": "Elija la carpeta donde se guardan los overlays antes de generar.",
+    "openSettings": "Abrir ajustes",
+    "close": "Cerrar"
   },
   "overlaysPage": {
-    "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",
+    "subtitle": "Elija una plantilla para crear una instancia y mostrarla en OBS",
     "loading": "Cargando plantillas...",
-    "empty": "No hay plantillas disponibles."
+    "empty": "No hay plantillas disponibles.",
+    "generateButton": "Generar con IA"
   },
   "content": {
     "title": "Contenido",
@@ -29,6 +68,9 @@
   "colorField": {
     "openPicker": "Abrir selector de color"
   },
+  "common": {
+    "close": "Cerrar"
+  },
   "dialog": {
     "selectOverlaysDir": "Elegir directorio de overlays"
   },
@@ -43,21 +85,98 @@
       "save_failed": "No se pudo guardar el archivo de presets."
     },
     "template": {
-      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays."
+      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays.",
+      "exists": "Ya existe una plantilla llamada \"{name}\".",
+      "write_failed": "No se pudieron escribir los archivos de la plantilla."
     },
     "language": {
       "unsupported": "Idioma no soportado: {lang}."
     },
     "overlays_dir": {
-      "invalid": "\"{path}\" no es un directorio válido."
+      "invalid": "\"{path}\" no es un directorio válido.",
+      "missing": "El directorio de overlays no está configurado."
     },
     "config": {
       "save_failed": "No se pudo guardar la configuración."
+    },
+    "keyring": {
+      "unavailable": "El llavero del sistema no está disponible en este equipo.",
+      "failed": "El llavero del sistema reportó un error.",
+      "delete_failed": "No se pudo eliminar la clave del llavero del sistema.",
+      "entry_missing": "No hay ninguna clave de API guardada para este proveedor.",
+      "empty_secret": "La clave de API no puede estar vacía."
+    },
+    "provider": {
+      "unauthorized": "El proveedor de IA rechazó la clave de API.",
+      "rate_limited": "Se superó el límite de peticiones del proveedor. Intente de nuevo en un momento.",
+      "timeout": "La petición al proveedor de IA expiró.",
+      "network": "No se pudo conectar con el proveedor de IA.",
+      "unavailable": "El proveedor de IA no está disponible en este momento. Intente de nuevo en unos instantes.",
+      "invalid_response": "El proveedor de IA devolvió una respuesta inválida.",
+      "unknown": "Proveedor de IA desconocido."
+    },
+    "model": {
+      "unknown": "Modelo desconocido para este proveedor."
+    },
+    "generation": {
+      "invalid_output": "El overlay generado es inválido.",
+      "invalid_name": "El nombre del overlay es inválido: {reason}",
+      "empty_prompt": "Escriba una descripción del overlay primero.",
+      "issue": {
+        "truncated": "La respuesta se cortó antes de terminar.",
+        "no_json_object": "La respuesta no contenía un objeto JSON.",
+        "invalid_json": "El JSON de la respuesta no se pudo analizar: {error}",
+        "missing_name": "A la respuesta le falta el nombre del overlay.",
+        "missing_files": "A la respuesta le falta el objeto files.",
+        "missing_file": "A la respuesta le falta el archivo {file}.",
+        "empty_file": "{file} está vacío.",
+        "manifest_invalid_json": "overlay.json no es JSON válido: {error}",
+        "manifest_not_object": "overlay.json debe ser un objeto JSON.",
+        "manifest_top_level_id": "overlay.json no debe incluir un campo id de nivel superior.",
+        "manifest_missing_name": "overlay.json debe tener un nombre no vacío.",
+        "manifest_fields_missing": "overlay.json debe tener un arreglo fields.",
+        "manifest_fields_not_array": "fields de overlay.json debe ser un arreglo.",
+        "manifest_field_not_object": "El campo {index} de overlay.json no es un objeto.",
+        "manifest_field_missing": "Al campo {index} de overlay.json le falta {key}.",
+        "manifest_field_empty_key": "El campo {index} de overlay.json tiene un key vacío.",
+        "manifest_duplicate_key": "El campo {index} de overlay.json duplica el key {key}.",
+        "manifest_unknown_type": "El campo {index} de overlay.json tiene el tipo desconocido {type}.",
+        "script_template_id": "script.js debe declarar TEMPLATE_ID = \"{template_id}\" exactamente.",
+        "script_missing_handler": "script.js debe definir el manejador {handler}(...).",
+        "script_no_instance_filter": "script.js debe filtrar los mensajes por instancia.",
+        "script_no_reconnect": "A script.js le falta la lógica de reconexión ({needle}).",
+        "style_not_transparent": "style.css debe mantener el fondo del body transparente.",
+        "html_missing_ref": "index.html debe referenciar el archivo local {ref}.",
+        "remote_asset": "{file} referencia un recurso remoto o absoluto ({ref}) — solo se permiten archivos locales relativos.",
+        "js_remote_fetch": "script.js usa fetch() con una dirección no relativa ({ref}).",
+        "js_ws_not_loopback": "script.js debe usar location.host en la URL de WebSocket ({ref}).",
+        "rewrite_template_id_absent": "No se pudo renombrar: script.js debe fijar exactamente un TEMPLATE_ID (se encontraron {occurrences}).",
+        "rewrite_name_mismatch": "No se pudo renombrar: el nombre del manifiesto no coincide con el id de plantilla del script ({expected})."
+      }
+    },
+    "staged": {
+      "missing": "El overlay generado ya no está disponible."
     }
   },
   "settings": {
     "title": "Ajustes",
     "subtitle": "Configuración general de la aplicación",
+    "apiKeys": {
+      "label": "Claves de API",
+      "description": "Las claves de los proveedores se guardan en el llavero del sistema",
+      "add": "Agregar clave",
+      "delete": "Eliminar",
+      "notConfigured": "Sin claves configuradas",
+      "keyringUnavailable": "El llavero del sistema no está disponible — no se pueden administrar claves.",
+      "addTitle": "Agregar clave de API",
+      "provider": "Proveedor",
+      "keyPlaceholder": "sk-ant-...",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "deleteConfirmTitle": "¿Eliminar la clave de API?",
+      "deleteConfirmBody": "Esto elimina de forma permanente la clave de Anthropic guardada en el llavero del sistema.",
+      "confirm": "Eliminar"
+    },
     "overlaysDir": {
       "label": "Carpeta de overlays",
       "description": "Las plantillas se leen desde esta ubicación",

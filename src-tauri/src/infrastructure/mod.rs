@@ -1,6 +1,10 @@
+pub mod ai;
 pub mod error;
 pub mod fs_template_source;
 pub mod http;
 pub mod json_store;
+pub mod keyring;
 pub mod overlay_bus;
+pub mod overlay_writer;
 pub mod tauri;
+pub mod validator;

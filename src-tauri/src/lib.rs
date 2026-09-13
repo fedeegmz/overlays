@@ -6,13 +6,18 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use application::config_service::ConfigService;
+use application::generation_service::GenerationService;
+use application::key_service::KeyService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
+use infrastructure::ai::anthropic::AnthropicProvider;
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::json_store::{JsonConfigRepository, JsonPresetRepository};
+use infrastructure::keyring::KeyringStore;
 use infrastructure::overlay_bus::BroadcastOverlayBus;
+use infrastructure::overlay_writer::OverlayWriter;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -42,19 +47,43 @@ pub fn run() {
 
             eprintln!("[overlays] overlays_dir = {:?}", overlays_dir.get());
 
+            // D4: sweep any `.staging/<uuid4>` dirs left by a crashed run —
+            // only when the overlays dir is configured. The writer only ever
+            // touches uuid4-shaped direct children of `.staging/`.
+            if !overlays_dir.get().as_os_str().is_empty() {
+                let swept = OverlayWriter::new(overlays_dir.get()).sweep_orphans();
+                if swept > 0 {
+                    eprintln!("[overlays] swept {swept} orphaned staging dirs");
+                }
+            }
+
             let bus = Arc::new(BroadcastOverlayBus::new());
             let catalog = Arc::new(TemplateCatalog::new(
                 Arc::new(FsTemplateSource),
                 overlays_dir.clone(),
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
-            let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
+            let config_service = Arc::new(ConfigService::new(
+                config_repo.clone(),
+                overlays_dir.clone(),
+            ));
+            let key_service = Arc::new(KeyService::new(config_repo, Arc::new(KeyringStore)));
+            let generation_service = Arc::new(GenerationService::new(
+                key_service.clone(),
+                Arc::new(AnthropicProvider::new()),
+                // System prompt is composed in the infrastructure layer —
+                // the application never imports prompt constants.
+                infrastructure::ai::system_prompt(),
+                overlays_dir.clone(),
+            ));
             let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
 
             app.manage(http_state.clone());
             app.manage(catalog);
             app.manage(presets);
             app.manage(config_service);
+            app.manage(key_service);
+            app.manage(generation_service);
 
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = start_server(http_state).await {
@@ -74,6 +103,13 @@ pub fn run() {
             infrastructure::tauri::commands::get_config,
             infrastructure::tauri::commands::set_overlays_dir,
             infrastructure::tauri::commands::set_language,
+            infrastructure::tauri::commands::list_configured_providers,
+            infrastructure::tauri::commands::add_provider_key,
+            infrastructure::tauri::commands::delete_provider_key,
+            infrastructure::tauri::commands::generate_overlay,
+            infrastructure::tauri::commands::list_provider_models,
+            infrastructure::tauri::commands::accept_overlay,
+            infrastructure::tauri::commands::discard_overlay,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

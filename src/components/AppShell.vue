@@ -2,11 +2,11 @@
 import SideNav from "./SideNav.vue";
 
 defineProps<{
-  currentPage: "overlays" | "settings";
+  currentPage: "overlays" | "settings" | "generate";
 }>();
 
 const emit = defineEmits<{
-  navigate: [page: "overlays" | "settings"];
+  navigate: [page: "overlays" | "settings" | "generate"];
   openDetail: [];
 }>();
 </script>

@@ -2,13 +2,52 @@
   "sidebar": {
     "overlays": "Overlays",
     "instances": "Instances",
-    "closeInstance": "Close instance",
-    "settings": "Settings"
+    "settings": "Settings",
+    "generate": "Generate",
+    "closeInstance": "Close instance"
+  },
+  "generatePage": {
+    "title": "Generate overlay",
+    "subtitle": "Describe the overlay and the AI will build the template",
+    "promptLabel": "Description",
+    "promptPlaceholder": "e.g. lower third with title, subtitle and an accent bar, sliding in from the left",
+    "provider": "Provider",
+    "model": "Model",
+    "nameLabel": "Overlay name",
+    "namePlaceholder": "e.g. zocalo-inferior",
+    "nameHint": "Lowercase letters, numbers and single dashes.",
+    "nameInvalid": "Use lowercase letters, numbers and single dashes.",
+    "generate": "Generate",
+    "generating": "Generating…",
+    "staged": {
+      "title": "Generated overlay",
+      "directory": "Folder",
+      "files": "Files",
+      "nameEdit": "Template name",
+      "nameEditHint": "Lowercase letters, numbers and single dashes.",
+      "nameEditInvalid": "Invalid name — use lowercase letters, numbers and single dashes.",
+      "fields": "Fields"
+    },
+    "accept": "Save template",
+    "discard": "Discard",
+    "saving": "Saving…",
+    "accepted": "Template saved — it's now available in Overlays."
+  },
+  "gate": {
+    "noKeyTitle": "No API key configured",
+    "noKeyBody": "Add an Anthropic API key in Settings to generate overlays.",
+    "keyringTitle": "System keyring unavailable",
+    "keyringBody": "The system keyring is not available, so API keys can't be stored or read. Enable your system keyring and try again.",
+    "noDirTitle": "Overlays folder not configured",
+    "noDirBody": "Choose the folder where overlays are stored before generating overlays.",
+    "openSettings": "Open Settings",
+    "close": "Close"
   },
   "overlaysPage": {
     "subtitle": "Pick a template to create an instance and show it in OBS",
     "loading": "Loading templates...",
-    "empty": "No templates available."
+    "empty": "No templates available.",
+    "generateButton": "Generate with AI"
   },
   "content": {
     "title": "Content",
@@ -29,6 +68,9 @@
   "colorField": {
     "openPicker": "Open color picker"
   },
+  "common": {
+    "close": "Close"
+  },
   "dialog": {
     "selectOverlaysDir": "Select overlays directory"
   },
@@ -43,21 +85,98 @@
       "save_failed": "Could not save the presets file."
     },
     "template": {
-      "discovery_failed": "Could not read templates from the overlays directory."
+      "discovery_failed": "Could not read templates from the overlays directory.",
+      "exists": "A template named \"{name}\" already exists.",
+      "write_failed": "Could not write the template files."
     },
     "language": {
       "unsupported": "Unsupported language: {lang}."
     },
     "overlays_dir": {
-      "invalid": "\"{path}\" is not a valid directory."
+      "invalid": "\"{path}\" is not a valid directory.",
+      "missing": "The overlays directory is not configured."
     },
     "config": {
       "save_failed": "Could not save the configuration."
+    },
+    "keyring": {
+      "unavailable": "The system keyring is not available on this device.",
+      "failed": "The system keyring reported an error.",
+      "delete_failed": "Could not delete the key from the system keyring.",
+      "entry_missing": "No API key is stored for this provider.",
+      "empty_secret": "The API key cannot be empty."
+    },
+    "provider": {
+      "unauthorized": "The AI provider rejected the API key.",
+      "rate_limited": "The AI provider rate limit was exceeded. Try again in a moment.",
+      "timeout": "The AI provider request timed out.",
+      "network": "Could not reach the AI provider.",
+      "unavailable": "The AI provider is unavailable right now. Try again in a moment.",
+      "invalid_response": "The AI provider returned an invalid response.",
+      "unknown": "Unknown AI provider."
+    },
+    "model": {
+      "unknown": "Unknown model for this provider."
+    },
+    "generation": {
+      "invalid_output": "The generated overlay is invalid.",
+      "invalid_name": "The overlay name is invalid: {reason}",
+      "empty_prompt": "Write a description of the overlay first.",
+      "issue": {
+        "truncated": "The response was cut off before it finished.",
+        "no_json_object": "The response did not contain a JSON object.",
+        "invalid_json": "The response JSON could not be parsed: {error}",
+        "missing_name": "The response is missing the overlay name.",
+        "missing_files": "The response is missing the files object.",
+        "missing_file": "The response is missing the file {file}.",
+        "empty_file": "{file} is empty.",
+        "manifest_invalid_json": "overlay.json is not valid JSON: {error}",
+        "manifest_not_object": "overlay.json must be a JSON object.",
+        "manifest_top_level_id": "overlay.json must not include a top-level id field.",
+        "manifest_missing_name": "overlay.json must have a non-empty name.",
+        "manifest_fields_missing": "overlay.json must have a fields array.",
+        "manifest_fields_not_array": "overlay.json fields must be an array.",
+        "manifest_field_not_object": "overlay.json field {index} is not an object.",
+        "manifest_field_missing": "overlay.json field {index} is missing {key}.",
+        "manifest_field_empty_key": "overlay.json field {index} has an empty key.",
+        "manifest_duplicate_key": "overlay.json field {index} duplicates the key {key}.",
+        "manifest_unknown_type": "overlay.json field {index} has unknown type {type}.",
+        "script_template_id": "script.js must declare TEMPLATE_ID = \"{template_id}\" exactly.",
+        "script_missing_handler": "script.js must define the {handler}(...) handler.",
+        "script_no_instance_filter": "script.js must filter messages by instance.",
+        "script_no_reconnect": "script.js is missing the reconnection logic ({needle}).",
+        "style_not_transparent": "style.css must keep the body background transparent.",
+        "html_missing_ref": "index.html must reference the local {ref}.",
+        "remote_asset": "{file} references a remote or absolute asset ({ref}) — only relative local files are allowed.",
+        "js_remote_fetch": "script.js uses fetch() with a non-relative address ({ref}).",
+        "js_ws_not_loopback": "script.js WebSocket URL must use location.host ({ref}).",
+        "rewrite_template_id_absent": "Cannot rename: script.js must pin exactly one TEMPLATE_ID ({occurrences} found).",
+        "rewrite_name_mismatch": "Cannot rename: the manifest name does not match the script's template id ({expected})."
+      }
+    },
+    "staged": {
+      "missing": "The generated overlay is no longer available."
     }
   },
   "settings": {
     "title": "Settings",
     "subtitle": "General application settings",
+    "apiKeys": {
+      "label": "API keys",
+      "description": "Provider keys are stored in the system keyring",
+      "add": "Add key",
+      "delete": "Delete",
+      "notConfigured": "No keys configured",
+      "keyringUnavailable": "The system keyring is not available — provider keys can't be managed.",
+      "addTitle": "Add API key",
+      "provider": "Provider",
+      "keyPlaceholder": "sk-ant-...",
+      "save": "Save",
+      "cancel": "Cancel",
+      "deleteConfirmTitle": "Delete API key?",
+      "deleteConfirmBody": "This permanently removes the stored Anthropic key from the system keyring.",
+      "confirm": "Delete"
+    },
     "overlaysDir": {
       "label": "Overlays folder",
       "description": "Templates are read from this location",

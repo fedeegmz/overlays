@@ -120,6 +120,8 @@ mod tests {
         let config = AppConfig {
             overlays_dir: Some(PathBuf::from("/home/user/overlays")),
             language: Some("es".to_string()),
+            provider_keys: Vec::new(),
+            ai_generator_enabled: true,
         };
 
         repo.save(&config).unwrap();

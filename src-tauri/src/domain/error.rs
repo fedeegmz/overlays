@@ -1,5 +1,7 @@
 use std::fmt;
 
+use super::ai::ValidationIssue;
+
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
@@ -8,6 +10,26 @@ pub enum DomainError {
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
     ConfigSaveFailed { detail: String },
+    KeyringUnavailable,
+    KeyringFailed { detail: String },
+    KeyringDeleteFailed,
+    KeyringEntryMissing { provider: String },
+    KeyringEmptySecret,
+    ProviderUnauthorized,
+    ProviderRateLimited,
+    ProviderTimeout,
+    ProviderNetwork { detail: String },
+    ProviderUnavailable { detail: String },
+    ProviderInvalidResponse { detail: String },
+    GenerationInvalidOutput { issues: Vec<ValidationIssue> },
+    GenerationEmptyPrompt,
+    OverlaysDirMissing,
+    TemplateExists { name: String },
+    TemplateWriteFailed { detail: String },
+    StagedOverlayMissing,
+    UnknownProvider,
+    UnknownModel,
+    InvalidName { reason: String },
 }
 
 impl fmt::Display for DomainError {
@@ -21,6 +43,36 @@ impl fmt::Display for DomainError {
             Self::LanguageUnsupported { lang } => write!(f, "unsupported language: {lang}"),
             Self::OverlaysDirInvalid { path } => write!(f, "invalid overlays dir: {path}"),
             Self::ConfigSaveFailed { detail } => write!(f, "config save failed: {detail}"),
+            Self::KeyringUnavailable => write!(f, "keyring is not available"),
+            Self::KeyringFailed { detail } => write!(f, "keyring operation failed: {detail}"),
+            Self::KeyringDeleteFailed => write!(f, "keyring delete failed"),
+            Self::KeyringEntryMissing { provider } => {
+                write!(f, "no keyring entry for provider: {provider}")
+            }
+            Self::KeyringEmptySecret => write!(f, "API key is empty"),
+            Self::ProviderUnauthorized => write!(f, "provider rejected the API key"),
+            Self::ProviderRateLimited => write!(f, "provider rate limit exceeded"),
+            Self::ProviderTimeout => write!(f, "provider request timed out"),
+            Self::ProviderNetwork { detail } => write!(f, "provider network error: {detail}"),
+            Self::ProviderUnavailable { detail } => {
+                write!(f, "provider unavailable: {detail}")
+            }
+            Self::ProviderInvalidResponse { detail } => {
+                write!(f, "provider invalid response: {detail}")
+            }
+            Self::GenerationInvalidOutput { issues } => {
+                write!(f, "generated output is invalid: {:?}", issues)
+            }
+            Self::GenerationEmptyPrompt => write!(f, "generation prompt is empty"),
+            Self::OverlaysDirMissing => write!(f, "overlays directory is not configured"),
+            Self::TemplateExists { name } => write!(f, "template already exists: {name}"),
+            Self::TemplateWriteFailed { detail } => {
+                write!(f, "template write failed: {detail}")
+            }
+            Self::StagedOverlayMissing => write!(f, "staged overlay is missing"),
+            Self::UnknownProvider => write!(f, "unknown provider"),
+            Self::UnknownModel => write!(f, "unknown model"),
+            Self::InvalidName { reason } => write!(f, "invalid name: {reason}"),
         }
     }
 }
