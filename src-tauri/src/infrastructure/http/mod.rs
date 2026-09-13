@@ -91,7 +91,7 @@ mod tests {
             .await
             .unwrap();
         let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["templates"].as_array().unwrap().len(), 2);
+        assert_eq!(json["templates"].as_array().unwrap().len(), 3);
     }
 
     #[tokio::test]

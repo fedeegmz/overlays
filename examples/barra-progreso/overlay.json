@@ -1,0 +1,25 @@
+{
+  "name": "Barra de progreso",
+  "fields": [
+    {
+      "key": "etiqueta",
+      "label": "Etiqueta",
+      "type": "text",
+      "default": "Progreso"
+    },
+    {
+      "key": "valor",
+      "label": "Progreso",
+      "type": "progress",
+      "min": 0,
+      "max": 100,
+      "default": "50"
+    },
+    {
+      "key": "color_barra",
+      "label": "Color de la barra",
+      "type": "color",
+      "default": "#38bdf8"
+    }
+  ]
+}

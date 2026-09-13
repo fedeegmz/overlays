@@ -28,6 +28,11 @@ export const useTemplateStore = defineStore("templates", () => {
     const fields: Record<string, string> = {};
     if (!template) return fields;
     for (const f of template.fields) {
+      if (f.type === "progress") {
+        const min = f.min ?? 0;
+        fields[f.key] = f.default ?? String(min);
+        continue;
+      }
       if (f.default !== undefined) fields[f.key] = f.default;
     }
     return fields;

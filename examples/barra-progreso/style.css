@@ -1,0 +1,58 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#barra-contenedor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#barra-contenedor.entrar {
+  opacity: 1;
+}
+
+#barra-etiqueta {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 650;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+#barra-valor {
+  color: #d4d4d4;
+  font-size: 16px;
+  font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+#barra-fondo {
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+#barra-relleno {
+  height: 100%;
+  width: 0%;
+  background: #38bdf8;
+  border-radius: 7px;
+  transition:
+    width 0.3s ease,
+    background-color 0.2s ease;
+}

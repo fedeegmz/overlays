@@ -8,6 +8,10 @@ pub struct OverlayField {
     pub field_type: String,
     #[serde(default)]
     pub default: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize)]

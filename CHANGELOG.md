@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Biome for frontend linting and formatting, wired into the build gate (`pnpm check` / `pnpm check:fix`).
 - Git hooks managed with lefthook: `pre-commit` runs Biome (frontend) plus `cargo fmt --check` and `cargo clippy -- -D warnings` (backend, in parallel), and `pre-push` runs `cargo test`.
 - CI workflow (GitHub Actions) running on push and pull requests to `develop` and `main`: frontend job (Biome + `vue-tsc`) and backend job (`cargo fmt`, `clippy`, `test`).
+- Progress field type for overlay templates: configurable slider + numeric input in the content panel. Defined in `overlay.json` with required `min`/`max` (fields with missing or inverted bounds are discarded at discovery) and an optional `default` that falls back to `min`. Field values keep traveling as strings over IPC, presets, and WebSocket.
+- Example overlay template `barra-progreso` demonstrating the progress field.
 
 ## [0.2.0] - 2026-08-24
 

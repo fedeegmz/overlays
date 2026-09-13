@@ -64,6 +64,8 @@ mod tests {
                     label: "Título".into(),
                     field_type: "text".into(),
                     default: None,
+                    min: None,
+                    max: None,
                 }],
             }])
         }

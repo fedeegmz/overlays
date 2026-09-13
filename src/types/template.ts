@@ -3,6 +3,8 @@ export interface TemplateField {
   label: string;
   type: string;
   default?: string;
+  min?: number;
+  max?: number;
 }
 
 export interface TemplateInfo {

@@ -6,6 +6,7 @@ import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
 import ColorField from "./ColorField.vue";
+import ProgressField from "./ProgressField.vue";
 
 const { t } = useI18n();
 const instanceStore = useInstanceStore();
@@ -98,6 +99,15 @@ function handleDelete(name: string) {
             :model-value="activeInstance.fields[field.key] ?? ''"
             :input-id="`field-${field.key}`"
             :disabled="sending"
+            @update:model-value="updateField(field.key, $event)"
+          />
+          <ProgressField
+            v-else-if="field.type === 'progress'"
+            :model-value="activeInstance.fields[field.key] ?? ''"
+            :input-id="`field-${field.key}`"
+            :disabled="sending"
+            :min="field.min"
+            :max="field.max"
             @update:model-value="updateField(field.key, $event)"
           />
           <input
