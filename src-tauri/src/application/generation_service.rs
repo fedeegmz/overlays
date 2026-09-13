@@ -2,14 +2,17 @@
 //!
 //! Fail-closed pipeline (D3/D8): a truncated response, an unparseable one,
 //! or one that violates the overlay contract is NEVER staged — each surfaces
-//! as `GenerationInvalidOutput` with the collected issues.
+//! as `GenerationInvalidOutput` with the collected issues. A content-quality
+//! failure triggers exactly ONE retry whose second prompt embeds the issues;
+//! transport errors are never retried.
 //!
 //! `accept`/`discard` operate on the staging id only (uuid4, sweep-guarded —
 //! D4) and derive the template id from the STAGED manifest, never from a
-//! caller-supplied path segment.
+//! caller-supplied path segment. The writer is rebuilt from the live
+//! overlays dir on every operation, so config changes are always honored.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use serde_json::Value;
@@ -19,7 +22,7 @@ use crate::application::key_service::KeyService;
 use crate::application::ports::AiProvider;
 use crate::application::template_catalog::OverlaysDirHandle;
 use crate::domain::ai::{
-    AiError, GeneratedFiles, GeneratedOverlay, GeneratedOverlaySummary, ValidationIssue,
+    AiError, AiText, GeneratedFiles, GeneratedOverlay, GeneratedOverlaySummary, ValidationIssue,
 };
 use crate::domain::error::{DomainError, DomainResult};
 use crate::domain::name::{normalize_name, validate_name};
@@ -27,35 +30,12 @@ use crate::domain::template::OverlayField;
 use crate::infrastructure::overlay_writer::OverlayWriter;
 use crate::infrastructure::validator::validate_generated_overlay;
 
-/// Fixed suffix appended to the base prompt: the EXACT JSON shape the model
-/// must answer with (nothing else, no fences, no prose).
-const OUTPUT_SHAPE: &str = r#"
-RESPOND ONLY with a single valid JSON object, no markdown fences, no text before or after, using this exact shape:
-{
-  "name": "Nombre visible del overlay",
-  "files": {
-    "overlay_json": "contenido completo de overlay.json (sin campo id top-level)",
-    "index_html": "contenido completo de index.html",
-    "style_css": "contenido completo de style.css",
-    "script_js": "contenido completo de script.js"
-  }
-}
-The folder name will be derived from "name" (kebab-case) — you do not provide the id.
-"#;
-
-/// The real system prompt: base contract + output shape instruction.
-fn system_prompt() -> String {
-    format!(
-        "{}\n\n{}",
-        crate::infrastructure::ai::BASE_PROMPT,
-        OUTPUT_SHAPE
-    )
-}
-
 pub struct GenerationService {
     keys: Arc<KeyService>,
     provider: Arc<dyn AiProvider>,
-    writer: OverlayWriter,
+    /// Full system prompt (composed in the infrastructure layer and injected
+    /// — the application layer must not import prompt constants).
+    system: String,
     overlays_dir: OverlaysDirHandle,
 }
 
@@ -63,13 +43,13 @@ impl GenerationService {
     pub fn new(
         keys: Arc<KeyService>,
         provider: Arc<dyn AiProvider>,
+        system: String,
         overlays_dir: OverlaysDirHandle,
     ) -> Self {
-        let writer = OverlayWriter::new(overlays_dir.get());
         Self {
             keys,
             provider,
-            writer,
+            system,
             overlays_dir,
         }
     }
@@ -98,24 +78,30 @@ impl GenerationService {
             .cloned()
             .ok_or(DomainError::UnknownModel)?;
 
-        let response = self
+        // Exactly one retry on content-quality failures (truncated/invalid
+        // output), embedding the collected issues into the second prompt.
+        // Transport errors are returned immediately and never retried.
+        let first = self
             .provider
-            .generate(&model, prompt, &system_prompt(), &secret)
+            .generate(&model, prompt, &self.system, &secret)
             .map_err(map_ai_error)?;
-
-        if response.truncated {
-            return Err(DomainError::GenerationInvalidOutput {
-                issues: vec![ValidationIssue::new("truncated")],
-            });
-        }
-
-        let overlay = normalize_generated(&response.text)?;
-        let report = validate_generated_overlay(&overlay.files, &overlay.directory);
-        if !report.valid {
-            return Err(DomainError::GenerationInvalidOutput {
-                issues: report.issues,
-            });
-        }
+        let overlay = match self.to_overlay(&first) {
+            Ok(overlay) => overlay,
+            Err(DomainError::GenerationInvalidOutput { issues }) => {
+                let feedback = feedback_block(&issues);
+                let second = self
+                    .provider
+                    .generate(
+                        &model,
+                        &format!("{prompt}\n\n{feedback}"),
+                        &self.system,
+                        &secret,
+                    )
+                    .map_err(map_ai_error)?;
+                self.to_overlay(&second)?
+            }
+            Err(e) => return Err(e),
+        };
 
         let staged = writer.stage(&overlay)?;
         let staging_id = staged
@@ -132,11 +118,36 @@ impl GenerationService {
         })
     }
 
+    /// Fail-closed conversion (D3/D8): truncation or contract violations
+    /// surface as `GenerationInvalidOutput` — nothing is staged.
+    fn to_overlay(&self, response: &AiText) -> DomainResult<GeneratedOverlay> {
+        if response.truncated {
+            return Err(DomainError::GenerationInvalidOutput {
+                issues: vec![ValidationIssue::new("truncated")],
+            });
+        }
+        let overlay = normalize_generated(&response.text)?;
+        let report = validate_generated_overlay(&overlay.files, &overlay.directory);
+        if !report.valid {
+            return Err(DomainError::GenerationInvalidOutput {
+                issues: report.issues,
+            });
+        }
+        Ok(overlay)
+    }
+
     /// Promote a staged overlay into the template tree. The template id is
     /// derived from the staged manifest's `name` (normalized), never from a
     /// caller-supplied directory.
     pub fn accept(&self, staging_id: &str) -> DomainResult<()> {
-        let staged = self.staging_path(staging_id)?;
+        let root = self.overlays_dir.get();
+        if root.as_os_str().is_empty() {
+            return Err(DomainError::StagedOverlayMissing);
+        }
+        // Rebuilt per call from the LIVE overlays dir (the constructor must
+        // not freeze a writer): a config change since generation is honored.
+        let writer = OverlayWriter::new(root.clone());
+        let staged = staging_path(&root, staging_id)?;
         let manifest = fs::read_to_string(staged.join("overlay.json"))
             .map_err(|_| DomainError::StagedOverlayMissing)?;
         let value: Value =
@@ -146,24 +157,55 @@ impl GenerationService {
             .ok_or(DomainError::StagedOverlayMissing)?;
         let directory = normalize_name(name);
         validate_name(&directory)?;
-        self.writer.accept(&staged, &directory)
+        writer.accept(&staged, &directory)
     }
 
     /// Remove a staged overlay (user rejected it or it expired).
     pub fn discard(&self, staging_id: &str) -> DomainResult<()> {
-        let staged = self.staging_path(staging_id)?;
-        self.writer.discard(&staged)
-    }
-
-    /// Sweep-guarded staging path: only a uuid4-shaped id maps to a path
-    /// (D4) — anything else is a missing staged overlay, full stop.
-    fn staging_path(&self, staging_id: &str) -> DomainResult<PathBuf> {
-        let id = Uuid::parse_str(staging_id).map_err(|_| DomainError::StagedOverlayMissing)?;
-        if id.get_version() != Some(Version::Random) {
+        let root = self.overlays_dir.get();
+        if root.as_os_str().is_empty() {
             return Err(DomainError::StagedOverlayMissing);
         }
-        Ok(self.writer.staging_root().join(id.to_string()))
+        let writer = OverlayWriter::new(root.clone());
+        let staged = staging_path(&root, staging_id)?;
+        writer.discard(&staged)
     }
+}
+
+/// Sweep-guarded staging path (D4): only a uuid4-shaped id maps to a path
+/// (anything else is a missing staged overlay, full stop).
+fn staging_path(root: &Path, staging_id: &str) -> DomainResult<PathBuf> {
+    let id = Uuid::parse_str(staging_id).map_err(|_| DomainError::StagedOverlayMissing)?;
+    if id.get_version() != Some(Version::Random) {
+        return Err(DomainError::StagedOverlayMissing);
+    }
+    Ok(OverlayWriter::new(root.to_path_buf())
+        .staging_root()
+        .join(id.to_string()))
+}
+
+/// Model-facing feedback block appended to the retry prompt. Issue codes are
+/// stable identifiers; params are sorted so the text is deterministic.
+fn feedback_block(issues: &[ValidationIssue]) -> String {
+    if issues.is_empty() {
+        return "The previous response was truncated. Respond again with the complete JSON only — no placeholder text.".into();
+    }
+    let mut out = String::from(
+        "The previous response was rejected. Fix every point below and respond again with a single complete JSON object, no markdown fences:\n",
+    );
+    for (i, issue) in issues.iter().enumerate() {
+        out.push_str(&format!("{}. {}\n", i + 1, issue.code));
+        let mut params: Vec<(&str, &str)> = issue
+            .params
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
+        params.sort_unstable();
+        for (k, v) in params {
+            out.push_str(&format!("   - {k}: {v}\n"));
+        }
+    }
+    out
 }
 
 fn map_ai_error(e: AiError) -> DomainError {
@@ -287,8 +329,30 @@ mod tests {
     use crate::domain::ai::{AiText, ProviderKind};
 
     struct StubProvider {
-        reply: Result<AiText, AiError>,
+        replies: Vec<Result<AiText, AiError>>,
+        next: std::sync::atomic::AtomicUsize,
+        prompts: std::sync::Mutex<Vec<String>>,
         model: String,
+    }
+
+    impl StubProvider {
+        fn new(replies: Vec<Result<AiText, AiError>>, model: &str) -> Self {
+            assert!(!replies.is_empty(), "stub needs at least one reply");
+            Self {
+                replies,
+                next: std::sync::atomic::AtomicUsize::new(0),
+                prompts: std::sync::Mutex::new(Vec::new()),
+                model: model.into(),
+            }
+        }
+
+        fn call_count(&self) -> usize {
+            self.prompts.lock().unwrap().len()
+        }
+
+        fn prompts(&self) -> Vec<String> {
+            self.prompts.lock().unwrap().clone()
+        }
     }
 
     impl AiProvider for StubProvider {
@@ -303,11 +367,14 @@ mod tests {
         fn generate(
             &self,
             _model: &str,
-            _prompt: &str,
+            prompt: &str,
             _system: &str,
             _key: &str,
         ) -> Result<AiText, AiError> {
-            self.reply.clone()
+            self.prompts.lock().unwrap().push(prompt.to_string());
+            let i = self.next.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let idx = i.min(self.replies.len() - 1);
+            self.replies[idx].clone()
         }
     }
 
@@ -329,25 +396,31 @@ mod tests {
 
     // Unique dir per test: parallel tests share the pid (flaky-race class
     // already fixed in fs_template_source/http/overlay_writer tests); the
-    // shared counter in test_utils makes every tag unique too.
+    // shared counter in test_utils makes every tag unique too. The service
+    // is given a literal system prompt — the application layer must not
+    // depend on infrastructure prompt constants (layering, item 22).
     fn service_with(
         tag: &str,
-        reply: Result<AiText, AiError>,
-    ) -> (GenerationService, OverlaysDirHandle) {
+        replies: Vec<Result<AiText, AiError>>,
+    ) -> (GenerationService, OverlaysDirHandle, Arc<StubProvider>) {
         let keystore = Arc::new(MemoryKeyStore::new());
         keystore.set("anthropic", "sk-test").unwrap();
         let keys = Arc::new(KeyService::new(Arc::new(MemoryConfigRepo::new()), keystore));
-        let provider: Arc<dyn AiProvider> = Arc::new(StubProvider {
-            reply,
-            model: "claude-test".into(),
-        });
+        let stub = Arc::new(StubProvider::new(replies, "claude-test"));
+        let provider: Arc<dyn AiProvider> = stub.clone();
         let dir = unique_temp_dir(&format!("gen-{tag}"));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let handle = OverlaysDirHandle::new(dir.clone());
         (
-            GenerationService::new(keys, provider, handle.clone()),
+            GenerationService::new(
+                keys,
+                provider,
+                "You are a helpful overlay generator.".into(),
+                handle.clone(),
+            ),
             handle,
+            stub,
         )
     }
 
@@ -357,12 +430,12 @@ mod tests {
 
     #[test]
     fn generates_and_stages_a_valid_overlay() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "valid",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("Mi Overlay"),
                 truncated: false,
-            }),
+            })],
         );
 
         let summary = service.generate("zócalo inferior minimalista").unwrap();
@@ -379,29 +452,30 @@ mod tests {
     }
 
     #[test]
-    fn rejects_empty_prompt() {
-        let (service, dir) = service_with(
+    fn rejects_empty_prompt_and_never_calls_the_provider() {
+        let (service, dir, stub) = service_with(
             "empty",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("X"),
                 truncated: false,
-            }),
+            })],
         );
         assert!(matches!(
             service.generate("   "),
             Err(DomainError::GenerationEmptyPrompt)
         ));
+        assert_eq!(stub.call_count(), 0, "provider must not be called");
         cleanup(&dir);
     }
 
     #[test]
     fn rejects_missing_overlays_dir() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "nodir",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("X"),
                 truncated: false,
-            }),
+            })],
         );
         dir.set(PathBuf::new());
         assert!(matches!(
@@ -415,16 +489,21 @@ mod tests {
     fn surfaces_keyring_failure_when_no_key() {
         let keystore = Arc::new(MemoryKeyStore::new());
         let keys = Arc::new(KeyService::new(Arc::new(MemoryConfigRepo::new()), keystore));
-        let provider: Arc<dyn AiProvider> = Arc::new(StubProvider {
-            reply: Ok(AiText {
+        let provider: Arc<dyn AiProvider> = Arc::new(StubProvider::new(
+            vec![Ok(AiText {
                 text: valid_ai_json("X"),
                 truncated: false,
-            }),
-            model: "m".into(),
-        });
+            })],
+            "m",
+        ));
         let dir = unique_temp_dir("gen-nokey");
         fs::create_dir_all(&dir).unwrap();
-        let service = GenerationService::new(keys, provider, OverlaysDirHandle::new(dir.clone()));
+        let service = GenerationService::new(
+            keys,
+            provider,
+            "You are a helpful overlay generator.".into(),
+            OverlaysDirHandle::new(dir.clone()),
+        );
 
         assert!(matches!(
             service.generate("algo"),
@@ -435,12 +514,12 @@ mod tests {
 
     #[test]
     fn truncated_response_never_stages() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "trunc",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("Mi Overlay"),
                 truncated: true,
-            }),
+            })],
         );
         assert!(matches!(
             service.generate("algo"),
@@ -453,12 +532,12 @@ mod tests {
 
     #[test]
     fn invalid_json_is_rejected() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "badjson",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: "esto no es json".into(),
                 truncated: false,
-            }),
+            })],
         );
         assert!(matches!(
             service.generate("algo"),
@@ -470,10 +549,10 @@ mod tests {
     #[test]
     fn contract_violations_are_collected() {
         // style.css is opaque → fails validation.
-        let (service, dir) = service_with("contract", Ok(AiText {
+        let (service, dir, _stub) = service_with("contract", vec![Ok(AiText {
             text: r#"{"name":"X","files":{"overlay_json":"{\"name\":\"X\",\"fields\":[]}","index_html":"<b></b>","style_css":"body{background:#000}","script_js":"const TEMPLATE_ID=\"x\";function show(f){}function update(f){}function hide(){}"}}"#.into(),
             truncated: false,
-        }));
+        })]);
         assert!(matches!(
             service.generate("algo"),
             Err(DomainError::GenerationInvalidOutput { ref issues })
@@ -483,7 +562,7 @@ mod tests {
     }
 
     #[test]
-    fn provider_errors_map_to_domain_errors() {
+    fn provider_errors_map_to_domain_errors_without_retry() {
         let cases = [
             (AiError::Unauthorized, DomainError::ProviderUnauthorized),
             (AiError::RateLimited, DomainError::ProviderRateLimited),
@@ -502,22 +581,128 @@ mod tests {
             ),
         ];
         for (ai, domain) in cases {
-            let (service, dir) = service_with("perr", Err(ai));
+            let (service, dir, stub) = service_with("perr", vec![Err(ai)]);
             assert!(
                 matches!(service.generate("algo"), Err(e) if std::mem::discriminant(&e) == std::mem::discriminant(&domain))
+            );
+            assert_eq!(
+                stub.call_count(),
+                1,
+                "transport errors are surfaced, never retried"
             );
             cleanup(&dir);
         }
     }
 
     #[test]
+    fn retries_exactly_once_with_feedback_then_succeeds() {
+        let (service, dir, stub) = service_with(
+            "retry-ok",
+            vec![
+                // First attempt: unparseable → no_json_object issue.
+                Ok(AiText {
+                    text: "not json".into(),
+                    truncated: false,
+                }),
+                // Second attempt (retry): valid → staged.
+                Ok(AiText {
+                    text: valid_ai_json("Mi Overlay"),
+                    truncated: false,
+                }),
+            ],
+        );
+
+        let summary = service.generate("un contador").unwrap();
+        assert_eq!(summary.directory, "mi-overlay");
+        assert_eq!(stub.call_count(), 2, "exactly one retry");
+        let prompts = stub.prompts();
+        assert!(
+            prompts[1].contains("no_json_object"),
+            "second prompt must embed the collected issue codes, got: {}",
+            prompts[1]
+        );
+        assert!(prompts[1].contains("The previous response was rejected"));
+        assert!(prompts[0].starts_with("un contador"));
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn retries_once_when_response_is_truncated() {
+        let (service, dir, stub) = service_with(
+            "retry-trunc",
+            vec![
+                Ok(AiText {
+                    text: valid_ai_json("X"),
+                    truncated: true,
+                }),
+                Ok(AiText {
+                    text: valid_ai_json("X"),
+                    truncated: false,
+                }),
+            ],
+        );
+
+        service.generate("algo").unwrap();
+        assert_eq!(stub.call_count(), 2);
+        assert!(stub.prompts()[1].contains("truncated"));
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn no_retry_when_first_attempt_is_valid() {
+        let (service, dir, stub) = service_with(
+            "retry-none",
+            vec![Ok(AiText {
+                text: valid_ai_json("X"),
+                truncated: false,
+            })],
+        );
+
+        service.generate("algo").unwrap();
+        assert_eq!(stub.call_count(), 1, "valid output must not be retried");
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn retry_does_not_loop_on_repeated_failure() {
+        let (service, dir, stub) = service_with(
+            "retry-loop",
+            vec![
+                // First attempt: unparseable.
+                Ok(AiText {
+                    text: "not json".into(),
+                    truncated: false,
+                }),
+                // Second attempt still violates the contract.
+                Ok(AiText {
+                    text: r#"{"name":"X","files":{"overlay_json":"{\"name\":\"X\",\"fields\":[]}","index_html":"<b></b>","style_css":"body{background:#000}","script_js":"const TEMPLATE_ID=\"x\";function show(f){}function update(f){}function hide(){}"}}"#.into(),
+                    truncated: false,
+                }),
+            ],
+        );
+
+        let err = service.generate("algo").unwrap_err();
+        assert!(
+            matches!(&err, DomainError::GenerationInvalidOutput { ref issues }
+                if issues.iter().any(|i| i.code == "style_not_transparent")),
+            "surfaced issues come from the second (final) attempt"
+        );
+        assert_eq!(
+            stub.call_count(),
+            2,
+            "exactly one retry even when it also fails"
+        );
+        cleanup(&dir);
+    }
+
+    #[test]
     fn accept_derives_template_id_from_staged_manifest() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "accept",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("Zócalo Deportes"),
                 truncated: false,
-            }),
+            })],
         );
         let summary = service.generate("zócalo de deportes").unwrap();
 
@@ -537,12 +722,12 @@ mod tests {
 
     #[test]
     fn accept_refuses_non_uuid_and_non_v4_ids() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "accept",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("X"),
                 truncated: false,
-            }),
+            })],
         );
         assert!(matches!(
             service.accept("../../etc/passwd"),
@@ -558,12 +743,12 @@ mod tests {
 
     #[test]
     fn discard_removes_staging_and_keeps_templates() {
-        let (service, dir) = service_with(
+        let (service, dir, _stub) = service_with(
             "acc-ref",
-            Ok(AiText {
+            vec![Ok(AiText {
                 text: valid_ai_json("X"),
                 truncated: false,
-            }),
+            })],
         );
         let summary = service.generate("algo").unwrap();
 
@@ -589,5 +774,33 @@ mod tests {
         assert_eq!(extract_json("sin llaves"), None);
         // Braces inside strings are not counted.
         assert_eq!(extract_json(r#"{"s":"}"}"#).unwrap(), r#"{"s":"}"}"#);
+    }
+
+    #[test]
+    fn accept_uses_live_overlays_dir_after_config_change() {
+        // The writer must NOT be frozen at construction: a config change
+        // between generate and accept has to be honored (item 9).
+        let (service, dir, _stub) = service_with(
+            "acc-live",
+            vec![Ok(AiText {
+                text: valid_ai_json("Mi Overlay"),
+                truncated: false,
+            })],
+        );
+        let summary = service.generate("algo").unwrap();
+
+        let other = unique_temp_dir("gen-other");
+        fs::create_dir_all(&other).unwrap();
+        dir.set(other.clone());
+
+        assert!(
+            matches!(
+                service.accept(&summary.staging_id),
+                Err(DomainError::StagedOverlayMissing)
+            ),
+            "staging from the old dir must not resolve under the new root"
+        );
+        cleanup(&dir);
+        let _ = fs::remove_dir_all(&other);
     }
 }

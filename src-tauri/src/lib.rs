@@ -71,6 +71,9 @@ pub fn run() {
             let generation_service = Arc::new(GenerationService::new(
                 key_service.clone(),
                 Arc::new(AnthropicProvider::new()),
+                // System prompt is composed in the infrastructure layer —
+                // the application never imports prompt constants.
+                infrastructure::ai::system_prompt(),
                 overlays_dir.clone(),
             ));
             let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
