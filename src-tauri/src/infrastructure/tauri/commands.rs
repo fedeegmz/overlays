@@ -192,15 +192,20 @@ pub async fn list_provider_models(
     .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?
 }
 
-/// Promote a staged overlay into the template tree (no-clobber).
+/// Promote a staged overlay into the template tree (no-clobber). The
+/// optional `name` is the user's last-minute rename — revalidated and
+/// applied via a targeted fail-closed rewrite before promotion.
 #[tauri::command]
 pub async fn accept_overlay(
     generation: State<'_, Arc<GenerationService>>,
     staging_id: String,
+    name: String,
 ) -> Result<(), CommandError> {
     let generation = generation.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        generation.accept(&staging_id).map_err(CommandError::from)
+        generation
+            .accept(&staging_id, &name)
+            .map_err(CommandError::from)
     })
     .await
     .map_err(|e| CommandError::new(CommandError::COMMON_INTERNAL).param("reason", e.to_string()))?

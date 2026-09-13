@@ -167,10 +167,14 @@ impl GenerationService {
         Ok(overlay)
     }
 
-    /// Promote a staged overlay into the template tree. The template id is
-    /// derived from the staged manifest's `name` (normalized), never from a
-    /// caller-supplied directory.
-    pub fn accept(&self, staging_id: &str) -> DomainResult<()> {
+    /// Promote a staged overlay into the template tree. The template id comes
+    /// from STAGED CONTENT only — the script's pinned `TEMPLATE_ID` (the
+    /// overlay contract's authority) — never from a caller-supplied path
+    /// segment. An optional `edited_name` renames the overlay first via a
+    /// targeted, fail-closed rewrite (D11/D13): the script must pin EXACTLY
+    /// one template id, and the manifest's `name` must normalize to it —
+    /// otherwise the accept fails with zero writes.
+    pub fn accept(&self, staging_id: &str, edited_name: &str) -> DomainResult<()> {
         let root = self.overlays_dir.get();
         if root.as_os_str().is_empty() {
             return Err(DomainError::StagedOverlayMissing);
@@ -179,16 +183,101 @@ impl GenerationService {
         // not freeze a writer): a config change since generation is honored.
         let writer = OverlayWriter::new(root.clone());
         let staged = staging_path(&root, staging_id)?;
+
         let manifest = fs::read_to_string(staged.join("overlay.json"))
             .map_err(|_| DomainError::StagedOverlayMissing)?;
         let value: Value =
             serde_json::from_str(&manifest).map_err(|_| DomainError::StagedOverlayMissing)?;
-        let name = value["name"]
+        let manifest_name = value["name"]
             .as_str()
+            .filter(|n| !n.trim().is_empty())
             .ok_or(DomainError::StagedOverlayMissing)?;
-        let directory = normalize_name(name);
-        validate_name(&directory)?;
-        writer.accept(&staged, &directory)
+        let index_html = fs::read_to_string(staged.join("index.html"))
+            .map_err(|_| DomainError::StagedOverlayMissing)?;
+        let style_css = fs::read_to_string(staged.join("style.css"))
+            .map_err(|_| DomainError::StagedOverlayMissing)?;
+        let script_js = fs::read_to_string(staged.join("script.js"))
+            .map_err(|_| DomainError::StagedOverlayMissing)?;
+
+        // (a) The script must pin EXACTLY ONE template id. Zero ids or
+        // several mean the bundle is not trustworthy — fail closed.
+        let pinned = pinned_template_ids(&script_js);
+        if pinned.len() != 1 {
+            return Err(DomainError::GenerationInvalidOutput {
+                issues: vec![ValidationIssue::new("rewrite_template_id_absent")
+                    .param("occurrences", pinned.len().to_string())],
+            });
+        }
+        let old_directory = pinned[0].clone();
+        validate_name(&old_directory)?;
+
+        // (b) The manifest's name must normalize to the pinned id — accept
+        // never guesses when the staged bundle disagrees with itself.
+        if normalize_name(manifest_name) != old_directory {
+            return Err(DomainError::GenerationInvalidOutput {
+                issues: vec![
+                    ValidationIssue::new("rewrite_name_mismatch").param("expected", old_directory)
+                ],
+            });
+        }
+
+        // Target identity: the user edit wins when present (revalidated
+        // backend-side), otherwise the pinned id is kept.
+        let edited_name = edited_name.trim();
+        let (target_directory, target_manifest_name) = if edited_name.is_empty() {
+            (old_directory.clone(), manifest_name.to_string())
+        } else {
+            let target_directory = normalize_name(edited_name);
+            validate_name(&target_directory)?;
+            (target_directory, edited_name.to_string())
+        };
+
+        if target_directory == old_directory {
+            // No rename: the bundle is coherent, so promote as-is.
+            return writer.accept(&staged, &old_directory);
+        }
+
+        // Rename: rewrite IN MEMORY FIRST — every check must pass before a
+        // single byte is written, then the final bundle is re-validated
+        // against the TARGET id (D3/D8/D11).
+        let old_anchor = format!("TEMPLATE_ID = \"{old_directory}\"");
+        let new_script = script_js.replace(
+            &old_anchor,
+            &format!("TEMPLATE_ID = \"{target_directory}\""),
+        );
+        let mut new_inner = value;
+        new_inner["name"] = Value::String(target_manifest_name);
+        let new_manifest = serde_json::to_string_pretty(&new_inner).map_err(|_| {
+            DomainError::GenerationInvalidOutput {
+                issues: vec![ValidationIssue::new("manifest_invalid_json")],
+            }
+        })?;
+        let files = GeneratedFiles {
+            overlay_json: new_manifest,
+            index_html,
+            style_css,
+            script_js: new_script,
+        };
+        let report = validate_generated_overlay(&files, &target_directory);
+        if !report.valid {
+            return Err(DomainError::GenerationInvalidOutput {
+                issues: report.issues,
+            });
+        }
+
+        // All checks passed — persist the rewrite (still inside .staging),
+        // then promote no-clobber.
+        fs::write(staged.join("overlay.json"), &files.overlay_json).map_err(|e| {
+            DomainError::TemplateWriteFailed {
+                detail: format!("rewrite overlay.json: {e}"),
+            }
+        })?;
+        fs::write(staged.join("script.js"), &files.script_js).map_err(|e| {
+            DomainError::TemplateWriteFailed {
+                detail: format!("rewrite script.js: {e}"),
+            }
+        })?;
+        writer.accept(&staged, &target_directory)
     }
 
     /// Remove a staged overlay (user rejected it or it expired).
@@ -213,6 +302,26 @@ fn staging_path(root: &Path, staging_id: &str) -> DomainResult<PathBuf> {
     Ok(OverlayWriter::new(root.to_path_buf())
         .staging_root()
         .join(id.to_string()))
+}
+
+/// Extract every template id pinned by `TEMPLATE_ID = "<id>"` assignments
+/// (the trailing `;` is optional — the validator only requires containment).
+/// The ACCEPT rewrite requires EXACTLY ONE pinned id.
+fn pinned_template_ids(script: &str) -> Vec<String> {
+    let marker = "TEMPLATE_ID = \"";
+    let mut ids = Vec::new();
+    let mut rest = script;
+    while let Some(start) = rest.find(marker) {
+        let after = &rest[start + marker.len()..];
+        match after.find('"') {
+            Some(end) => {
+                ids.push(after[..end].to_string());
+                rest = &after[end + 1..];
+            }
+            None => break,
+        }
+    }
+    ids
 }
 
 /// Model-facing feedback block appended to the retry prompt. Issue codes are
@@ -768,7 +877,7 @@ mod tests {
             )
             .unwrap();
 
-        service.accept(&summary.staging_id).unwrap();
+        service.accept(&summary.staging_id, "").unwrap();
         assert!(dir
             .get()
             .join("zocalo-deportes")
@@ -792,12 +901,12 @@ mod tests {
             })],
         );
         assert!(matches!(
-            service.accept("../../etc/passwd"),
+            service.accept("../../etc/passwd", ""),
             Err(DomainError::StagedOverlayMissing)
         ));
         // A valid-format but v1 uuid (not random/v4) is also refused.
         assert!(matches!(
-            service.accept("550e8400-e29b-11d4-a716-446655440000"),
+            service.accept("550e8400-e29b-11d4-a716-446655440000", ""),
             Err(DomainError::StagedOverlayMissing)
         ));
         cleanup(&dir);
@@ -861,13 +970,150 @@ mod tests {
 
         assert!(
             matches!(
-                service.accept(&summary.staging_id),
+                service.accept(&summary.staging_id, ""),
                 Err(DomainError::StagedOverlayMissing)
             ),
             "staging from the old dir must not resolve under the new root"
         );
         cleanup(&dir);
         let _ = fs::remove_dir_all(&other);
+    }
+
+    #[test]
+    fn accept_rewrites_script_and_manifest_when_name_is_edited() {
+        let (service, dir, _stub) = service_with(
+            "acc-rename",
+            vec![Ok(AiText {
+                text: valid_ai_json("Zócalo Deportes"),
+                truncated: false,
+            })],
+        );
+        let summary = service
+            .generate("anthropic", "claude-test", "Zócalo Deportes", "algo")
+            .unwrap();
+        assert_eq!(summary.directory, "zocalo-deportes");
+
+        service.accept(&summary.staging_id, "Zócalo Final").unwrap();
+
+        let promoted = dir.get().join("zocalo-final");
+        assert!(promoted.join("overlay.json").is_file(), "renamed dir");
+        assert!(!dir.get().join("zocalo-deportes").exists());
+        let script = fs::read_to_string(promoted.join("script.js")).unwrap();
+        assert!(script.contains("TEMPLATE_ID = \"zocalo-final\";"));
+        assert!(!script.contains("zocalo-deportes"));
+        let manifest: Value =
+            serde_json::from_str(&fs::read_to_string(promoted.join("overlay.json")).unwrap())
+                .unwrap();
+        assert_eq!(manifest["name"], "Zócalo Final");
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn accept_fails_closed_when_template_id_is_absent() {
+        // Tamper the staged script so the id appears ZERO times — the rename
+        // must fail with zero writes: no template dir, staging unchanged.
+        let (service, dir, _stub) = service_with(
+            "acc-no-id",
+            vec![Ok(AiText {
+                text: valid_ai_json("Mi Overlay"),
+                truncated: false,
+            })],
+        );
+        let summary = service
+            .generate("anthropic", "claude-test", "Mi Overlay", "algo")
+            .unwrap();
+        let staged_dir = dir.get().join(".staging").join(&summary.staging_id);
+        let script = fs::read_to_string(staged_dir.join("script.js")).unwrap();
+        fs::write(
+            staged_dir.join("script.js"),
+            script.replace("TEMPLATE_ID = \"mi-overlay\";", "const X = 1;"),
+        )
+        .unwrap();
+
+        let err = service
+            .accept(&summary.staging_id, "Otro Nombre")
+            .unwrap_err();
+        assert!(
+            matches!(&err, DomainError::GenerationInvalidOutput { ref issues }
+                if issues.iter().any(|i| i.code == "rewrite_template_id_absent")),
+            "got {err:?}"
+        );
+        assert!(!dir.get().join("otro-nombre").exists(), "zero writes");
+        assert!(!dir.get().join("mi-overlay").exists(), "zero writes");
+        // Staging still holds the ORIGINAL script (nothing rewritten).
+        let staged_script = fs::read_to_string(staged_dir.join("script.js")).unwrap();
+        assert!(staged_script.contains("const X = 1;"));
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn accept_fails_closed_on_inner_manifest_name_mismatch() {
+        // The inner overlay.json "name" disagrees with the staged name — a
+        // rename must not guess; it fails closed with zero writes.
+        let (service, dir, _stub) = service_with(
+            "acc-mismatch",
+            vec![Ok(AiText {
+                text: valid_ai_json("Mi Overlay"),
+                truncated: false,
+            })],
+        );
+        let summary = service
+            .generate("anthropic", "claude-test", "Mi Overlay", "algo")
+            .unwrap();
+        let staged_dir = dir.get().join(".staging").join(&summary.staging_id);
+        let mut inner: Value =
+            serde_json::from_str(&fs::read_to_string(staged_dir.join("overlay.json")).unwrap())
+                .unwrap();
+        inner["name"] = Value::String("Otro Inner".into());
+        fs::write(
+            staged_dir.join("overlay.json"),
+            serde_json::to_string(&inner).unwrap(),
+        )
+        .unwrap();
+
+        let err = service
+            .accept(&summary.staging_id, "Renombrado")
+            .unwrap_err();
+        assert!(
+            matches!(&err, DomainError::GenerationInvalidOutput { ref issues }
+                if issues.iter().any(|i| i.code == "rewrite_name_mismatch"))
+        );
+        assert!(!dir.get().join("renombrado").exists(), "zero writes");
+        assert!(!dir.get().join("mi-overlay").exists(), "zero writes");
+        cleanup(&dir);
+    }
+
+    #[test]
+    fn accept_edit_must_still_validate_end_to_end() {
+        // Renaming to an id that breaks the script contract is caught by the
+        // post-rewrite re-validation with zero writes.
+        let (service, dir, _stub) = service_with(
+            "acc-reval",
+            vec![Ok(AiText {
+                text: valid_ai_json("Mi Overlay"),
+                truncated: false,
+            })],
+        );
+        // Generated script's TEMPLATE_ID is "mi-overlay" — the rewrite keeps
+        // it consistent, so this asserts the happy path stays valid under
+        // the FULL validator after a name edit (script + manifest).
+        let summary = service
+            .generate("anthropic", "claude-test", "Mi Overlay", "algo")
+            .unwrap();
+        service.accept(&summary.staging_id, "Zócalo Final").unwrap();
+        let promoted = dir.get().join("zocalo-final");
+        assert!(promoted.join("script.js").is_file());
+        // Only a placeholder id was used in the stubbed payload: verify the
+        // promoted bundle passes the same validator used at generate time.
+        let files = GeneratedFiles {
+            overlay_json: fs::read_to_string(promoted.join("overlay.json")).unwrap(),
+            index_html: fs::read_to_string(promoted.join("index.html")).unwrap(),
+            style_css: fs::read_to_string(promoted.join("style.css")).unwrap(),
+            script_js: fs::read_to_string(promoted.join("script.js")).unwrap(),
+        };
+        let report = validate_generated_overlay(&files, "zocalo-final");
+        assert!(report.valid, "promoted bundle must pass validation");
+        cleanup(&dir);
     }
 
     #[test]
