@@ -1,12 +1,23 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { LOCALES } from "../i18n";
+import { getAppVersion } from "../services/appApi";
 import { useConfigStore } from "../stores/config";
 
 const configStore = useConfigStore();
 const { appConfig, configError } = storeToRefs(configStore);
 const { pickOverlaysDir, setLanguage } = configStore;
+
+const appVersion = ref("");
+onMounted(async () => {
+  try {
+    appVersion.value = await getAppVersion();
+  } catch {
+    appVersion.value = "";
+  }
+});
 
 const { t, locale } = useI18n();
 </script>
@@ -71,22 +82,16 @@ const { t, locale } = useI18n();
       <div class="settings-row">
         <div>
           <div class="settings-row-label">
-            {{ t("settings.appearance.label") }}
+            {{ t("settings.about.label") }}
           </div>
           <div class="settings-row-desc">
-            {{ t("settings.appearance.description") }}
+            {{ t("settings.about.description") }}
           </div>
         </div>
-        <div class="theme-toggle">
-          <button type="button" class="active">
-            {{ t("settings.appearance.light") }}
-          </button>
-          <button type="button" disabled>
-            {{ t("settings.appearance.dark") }}
-          </button>
-          <button type="button" disabled>
-            {{ t("settings.appearance.system") }}
-          </button>
+        <div class="settings-row-right">
+          <span v-if="appVersion" class="settings-row-value">
+            v{{ appVersion }}
+          </span>
         </div>
       </div>
     </div>

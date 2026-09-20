@@ -80,6 +80,10 @@
       "light": "Claro",
       "dark": "Oscuro",
       "system": "Sistema"
+    },
+    "about": {
+      "label": "Versión",
+      "description": "Versión de la aplicación"
     }
   }
 }

@@ -80,6 +80,10 @@
       "light": "Light",
       "dark": "Dark",
       "system": "System"
+    },
+    "about": {
+      "label": "Version",
+      "description": "Application version"
     }
   }
 }
