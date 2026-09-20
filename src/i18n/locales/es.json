@@ -8,7 +8,8 @@
   "overlaysPage": {
     "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",
     "loading": "Cargando plantillas...",
-    "empty": "No hay plantillas disponibles."
+    "empty": "No hay plantillas disponibles.",
+    "reload": "Recargar"
   },
   "content": {
     "title": "Contenido",

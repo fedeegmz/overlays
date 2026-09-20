@@ -8,7 +8,8 @@
   "overlaysPage": {
     "subtitle": "Pick a template to create an instance and show it in OBS",
     "loading": "Loading templates...",
-    "empty": "No templates available."
+    "empty": "No templates available.",
+    "reload": "Reload"
   },
   "content": {
     "title": "Content",
