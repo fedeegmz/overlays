@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Closing the last overlay instance from the sidebar no longer leaves a blank detail page — the app now returns to the overlay list.
+- The HTTP manifest test (`templates_endpoint_returns_manifest`) no longer hardcodes a template count from the `examples/` directory — it now validates the manifest shape and non-empty collection, so adding example templates won't break `cargo test`.
 
 ## [0.2.0] - 2026-08-24
 

@@ -91,7 +91,17 @@ mod tests {
             .await
             .unwrap();
         let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["templates"].as_array().unwrap().len(), 3);
+        let templates = json["templates"].as_array().unwrap();
+        assert!(
+            !templates.is_empty(),
+            "expected at least one example template"
+        );
+        for template in templates {
+            let obj = template.as_object().expect("template is an object");
+            assert!(obj.contains_key("id"), "template has an id");
+            assert!(obj.contains_key("name"), "template has a name");
+            assert!(obj["fields"].is_array(), "template has a fields array");
+        }
     }
 
     #[tokio::test]
