@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { ref, watch } from "vue";
 import { bootstrapStores } from "./bootstrap";
 import AppShell from "./components/AppShell.vue";
@@ -9,7 +10,7 @@ import { useInstanceStore } from "./stores/instances";
 
 bootstrapStores();
 
-const { instances } = useInstanceStore();
+const { instances } = storeToRefs(useInstanceStore());
 
 type Page = "overlays" | "detail" | "settings";
 

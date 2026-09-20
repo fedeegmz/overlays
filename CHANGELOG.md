@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example overlay template `marco-camara`: full-canvas camera frame with transparent background and configurable color, thickness, and corner radius (outer corners stay square while only the interior hole rounds via an SVG overlay).
 - Live preview in the overlay detail page: the real overlay HTML is loaded in an embedded preview that reflects configuration changes (typed fields, color picker, progress, applied presets) in real time over the WebSocket bus, without clicking the Update button. A dedicated preview instance ID keeps the live updates from touching the instance shown in OBS. Includes an "Open in window" fallback that renders the overlay as a first-class webview (reliable across Linux, macOS, and Windows).
 
+### Fixed
+
+- Closing the last overlay instance from the sidebar no longer leaves a blank detail page — the app now returns to the overlay list.
+
 ## [0.2.0] - 2026-08-24
 
 ### Added
