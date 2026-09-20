@@ -1,237 +1,271 @@
-# Overlay App — Control de overlays para OBS
+# Overlays — Control de overlays para OBS
 
-Aplicación de escritorio (Tauri + Rust + Vue 3) que sirve **overlays HTML/CSS/JS** como Browser Source para OBS y permite controlar su contenido en tiempo real desde un panel de control integrado.
+Aplicación de escritorio (Tauri + Rust + Vue 3) que sirve **overlays HTML/CSS/JS** como fuentes de navegador (Browser Source) de [OBS Studio](https://obsproject.com/) y permite controlar su contenido en tiempo real desde un panel integrado: mostrarlos, ocultarlos y actualizar sus textos, colores y valores sin recargar la fuente ni salir de la app.
 
-- Servidor HTTP + WebSocket embebido en `127.0.0.1:4848` (con fallback automático a `4849–4851` si el puerto está ocupado).
-- Plantillas listas: `lower-third-basico` (zócalo) y `titulo-centrado` (intro de segmento), con animaciones de entrada/salida.
-- Multi-instancia: cada plantilla puede tener varias instancias abiertas al mismo tiempo, cada una con su propio `instance_id`.
-- Presets: guardá combinaciones de plantilla + campos para reutilizarlas.
-- Campos de texto y color (con canal alpha), definidos por plantilla.
-- Interfaz bilingüe: español e inglés.
+## Características
 
----
-
-## Requisitos
-
-| Dependencia | Versión                   | Notas                                                                                                                                                                        |
-| ----------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js     | ≥ 21                      | Para el script de prueba de overlays (`WebSocket` global)                                                                                                                    |
-| pnpm        | cualquier reciente        | Manager de paquetes del frontend                                                                                                                                             |
-| Rust        | stable (toolchain actual) | Para el backend de Tauri                                                                                                                                                     |
-| Linux       | —                         | Dependencias de sistema: `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `libgtk-3-dev` (ver [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/)) |
+- **Servidor local embebido**: HTTP + WebSocket en `127.0.0.1:4848`, con fallback automático a `4849–4851` si el puerto está ocupado. Todo el tráfico es local: la app funciona sin conexión a internet.
+- **Panel de control integrado**: grilla de plantillas, vista de detalle con campos editables, vista previa 16:9 y botones para mostrar, actualizar y ocultar.
+- **Vista previa en vivo**: los cambios en los campos se reflejan al instante en la vista previa, sin tocar lo que está en OBS.
+- **Multi-instancia**: cada plantilla puede tener varias instancias activas a la vez, cada una con su propia URL y su propio estado.
+- **Presets**: permite guardar combinaciones de plantilla + campos con un nombre y volver a aplicarlas en cualquier momento.
+- **Tipos de campo**: texto, color (con canal alpha), progreso (con rango) y booleano (interruptor on/off).
+- **Plantillas de ejemplo**: cinco overlays listos para usar.
+- **Bilingüe**: la interfaz está en español e inglés, y el idioma se cambia desde Ajustes.
+- **Sin configuración de red**: OBS y la app se comunican por `localhost`; no es necesario abrir puertos ni tocar el firewall.
 
 ---
 
-## Puesta en marcha
+## Cómo funciona
 
-```bash
-# 1. Instalar dependencias del frontend
-pnpm install
+1. La app levanta un servidor local que **sirve los archivos HTML/CSS/JS** de cada overlay (`/overlay/...`).
+2. En OBS se agrega cada overlay como una **fuente de navegador (Browser Source)** apuntando a su URL.
+3. El overlay se conecta al WebSocket de la app (`/ws`) y queda escuchando mensajes.
+4. Desde el panel de la app se disparan comandos `show`, `update` y `hide`, que viajan por WebSocket hasta el overlay correspondiente en OBS y ejecutan su animación de entrada, la actualización de su contenido o su animación de salida.
 
-# 2. Correr la app en modo desarrollo
-pnpm tauri dev
-```
-
-El primer build de Rust tarda un rato. Al terminar se abre la ventana de la app y, en paralelo, queda corriendo el servidor de overlays en `http://localhost:4848`.
-
-> En dev, `pnpm tauri dev` levanta el frontend (Vite, puerto `1420`) y la app Tauri; el servidor de overlays es independiente y lo arranca el backend Rust.
+Cada overlay filtra los mensajes por su plantilla y por su `instance_id`, de modo que varias plantillas e instancias pueden convivir sin pisarse.
 
 ---
 
-## Desarrollo
+## Uso de la app
 
-| Tarea                    | Comando                                       |
-| ------------------------ | --------------------------------------------- |
-| Lint + format (frontend) | `pnpm check` / auto-fix con `pnpm check:fix`  |
-| Typecheck (frontend)     | `pnpm exec vue-tsc --noEmit`                  |
-| Tests (backend)          | `cd src-tauri && cargo test`                  |
-| Formato (backend)        | `cd src-tauri && cargo fmt --all`             |
-| Lint (backend)           | `cd src-tauri && cargo clippy -- -D warnings` |
+### 1. Elegir una plantilla
 
-### Git hooks
+En la página **Overlays** se encuentra la grilla con las plantillas disponibles (ordenadas alfabéticamente):
 
-Los hooks se gestionan con [lefthook](https://lefthook.dev) (`lefthook.yml`) y se instalan automáticamente con `pnpm install`:
+| Plantilla                               | Qué hace                                                                                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Barra de progreso**                   | Barra horizontal con etiqueta, valor porcentual y color configurables.                                                                                |
+| **Layout Media 3 Abajo**                | Diseño 16:9 con un espacio superior y tres espacios inferiores para escenas de juegos o reacciones. Tamaño y color del área multimedia configurables. |
+| **Marco de cámara**                     | Marco que rodea la imagen de cámara en todo el canvas; color, grosor y radio de esquinas configurables.                                               |
+| **Título centrado (intro de segmento)** | Texto centrado con animación de entrada desde arriba.                                                                                                 |
+| **Zócalo básico**                       | Barra con título y subtítulo abajo a la izquierda, con opciones de color.                                                                             |
 
-- **pre-commit** (en paralelo): `pnpm check` (frontend), `cargo fmt --check --all` y `cargo clippy -- -D warnings` (backend — solo si hay archivos `.rs` stageados).
-- **pre-push**: `cargo test` del backend.
+Al hacer clic en una plantilla se crea una instancia nueva y se abre su página de detalle. Si la carpeta de overlays está vacía o no está configurada, la grilla lo indica.
 
-Si modificás `lefthook.yml`, re-sincronizá los hooks con:
+### 2. Editar el contenido
 
-```bash
-pnpm exec lefthook install
-```
+En el panel **Contenido** se muestran los campos de la plantilla, cada uno con su tipo de control:
 
----
+- **Texto**: campo de texto libre.
+- **Color**: selector de color (formato `#rrggbb` o `#rrggbbaa`, con transparencia).
+- **Progreso**: control deslizante + entrada numérica, limitado al rango definido por la plantilla.
+- **Booleano**: interruptor on/off (por ejemplo, «Mostrar subtítulo»).
 
-## Uso de la app — paso a paso
+Los cambios se reflejan al instante en la **vista previa** del panel izquierdo, sin esperar.
 
-### 1. Elegir la plantilla
+### 3. Controlar la instancia en OBS
 
-Desde el **OverlaysPage** (grilla de plantillas), seleccioná la que querés usar:
+En el panel **Vista previa**:
 
-- **Zócalo básico** — barra con título + subtítulo abajo a la izquierda.
-- **Título centrado (intro de segmento)** — texto centrado con entrada desde arriba.
+- **Visible en OBS / Oculto** (interruptor): dispara la animación de entrada o de salida del overlay.
+- **Actualizar**: aplica los campos actuales al overlay **sin re-animar** (ideal para contenido que cambia solo, como un cronómetro o un progreso).
+- **Abrir en ventana**: abre el overlay en una ventana propia para verificarlo a escala real; si la ventana ya existe, recibe el foco.
 
-Al seleccionar una plantilla se crea una nueva instancia y se abre el **OverlayDetailPage**.
+La dirección que se muestra sobre el panel es la **URL del overlay** con su `instance_id`; es la que se pega en OBS.
 
-### 2. Completar los campos
+### 4. Guardar presets
 
-En el **ContentPanel** de la página de detalle, completá los campos según la plantilla:
+En el panel **Contenido**, sección Presets:
 
-| Campo     | Ejemplo          |
-| --------- | ---------------- |
-| Título    | `Federico Pérez` |
-| Subtítulo | `Dev Backend`    |
+- **Guardar actual**: persiste la plantilla + los campos actuales con el nombre indicado. Si ya existe un preset con ese nombre, se reemplaza.
+- **Aplicar** (ícono ▶ de cada preset): carga los campos guardados y dispara `show` de inmediato.
+- **Eliminar** (ícono de basura): borra el preset. Para confirmar, hay que hacer doble clic en menos de 2 segundos.
 
-### 3. Mostrar / Actualizar / Ocultar
+Los presets se agrupan por plantilla y sobreviven al reinicio de la app (se guardan en `presets.json`).
 
-Desde el **PreviewPanel** (vista 16:9):
+### 5. Instancias múltiples
 
-- **Mostrar** → dispara la animación de entrada del overlay en OBS.
-- **Actualizar** → cambia el texto sin re-animar (útil para contenido que cambia solo, como un cronómetro).
-- **Ocultar** → dispara la animación de salida.
+En la barra lateral, la sección **Instancias** lista todas las instancias abiertas:
 
-Todo se refleja en OBS en tiempo real vía WebSocket, sin recargar la fuente.
-
-### 4. Guardar presets (opcional)
-
-Desde el **ContentPanel**:
-
-- **Guardar actual** → persiste la plantilla + campos con un nombre.
-- **Aplicar** (en la lista de presets) → carga los campos guardados y dispara `show` de una.
-- **Eliminar** (botón × en cada preset) → borra el preset.
-
-Los presets se guardan en `presets.json` dentro del directorio de datos de la app y sobreviven al reinicio.
-
-### 5. Multi-instancia
-
-Cada plantilla puede tener varias instancias simultáneas. Las instancias aparecen en el **Sidebar** con un indicador de estado (live/idle) y un botón para cerrarlas. Cada overlay filtra los mensajes WebSocket por su propio `instance_id` (UUID), además del `TEMPLATE_ID`.
+- Cada una muestra un punto de estado: **verde** si está visible en OBS, **gris** si está oculta.
+- Si hay varias instancias de la misma plantilla, se numeran (`Zócalo básico #1`, `#2`, ...).
+- Haga clic en una instancia para abrir su detalle, o en **×** para cerrarla. Si estaba visible, primero se oculta. Al cerrar la última instancia la app vuelve a la grilla.
 
 ---
 
 ## Configurar OBS
 
-1. Abrí la app de escritorio (arranca el servidor automáticamente).
-2. En OBS: **Fuentes → + → Navegador**.
-3. Pegá la URL que aparece en el subtítulo del **OverlayDetailPage**, por ejemplo:
+1. Abra la aplicación **Overlays** (al iniciarse arranca el servidor local automáticamente).
+2. Cree una instancia desde la grilla y copie la URL que aparece en el detalle, por ejemplo:
    `http://localhost:4848/overlay/lower-third-basico/index.html?instance=<uuid>`
-4. Ajustá el tamaño de la fuente según el overlay (definido en el CSS de la plantilla). Para un zócalo de 1920×1080 de canvas, un ancho/alto de `1920×300` suele funcionar.
-5. Marcá **"Actualizar navegador cuando la escena se active"** si querés que se recargue al cambiar de escena.
+3. En OBS: **Fuentes → + → Navegador**.
+4. Pegue la URL y ajuste el tamaño de la fuente según el layout de la plantilla. Para un canvas de 1920×1080:
 
-Para usar varias plantillas a la vez (zócalo + título), agregá cada una como fuente de navegador separada.
+   | Plantilla                           | Tamaño de fuente recomendado         |
+   | ----------------------------------- | ------------------------------------ |
+   | Zócalo básico                       | 1920×300 (abajo a la izquierda)      |
+   | Título centrado (intro de segmento) | 1920×1080                            |
+   | Barra de progreso                   | 1920×200 (el elemento está centrado) |
+   | Marco de cámara                     | 1920×1080                            |
+   | Layout Media 3 Abajo                | 1920×1080                            |
+
+5. Marque **«Actualizar navegador cuando la escena se active»** si desea que la fuente se recargue cada vez que entre a la escena.
+6. El overlay debe verse sobre el fondo transparente de OBS; las plantillas de ejemplo usan fondo transparente en su CSS.
+
+Para usar varias plantillas al mismo tiempo (zócalo + cámara, por ejemplo), agregue **una fuente de navegador por instancia**. Cada instancia tiene su propia URL con un `instance_id` distinto.
 
 ---
 
-## Configuración del directorio de overlays
+## Configurar la aplicación
 
-El directorio donde se buscan las plantillas es configurable desde la **SettingsPage** de la app. Por defecto busca en `src-tauri/overlays/`. Si configurás otro directorio, se persiste en `config.json` dentro del directorio de datos de la app.
+Todo se configura desde **Ajustes** (engranaje en la barra lateral):
 
----
+- **Idioma**: cambia la interfaz entre Español e Inglés al instante.
+- **Carpeta de overlays**: el directorio desde donde la app lee las plantillas. Se elige con el botón **Elegir directorio**. Si no se configura ninguno, la grilla queda vacía (no es posible agregar plantillas hasta elegir carpeta).
+- **Versión**: muestra la versión instalada de la app.
 
-## Verificar que todo funciona (opcional)
+La configuración se persiste en `config.json` dentro del directorio de datos de la aplicación y sobrevive al reinicio.
 
-Con la app corriendo, desde otra terminal:
-
-```bash
-# Estado del servidor y plantillas disponibles
-curl http://127.0.0.1:4848/api/templates
-```
+Al cambiar la carpeta desde Ajustes, la grilla se recarga automáticamente. Si se modifican archivos directamente dentro de la carpeta ya configurada (por ejemplo, al agregar una plantilla a mano), use el botón **Recargar** de la grilla para volver a escanearla sin reiniciar la app.
 
 ---
 
 ## Agregar una plantilla nueva
 
-No hace falta tocar el backend ni el panel de control:
+No es necesario tocar el backend ni el código de la app. Solo hay que crear una **carpeta en el directorio de overlays** con cuatro archivos:
 
-1. Creá una carpeta en el directorio de overlays con la siguiente estructura:
-   - `overlay.json` — metadata de la plantilla (id, nombre, campos).
-   - `index.html` — HTML base del overlay.
-   - `style.css` — estilos del overlay.
-   - `script.js` — lógica del overlay.
+```
+mi-plantilla/
+├── overlay.json   # metadata: nombre y campos
+├── index.html     # estructura base del overlay
+├── style.css      # estilos
+└── script.js      # lógica (WebSocket + show/update/hide)
+```
 
-2. En `overlay.json`:
+### `overlay.json`
 
-   ```json
-   {
-     "id": "mi-plantilla",
-     "name": "Mi Plantilla",
-     "fields": [
-       {
-         "key": "titulo",
-         "label": "Título",
-         "type": "text",
-         "default": "Texto de ejemplo"
-       },
-       {
-         "key": "color_fondo",
-         "label": "Color de fondo",
-         "type": "color",
-         "default": "#cc241dff"
-       }
-     ]
-   }
-   ```
+El **nombre de la carpeta es el identificador de la plantilla** (`TEMPLATE_ID`). Un campo `id` a nivel raíz es opcional y solo se usa para sobreescribir ese identificador desde el archivo; en los ejemplos no se usa.
 
-   Tipos de campo soportados: `text` y `color` (formato `#rrggbbaa`, con alpha).
+```json
+{
+  "name": "Mi plantilla",
+  "fields": [
+    {
+      "key": "titulo",
+      "label": "Título",
+      "type": "text",
+      "default": "Texto de ejemplo"
+    },
+    {
+      "key": "color_fondo",
+      "label": "Color de fondo",
+      "type": "color",
+      "default": "#cc241dff"
+    },
+    {
+      "key": "avance",
+      "label": "Avance",
+      "type": "progress",
+      "min": 0,
+      "max": 100,
+      "default": "50"
+    },
+    {
+      "key": "mostrar_extra",
+      "label": "Mostrar extra",
+      "type": "boolean",
+      "default": "true"
+    }
+  ]
+}
+```
 
-3. En `script.js`:
-   - `const TEMPLATE_ID = "mi-plantilla"` — id que matchea con `overlay.json`.
-   - `const INSTANCE_ID = new URLSearchParams(window.location.search).get("instance")` — para filtrar mensajes de esta instancia.
-   - WebSocket: `ws://${location.host}/ws`, con reconexión cada 2s.
-   - Implementar `show(fields)`, `update(fields)` y `hide()`.
-   - Fondo transparente en `body` (crítico para OBS).
+Tipos de campo soportados:
 
-4. El backend descubre automáticamente la plantilla al escanear el directorio. Reiniciá la app o volvé a abrir la grilla de overlays para verla.
+| Tipo       | Control en la UI      | Reglas                                                                                    |
+| ---------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| `text`     | Campo de texto        | `default` opcional.                                                                       |
+| `color`    | Selector de color     | Formato `#rrggbb` o `#rrggbbaa` (con alpha).                                              |
+| `progress` | Deslizador + numérico | `min` y `max` **obligatorios** con `min < max`; `default` opcional (si falta, usa `min`). |
+| `boolean`  | Interruptor on/off    | `default` opcional: `"true"` o `"false"` (si falta, arranca apagado).                     |
+
+> Los campos inválidos se descartan al descubrir la plantilla (no rompen la app): un `progress` sin `min`/`max` o con rango invertido, o un `boolean` con `default` distinto de `"true"`/`"false"`. El backend registra en consola qué campo descartó y por qué.
+
+### `script.js`
+
+El script del overlay es el responsable de conectar y reaccionar. Contrato mínimo:
+
+- `const TEMPLATE_ID = "mi-plantilla"` — debe coincidir con el nombre de la carpeta (es el id de la plantilla).
+- `const INSTANCE_ID = new URLSearchParams(location.search).get("instance")` — para filtrar los mensajes de esta instancia.
+- WebSocket en `ws://${location.host}/ws` con **reconexión cada 2 segundos** si se cae.
+- Filtrar cada mensaje por `TEMPLATE_ID` y, si `INSTANCE_ID` está presente, por `instance_id`.
+- Implementar los tres handlers:
+  - `show(fields)` → actualiza el contenido y dispara la animación de entrada.
+  - `update(fields)` → actualiza el contenido sin re-animar.
+  - `hide()` → dispara la animación de salida.
+- **Fondo transparente** en `body` (requisito de OBS).
+
+Un ejemplo mínimo de conexión y filtrado:
+
+```js
+const INSTANCE_ID = new URLSearchParams(location.search).get("instance");
+const TEMPLATE_ID = "mi-plantilla";
+
+function connect() {
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.template !== TEMPLATE_ID) return;
+    if (INSTANCE_ID && msg.instance_id !== INSTANCE_ID) return;
+    switch (msg.action) {
+      case "show":
+        show(msg.fields || {});
+        break;
+      case "update":
+        update(msg.fields || {});
+        break;
+      case "hide":
+        hide();
+        break;
+    }
+  };
+  ws.onclose = () => setTimeout(connect, 2000);
+}
+connect();
+```
+
+### Ver la plantilla en la app
+
+La detección es automática y basada en archivos: basta con crear la carpeta. Para que aparezca en la grilla, presione **Recargar** en la página Overlays o reinicie la app. Si algún campo o el nombre da problemas, revise la consola (la app registra qué archivos descarta y por qué).
+
+Use las plantillas de la carpeta `examples/` como referencia de implementación completa.
 
 ---
 
-## Arquitectura
+## Servidor local y protocolo (resumen)
 
+Con la app corriendo, el servidor expone:
+
+| Recurso          | Descripción                                                      |
+| ---------------- | ---------------------------------------------------------------- |
+| `/overlay/...`   | Archivos de los overlays (HTML/CSS/JS/JSON/imágenes).            |
+| `/api/templates` | Manifiesto JSON con las plantillas y sus campos.                 |
+| `/ws`            | WebSocket por el que viajan los comandos `show`/`update`/`hide`. |
+
+Cada mensaje del WebSocket tiene esta forma:
+
+```json
+{
+  "instance_id": "uuid-de-la-instancia",
+  "template": "lower-third-basico",
+  "action": "show",
+  "fields": { "titulo": "Federico Gomez", "subtitulo": "Dev Backend" }
+}
 ```
-┌──────────────────────────────────────────────────┐
-│  Tauri Window (Vue 3)                            │
-│  ┌──────────┐ ┌────────────────────────────────┐ │
-│  │ Sidebar  │ │  OverlaysPage / OverlayDetail  │ │
-│  │ (nav +   │ │  ┌──────────┐ ┌─────────────┐  │ │
-│  │  insts)  │ │  │ Preview  │ │ Content     │  │ │
-│  │          │ │  │ Panel    │ │ Panel       │  │ │
-│  │          │ │  │ (16:9)   │ │ (fields +   │  │ │
-│  │          │ │  │          │ │  presets)   │  │ │
-│  │          │ │  └──────────┘ └─────────────┘  │ │
-│  └──────────┘ └────────────────────────────────┘ │
-│  ┌──────────┐                                    │
-│  │ Settings │                                    │
-│  └──────────┘                                    │
-└─────────────────────┬────────────────────────────┘
-                      │ Tauri IPC (invoke)
-                      ▼
-┌─────────────────────────────────────────────────┐
-│  Axum Server (Rust) — 127.0.0.1:4848-4851       │
-│  ┌───────────┐ ┌──────────┐ ┌────────────────┐  │
-│  │ Static    │ │ WebSocket│ │ /api/templates │  │
-│  │ /overlay/ │ │ /ws      │ │                │  │
-│  └─────┬─────┘ └─────┬────┘ └────────────────┘  │
-└────────┼──────────────┼─────────────────────────┘
-         │              │
-         ▼              ▼
-┌─────────────────────────────────────────────────┐
-│  OBS Browser Sources                            │
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │ overlay.html │  │ overlay.html │  ...        │
-│  │ ws → show/   │  │ ws → show/   │             │
-│  │   update/hide│  │   update/hide│             │
-│  └──────────────┘  └──────────────┘             │
-└─────────────────────────────────────────────────┘
+
+Para verificar que el servidor está vivo y qué plantillas hay:
+
+```bash
+curl http://127.0.0.1:4848/api/templates
 ```
+
+El detalle completo del servidor (broadcast, replay de estado, validaciones y arquitectura del backend) está en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Notas técnicas
+## Soporte y desarrollo
 
-- **Puerto**: fijo `4848`, con fallback automático a `4849–4851` si está ocupado. La app muestra la URL y el puerto real en el detalle de cada overlay.
-- **Protocolo**: la UI envía comandos Tauri al backend; este publica un payload JSON por WebSocket (broadcast channel, capacidad 128 mensajes) a todos los overlays conectados. Cada plantilla filtra los mensajes por `TEMPLATE_ID` + `INSTANCE_ID`.
-- **Descubrimiento**: el backend escanea el directorio de overlays buscando subdirectorios con `overlay.json` + `index.html`. No hay un manifiesto centralizado.
-- **Persistencia**: presets en `presets.json` y config en `config.json`, ambos en el directorio de datos de la app.
-- **Arquitectura del backend**: capas `domain/` (modelos y errores), `application/` (servicios y puertos) e `infrastructure/` (HTTP/WebSocket, comandos Tauri, stores JSON, filesystem). Los comandos IPC responden con un error estructurado (`CommandError`) que la UI mapea a mensajes traducidos.
-- **Frontend**: componentes Vue en `src/components/`; acceso a Tauri encapsulado en `src/services/`, estado en stores Pinia (`src/stores/`), tipos compartidos en `src/types/` y textos i18n en `src/i18n/locales/{es,en}.json`.
-- **Tauri plugins**: `dialog`.
+¿Desea desarrollar sobre la app, compilarla desde el código o entender la arquitectura? Todo el detalle técnico (requisitos, puesta en marcha, comandos, estructura, CI y releases) está en **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+
+¿Encontró un bug o quiere proponer una función nueva? Las release notes están en [CHANGELOG.md](CHANGELOG.md).
