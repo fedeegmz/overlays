@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git hooks managed with lefthook: `pre-commit` runs Biome (frontend) plus `cargo fmt --check` and `cargo clippy -- -D warnings` (backend, in parallel), and `pre-push` runs `cargo test`.
 - CI workflow (GitHub Actions) running on push and pull requests to `develop` and `main`: frontend job (Biome + `vue-tsc`) and backend job (`cargo fmt`, `clippy`, `test`).
 - Progress field type for overlay templates: configurable slider + numeric input in the content panel. Defined in `overlay.json` with required `min`/`max` (fields with missing or inverted bounds are discarded at discovery) and an optional `default` that falls back to `min`. Field values keep traveling as strings over IPC, presets, and WebSocket.
+- Boolean field type for overlay templates: a switch in the content panel to activate or deactivate overlay features. Defined in `overlay.json` with an optional `default` (`"true"`/`"false"`, discarded otherwise — unknown defaults make the field fall back to off at instance creation). Values travel as the strings `"true"`/`"false"` over IPC, presets, and WebSocket; overlay scripts read them with `fields.key === "true"`.
 - Example overlay template `barra-progreso` demonstrating the progress field.
 - Reload button on the Overlays page to re-scan the overlays directory without restarting the app; shows a spinning loader while refreshing.
 - Example overlay template `marco-camara`: full-canvas camera frame with transparent background and configurable color, thickness, and corner radius (outer corners stay square while only the interior hole rounds via an SVG overlay).
+- `lower-third-basico` demonstrates the boolean field: a "Mostrar subtítulo" switch that shows or hides the subtitle line, on by default.
 - Live preview in the overlay detail page: the real overlay HTML is loaded in an embedded preview that reflects configuration changes (typed fields, color picker, progress, applied presets) in real time over the WebSocket bus, without clicking the Update button. A dedicated preview instance ID keeps the live updates from touching the instance shown in OBS. Includes an "Open in window" fallback that renders the overlay as a first-class webview (reliable across Linux, macOS, and Windows).
 
 ### Fixed

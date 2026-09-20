@@ -33,6 +33,10 @@ export const useTemplateStore = defineStore("templates", () => {
         fields[f.key] = f.default ?? String(min);
         continue;
       }
+      if (f.type === "boolean") {
+        fields[f.key] = f.default ?? "false";
+        continue;
+      }
       if (f.default !== undefined) fields[f.key] = f.default;
     }
     return fields;

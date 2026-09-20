@@ -36,6 +36,9 @@ function update(fields) {
   if (fields.titulo !== undefined) tituloEl.textContent = fields.titulo;
   if (fields.subtitulo !== undefined)
     subtituloEl.textContent = fields.subtitulo;
+  if (fields.mostrar_subtitulo !== undefined)
+    subtituloEl.style.display =
+      fields.mostrar_subtitulo === "true" ? "" : "none";
   if (fields.color_titulo !== undefined)
     tituloEl.style.color = fields.color_titulo;
   if (fields.color_subtitulo !== undefined)

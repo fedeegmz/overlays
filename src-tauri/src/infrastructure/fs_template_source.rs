@@ -11,6 +11,36 @@ struct OverlayMeta {
     fields: Vec<OverlayField>,
 }
 
+fn validate_field(field: &OverlayField, meta_path: &Path) -> bool {
+    if field.field_type == "progress" {
+        if let (Some(min), Some(max)) = (field.min, field.max) {
+            if min < max {
+                return true;
+            }
+        }
+        eprintln!(
+            "[overlays] skipping field {:?} in {:?}: progress fields require min and max with min < max",
+            field.key, meta_path
+        );
+        return false;
+    }
+
+    if field.field_type == "boolean" {
+        return match field.default.as_deref() {
+            Some("true") | Some("false") | None => true,
+            Some(other) => {
+                eprintln!(
+                    "[overlays] skipping field {:?} in {:?}: boolean fields require default \"true\" or \"false\", got {:?}",
+                    field.key, meta_path, other
+                );
+                false
+            }
+        };
+    }
+
+    true
+}
+
 pub struct FsTemplateSource;
 
 impl TemplateSource for FsTemplateSource {
@@ -72,21 +102,7 @@ impl TemplateSource for FsTemplateSource {
             let fields = meta
                 .fields
                 .into_iter()
-                .filter(|field| {
-                    if field.field_type != "progress" {
-                        return true;
-                    }
-                    match (field.min, field.max) {
-                        (Some(min), Some(max)) if min < max => true,
-                        _ => {
-                            eprintln!(
-                                "[overlays] skipping field {:?} in {:?}: progress fields require min and max with min < max",
-                                field.key, meta_path
-                            );
-                            false
-                        }
-                    }
-                })
+                .filter(|field| validate_field(field, &meta_path))
                 .collect();
 
             templates.push(TemplateInfo {
@@ -159,6 +175,61 @@ mod tests {
             r#"[
                 { "key": "bad", "label": "Bad", "type": "progress" },
                 { "key": "inverted", "label": "Inv", "type": "progress", "min": 100, "max": 0 },
+                { "key": "texto", "label": "T", "type": "text" }
+            ]"#,
+        );
+
+        let templates = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(templates.len(), 1);
+        let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
+        assert_eq!(keys, vec!["texto"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn boolean_field_with_valid_default_is_kept() {
+        let dir = temp_dir("overlays-src-test");
+        write_template(
+            &dir,
+            "tpl-bool",
+            r#"[{ "key": "b", "label": "B", "type": "boolean", "default": "true" }]"#,
+        );
+
+        let templates = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(templates.len(), 1);
+        let field = &templates[0].fields[0];
+        assert_eq!(field.field_type, "boolean");
+        assert_eq!(field.default.as_deref(), Some("true"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn boolean_field_without_default_is_kept() {
+        let dir = temp_dir("overlays-src-test");
+        write_template(
+            &dir,
+            "tpl-bool",
+            r#"[{ "key": "b", "label": "B", "type": "boolean" }]"#,
+        );
+
+        let templates = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(templates.len(), 1);
+        let field = &templates[0].fields[0];
+        assert_eq!(field.default, None);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn boolean_field_with_invalid_default_is_dropped() {
+        let dir = temp_dir("overlays-src-test");
+        write_template(
+            &dir,
+            "tpl-bool",
+            r#"[
+                { "key": "bad", "label": "Bad", "type": "boolean", "default": "yes" },
                 { "key": "texto", "label": "T", "type": "text" }
             ]"#,
         );

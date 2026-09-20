@@ -14,6 +14,12 @@
       "default": "Subtítulo de ejemplo"
     },
     {
+      "key": "mostrar_subtitulo",
+      "label": "Mostrar subtítulo",
+      "type": "boolean",
+      "default": "true"
+    },
+    {
       "key": "color_titulo",
       "label": "Color título",
       "type": "color",

@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
+import BooleanField from "./BooleanField.vue";
 import ColorField from "./ColorField.vue";
 import ProgressField from "./ProgressField.vue";
 
@@ -108,6 +109,13 @@ function handleDelete(name: string) {
             :disabled="sending"
             :min="field.min"
             :max="field.max"
+            @update:model-value="updateField(field.key, $event)"
+          />
+          <BooleanField
+            v-else-if="field.type === 'boolean'"
+            :model-value="activeInstance.fields[field.key] ?? 'false'"
+            :input-id="`field-${field.key}`"
+            :disabled="sending"
             @update:model-value="updateField(field.key, $event)"
           />
           <input
