@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [0.3.1] - 2026-09-20
+
+### Fixed
+
+- Windows release builds failing on the CI runner: git checked out sources with CRLF line endings, which the Biome format gate (expects LF) reported as errors in every file. Added `.gitattributes` to normalize line endings to LF on every platform.
+
 ## [0.3.0] - 2026-09-20
 
 ### Added
@@ -57,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/fedeegmz/overlays/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fedeegmz/overlays/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fedeegmz/overlays/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fedeegmz/overlays/releases/tag/v0.1.0
