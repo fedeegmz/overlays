@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [0.3.0] - 2026-09-20
+
+### Added
+
 - App version shown in the Settings page via the Tauri app API (`@tauri-apps/api/app`).
 - Biome for frontend linting and formatting, wired into the build gate (`pnpm check` / `pnpm check:fix`).
 - Git hooks managed with lefthook: `pre-commit` runs Biome (frontend) plus `cargo fmt --check` and `cargo clippy -- -D warnings` (backend, in parallel), and `pre-push` runs `cargo test`.
@@ -53,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/fedeegmz/overlays/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fedeegmz/overlays/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fedeegmz/overlays/releases/tag/v0.1.0
