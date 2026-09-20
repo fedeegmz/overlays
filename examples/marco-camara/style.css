@@ -1,0 +1,25 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+#marco {
+  position: fixed;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#marco.entrar {
+  opacity: 1;
+}
+
+#marco.salir {
+  opacity: 0;
+}

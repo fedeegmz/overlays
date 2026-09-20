@@ -1,0 +1,27 @@
+{
+  "name": "Marco de cámara",
+  "fields": [
+    {
+      "key": "color",
+      "label": "Color del marco",
+      "type": "color",
+      "default": "#38bdf8"
+    },
+    {
+      "key": "grosor",
+      "label": "Grosor del marco",
+      "type": "progress",
+      "min": 1,
+      "max": 60,
+      "default": "6"
+    },
+    {
+      "key": "radio",
+      "label": "Radio de las esquinas",
+      "type": "progress",
+      "min": 0,
+      "max": 300,
+      "default": "0"
+    }
+  ]
+}

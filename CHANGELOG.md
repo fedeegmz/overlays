@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Progress field type for overlay templates: configurable slider + numeric input in the content panel. Defined in `overlay.json` with required `min`/`max` (fields with missing or inverted bounds are discarded at discovery) and an optional `default` that falls back to `min`. Field values keep traveling as strings over IPC, presets, and WebSocket.
 - Example overlay template `barra-progreso` demonstrating the progress field.
 - Reload button on the Overlays page to re-scan the overlays directory without restarting the app; shows a spinning loader while refreshing.
+- Example overlay template `marco-camara`: full-canvas camera frame with transparent background and configurable color, thickness, and corner radius (outer corners stay square while only the interior hole rounds via an SVG overlay).
 
 ## [0.2.0] - 2026-08-24
 
