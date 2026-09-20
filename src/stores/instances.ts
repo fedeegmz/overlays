@@ -1,3 +1,4 @@
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -36,6 +37,65 @@ export const useInstanceStore = defineStore("instances", () => {
     return `http://localhost:${serverPort.value}/overlay/${activeTemplate.value.path}?instance=${activeInstance.value.id}`;
   });
 
+  const previewInstanceId = computed<string | null>(() => {
+    if (!activeInstance.value) return null;
+    return `preview-${activeInstance.value.id}`;
+  });
+
+  const previewUrl = computed<string | null>(() => {
+    if (
+      !serverPort.value ||
+      !activeInstance.value ||
+      !activeTemplate.value ||
+      !previewInstanceId.value
+    )
+      return null;
+    const template = activeTemplate.value;
+    return `http://localhost:${serverPort.value}/overlay/${template.path}?instance=${previewInstanceId.value}`;
+  });
+
+  async function sendPreviewShow(): Promise<void> {
+    const instanceId = previewInstanceId.value;
+    const templateId = activeInstance.value?.templateId;
+    if (!instanceId || !templateId) return;
+    await sendOverlayUpdate({
+      instanceId,
+      template: templateId,
+      action: "show",
+      fields: buildFields(),
+    });
+  }
+
+  function sendPreviewHide(): void {
+    const instance = activeInstance.value;
+    const instanceId = previewInstanceId.value;
+    if (!instance || !instanceId) return;
+    void sendOverlayUpdate({
+      instanceId,
+      template: instance.templateId,
+      action: "hide",
+      fields: {},
+    });
+  }
+
+  async function openPreviewWindow(): Promise<void> {
+    const template = activeTemplate.value;
+    const instance = activeInstance.value;
+    if (!previewUrl.value || !template || !instance) return;
+    const label = `preview-${instance.id}`;
+    const existing = await WebviewWindow.getByLabel(label);
+    if (existing) {
+      await existing.setFocus();
+      return;
+    }
+    new WebviewWindow(label, {
+      url: previewUrl.value,
+      title: template.name,
+      width: 800,
+      height: 450,
+    });
+  }
+
   function instanceDisplayName(instance: OverlayInstance): string {
     const baseName =
       templateStore.getById(instance.templateId)?.name ?? instance.templateId;
@@ -48,6 +108,7 @@ export const useInstanceStore = defineStore("instances", () => {
   }
 
   function createInstance(templateId: string): string {
+    sendPreviewHide();
     const id = generateId();
     const instance: OverlayInstance = {
       id,
@@ -61,6 +122,7 @@ export const useInstanceStore = defineStore("instances", () => {
   }
 
   function selectInstance(id: string): void {
+    sendPreviewHide();
     activeInstanceId.value = id;
   }
 
@@ -139,11 +201,15 @@ export const useInstanceStore = defineStore("instances", () => {
     activeInstance,
     activeTemplate,
     overlayUrl,
+    previewInstanceId,
+    previewUrl,
     instanceDisplayName,
     createInstance,
     removeInstance,
     selectInstance,
     buildFields,
+    sendPreviewShow,
+    openPreviewWindow,
     show,
     update,
     hide,

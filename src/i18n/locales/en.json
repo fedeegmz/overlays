@@ -25,7 +25,11 @@
     "title": "Preview",
     "visibleInObs": "Visible in OBS",
     "hidden": "Hidden",
-    "update": "Update"
+    "update": "Update",
+    "loading": "Loading preview...",
+    "unavailable": "The local server is unavailable.",
+    "openWindow": "Open in window",
+    "live": "Live"
   },
   "colorField": {
     "openPicker": "Open color picker"

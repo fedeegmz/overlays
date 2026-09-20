@@ -1,21 +1,61 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 
 const { t } = useI18n();
 const instanceStore = useInstanceStore();
-const { activeInstance } = storeToRefs(instanceStore);
-const { update, toggleVisibility } = instanceStore;
+const { activeInstance, previewUrl } = storeToRefs(instanceStore);
+const { update, toggleVisibility, sendPreviewShow, openPreviewWindow } =
+  instanceStore;
 
 const sending = ref<"toggle" | "update" | null>(null);
 const sendError = ref<string | null>(null);
+const loading = ref(true);
+
+let previewTimer: ReturnType<typeof setTimeout> | null = null;
+let loadTimer: ReturnType<typeof setTimeout> | null = null;
 
 const visible = () => activeInstance.value?.visible ?? false;
 
 const disabled = () => sending.value !== null || !activeInstance.value;
+
+watch(
+  () => activeInstance.value?.fields,
+  () => {
+    if (previewTimer) clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => {
+      void sendPreviewShow().catch((err) => {
+        sendError.value = commandErrorMessage(err);
+      });
+    }, 200);
+  },
+  { deep: true },
+);
+
+watch(
+  previewUrl,
+  () => {
+    loading.value = true;
+    if (loadTimer) clearTimeout(loadTimer);
+    loadTimer = setTimeout(() => {
+      loading.value = false;
+    }, 4000);
+  },
+  { immediate: true },
+);
+
+async function handleFrameLoad() {
+  loading.value = false;
+  if (loadTimer) clearTimeout(loadTimer);
+  try {
+    await sendPreviewShow();
+  } catch (err) {
+    sendError.value = commandErrorMessage(err);
+  }
+}
 
 async function handleToggle() {
   if (disabled()) return;
@@ -42,20 +82,44 @@ async function runUpdate() {
     sending.value = null;
   }
 }
+
+async function handleOpenWindow() {
+  sendError.value = null;
+  try {
+    await openPreviewWindow();
+  } catch (err) {
+    sendError.value = commandErrorMessage(err);
+  }
+}
+
+onBeforeUnmount(() => {
+  if (previewTimer) clearTimeout(previewTimer);
+  if (loadTimer) clearTimeout(loadTimer);
+});
 </script>
 
 <template>
   <div class="panel">
     <div class="panel-header">{{ t("preview.title") }}</div>
     <div class="panel-body">
-      <div class="stage" :class="{ 'stage-dimmed': !visible() }">
-        <div class="stage-lowerthird">
-          <div class="lt-title">
-            {{ activeInstance?.fields?.titulo || activeInstance?.fields?.texto || '...' }}
-          </div>
-          <div class="lt-sub">
-            {{ activeInstance?.fields?.subtitulo || '' }}
-          </div>
+      <div class="stage">
+        <iframe
+          v-if="previewUrl"
+          class="stage-frame"
+          :src="previewUrl"
+          title="overlay preview"
+          @load="handleFrameLoad"
+        ></iframe>
+        <div class="stage-overlay">
+          <span v-if="previewUrl && !loading" class="stage-live"
+            >{{ t("preview.live") }}</span
+          >
+          <span v-if="loading" class="stage-message"
+            >{{ t("preview.loading") }}</span
+          >
+          <span v-else-if="!previewUrl" class="stage-message"
+            >{{ t("preview.unavailable") }}</span
+          >
         </div>
       </div>
 
@@ -86,6 +150,15 @@ async function runUpdate() {
           @click="runUpdate"
         >
           {{ t("preview.update") }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-ghost"
+          :disabled="!previewUrl"
+          @click="handleOpenWindow"
+        >
+          {{ t("preview.openWindow") }}
         </button>
       </div>
     </div>
@@ -120,35 +193,47 @@ async function runUpdate() {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='none'/%3E%3Cpath d='M0 40L40 0' stroke='%231D1D22' stroke-width='1'/%3E%3C/svg%3E");
   border-radius: var(--radius-md);
   position: relative;
+  overflow: hidden;
+}
+
+.stage-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.stage-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: flex-end;
-  padding: 22px;
-  transition: opacity 0.2s ease;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+  pointer-events: none;
 }
 
-.stage-dimmed {
-  opacity: 0.45;
-}
-
-.stage-lowerthird {
-  background: rgba(18, 18, 22, 0.75);
-  backdrop-filter: blur(3px);
-  border-left: 4px solid var(--accent);
-  padding: 10px 16px;
-  border-radius: 4px;
-  max-width: 70%;
-}
-
-.lt-title {
+.stage-live {
+  background: var(--accent);
   color: #fff;
-  font-size: 17px;
+  font-size: 10.5px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 999px;
 }
 
-.lt-sub {
-  color: #c9c9d1;
+.stage-message {
+  align-self: center;
+  color: var(--text-faint);
   font-size: 12.5px;
-  margin-top: 2px;
+  background: rgba(19, 19, 23, 0.72);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
 }
 
 .send-error {
@@ -223,5 +308,9 @@ async function runUpdate() {
   font-size: 13px;
   font-weight: 550;
   color: var(--text-secondary);
+}
+
+.btn-ghost {
+  margin-left: auto;
 }
 </style>
