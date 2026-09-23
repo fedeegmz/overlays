@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Copy-to-clipboard button next to the overlay URL in the detail page (works on Linux, Windows, and macOS via `tauri-plugin-clipboard-manager`). The button shows a checkmark confirmation for a couple of seconds after copying, and the URL truncates with an ellipsis while remaining fully reachable for copy.
 - File field type for overlay templates: a picker that opens the native file explorer restricted to the configured overlays directory. Defined in `overlay.json` with an optional `accept` list of extensions (without dots, normalized at discovery) that filters the picker. The stored value is the path **relative to the template folder**, so overlays keep referencing files the local HTTP server can serve; files outside the overlays directory are rejected by the backend.
 
 ## [0.3.1] - 2026-09-20

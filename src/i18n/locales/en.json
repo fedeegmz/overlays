@@ -31,6 +31,11 @@
     "openWindow": "Open in window",
     "live": "Live"
   },
+  "overlayDetail": {
+    "copyUrl": "Copy URL",
+    "copied": "URL copied",
+    "copyFailed": "Could not copy the URL."
+  },
   "colorField": {
     "openPicker": "Open color picker"
   },
