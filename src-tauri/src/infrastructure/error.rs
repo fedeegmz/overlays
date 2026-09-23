@@ -22,6 +22,8 @@ impl CommandError {
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
     pub const CONFIG_SAVE_FAILED: &str = "config.save_failed";
+    pub const FILE_ASSET_OUTSIDE_OVERLAYS_DIR: &str = "file.asset_outside_overlays_dir";
+    pub const FILE_RESOLVE_FAILED: &str = "file.resolve_failed";
 
     pub fn new(code: &str) -> Self {
         Self {
@@ -54,6 +56,12 @@ impl From<DomainError> for CommandError {
             }
             DomainError::ConfigSaveFailed { detail } => {
                 Self::new(Self::CONFIG_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::AssetOutsideOverlaysDir { path } => {
+                Self::new(Self::FILE_ASSET_OUTSIDE_OVERLAYS_DIR).param("path", path)
+            }
+            DomainError::AssetResolveFailed { path } => {
+                Self::new(Self::FILE_RESOLVE_FAILED).param("path", path)
             }
         }
     }

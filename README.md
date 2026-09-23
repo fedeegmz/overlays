@@ -9,7 +9,7 @@ Aplicación de escritorio (Tauri + Rust + Vue 3) que sirve **overlays HTML/CSS/J
 - **Vista previa en vivo**: los cambios en los campos se reflejan al instante en la vista previa, sin tocar lo que está en OBS.
 - **Multi-instancia**: cada plantilla puede tener varias instancias activas a la vez, cada una con su propia URL y su propio estado.
 - **Presets**: permite guardar combinaciones de plantilla + campos con un nombre y volver a aplicarlas en cualquier momento.
-- **Tipos de campo**: texto, color (con canal alpha), progreso (con rango) y booleano (interruptor on/off).
+- **Tipos de campo**: texto, color (con canal alpha), progreso (con rango), booleano (interruptor on/off) y archivo (selector que abre el explorador de archivos).
 - **Plantillas de ejemplo**: cinco overlays listos para usar.
 - **Bilingüe**: la interfaz está en español e inglés, y el idioma se cambia desde Ajustes.
 - **Sin configuración de red**: OBS y la app se comunican por `localhost`; no es necesario abrir puertos ni tocar el firewall.
@@ -179,8 +179,9 @@ Tipos de campo soportados:
 | `color`    | Selector de color     | Formato `#rrggbb` o `#rrggbbaa` (con alpha).                                              |
 | `progress` | Deslizador + numérico | `min` y `max` **obligatorios** con `min < max`; `default` opcional (si falta, usa `min`). |
 | `boolean`  | Interruptor on/off    | `default` opcional: `"true"` o `"false"` (si falta, arranca apagado).                     |
+| `file`     | Selector de archivo   | Abre el explorador limitado a la carpeta de overlays; `accept` (extensiónes sin punto, opcional) filtra los tipos. Guarda la ruta **relativa** a la carpeta de la plantilla. |
 
-> Los campos inválidos se descartan al descubrir la plantilla (no rompen la app): un `progress` sin `min`/`max` o con rango invertido, o un `boolean` con `default` distinto de `"true"`/`"false"`. El backend registra en consola qué campo descartó y por qué.
+> Los campos inválidos se descartan al descubrir la plantilla (no rompen la app): un `progress` sin `min`/`max` o con rango invertido, un `boolean` con `default` distinto de `"true"`/`"false"`, o un `file` con `accept` vacío o con extensiones no alfanuméricas. El backend registra en consola qué campo descartó y por qué.
 
 ### `script.js`
 

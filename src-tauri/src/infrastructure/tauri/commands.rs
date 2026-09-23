@@ -13,6 +13,7 @@ use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::preset::Preset;
 use crate::domain::template::Manifest;
 use crate::infrastructure::error::CommandError;
+use crate::infrastructure::fs_template_source;
 use crate::infrastructure::http::state::HttpState;
 
 #[derive(Debug, Clone, Serialize)]
@@ -52,6 +53,17 @@ pub fn get_server_status(http: State<'_, Arc<HttpState>>) -> ServerStatus {
         running: port.is_some(),
         port: port.unwrap_or(0),
     }
+}
+
+#[tauri::command]
+pub fn resolve_overlay_asset_path(
+    http: State<'_, Arc<HttpState>>,
+    template_id: String,
+    absolute_path: String,
+) -> Result<String, CommandError> {
+    let overlays_dir = http.overlays_dir.get();
+    fs_template_source::resolve_asset_path(&overlays_dir, &template_id, &absolute_path)
+        .map_err(CommandError::from)
 }
 
 #[tauri::command]

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- File field type for overlay templates: a picker that opens the native file explorer restricted to the configured overlays directory. Defined in `overlay.json` with an optional `accept` list of extensions (without dots, normalized at discovery) that filters the picker. The stored value is the path **relative to the template folder**, so overlays keep referencing files the local HTTP server can serve; files outside the overlays directory are rejected by the backend.
+
 ## [0.3.1] - 2026-09-20
 
 ### Fixed

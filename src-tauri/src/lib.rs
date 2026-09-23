@@ -68,6 +68,7 @@ pub fn run() {
             infrastructure::tauri::commands::send_overlay_update,
             infrastructure::tauri::commands::list_templates,
             infrastructure::tauri::commands::get_server_status,
+            infrastructure::tauri::commands::resolve_overlay_asset_path,
             infrastructure::tauri::commands::save_preset,
             infrastructure::tauri::commands::list_presets,
             infrastructure::tauri::commands::delete_preset,

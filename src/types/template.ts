@@ -5,6 +5,7 @@ export interface TemplateField {
   default?: string;
   min?: number;
   max?: number;
+  accept?: string[];
 }
 
 export interface TemplateInfo {

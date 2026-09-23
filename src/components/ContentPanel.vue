@@ -7,6 +7,7 @@ import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
 import BooleanField from "./BooleanField.vue";
 import ColorField from "./ColorField.vue";
+import FileField from "./FileField.vue";
 import ProgressField from "./ProgressField.vue";
 
 const { t } = useI18n();
@@ -116,6 +117,15 @@ function handleDelete(name: string) {
             :model-value="activeInstance.fields[field.key] ?? 'false'"
             :input-id="`field-${field.key}`"
             :disabled="sending"
+            @update:model-value="updateField(field.key, $event)"
+          />
+          <FileField
+            v-else-if="field.type === 'file'"
+            :model-value="activeInstance.fields[field.key] ?? ''"
+            :input-id="`field-${field.key}`"
+            :disabled="sending"
+            :template-id="activeInstance.templateId"
+            :accept="field.accept"
             @update:model-value="updateField(field.key, $event)"
           />
           <input

@@ -34,6 +34,12 @@
   "colorField": {
     "openPicker": "Open color picker"
   },
+  "fileField": {
+    "choose": "Choose file",
+    "picking": "Choosing...",
+    "clear": "Clear",
+    "placeholder": "File path"
+  },
   "dialog": {
     "selectOverlaysDir": "Select overlays directory"
   },
@@ -55,6 +61,10 @@
     },
     "overlays_dir": {
       "invalid": "\"{path}\" is not a valid directory."
+    },
+    "file": {
+      "asset_outside_overlays_dir": "The file \"{path}\" is outside the overlays directory.",
+      "resolve_failed": "Could not resolve the file \"{path}\"."
     },
     "config": {
       "save_failed": "Could not save the configuration."

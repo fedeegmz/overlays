@@ -8,6 +8,8 @@ pub enum DomainError {
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
     ConfigSaveFailed { detail: String },
+    AssetOutsideOverlaysDir { path: String },
+    AssetResolveFailed { path: String },
 }
 
 impl fmt::Display for DomainError {
@@ -21,6 +23,10 @@ impl fmt::Display for DomainError {
             Self::LanguageUnsupported { lang } => write!(f, "unsupported language: {lang}"),
             Self::OverlaysDirInvalid { path } => write!(f, "invalid overlays dir: {path}"),
             Self::ConfigSaveFailed { detail } => write!(f, "config save failed: {detail}"),
+            Self::AssetOutsideOverlaysDir { path } => {
+                write!(f, "asset outside overlays dir: {path}")
+            }
+            Self::AssetResolveFailed { path } => write!(f, "could not resolve asset: {path}"),
         }
     }
 }

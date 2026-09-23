@@ -173,6 +173,7 @@ Los comandos Tauri devuelven un error estructurado `CommandError` (con código),
 - Durante el descubrimiento se validan los campos:
   - `progress` requiere `min` y `max` con `min < max`; sin eso, el campo se descarta.
   - `boolean` requiere `default` `"true"`/`"false"` (o ausente); otro valor descarta el campo.
+  - `file` acepta un `accept` opcional (lista de extensiones sin punto); si viene, debe ser no vacío con entradas alfanuméricas (se normalizan a minúsculas y sin `.` inicial), si no se descarta el campo.
   - Los descartes se loguean con `[overlays]` en consola (carpeta, key y motivo).
 - En la UI, el botón **Recargar** de la grilla llama `refreshTemplates()` para re-disparar el discovery sin reiniciar.
 
