@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-22
+
 ### Added
 
 - Copy-to-clipboard button next to the overlay URL in the detail page (works on Linux, Windows, and macOS via `tauri-plugin-clipboard-manager`). The button shows a checkmark confirmation for a couple of seconds after copying, and the URL truncates with an ellipsis while remaining fully reachable for copy.
@@ -66,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/fedeegmz/overlays/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/fedeegmz/overlays/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fedeegmz/overlays/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fedeegmz/overlays/compare/v0.1.0...v0.2.0
