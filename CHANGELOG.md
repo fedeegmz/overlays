@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-09
+
 ### Added
 
 - Optional `step` for progress fields in `overlay.json` (defaults to `1`), applied to both the slider and the numeric input. Enables decimal values such as relative percentages (`"step": 0.1`). Fields with a non-positive `step` are discarded at discovery.
@@ -73,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/fedeegmz/overlays/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fedeegmz/overlays/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/fedeegmz/overlays/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fedeegmz/overlays/compare/v0.2.0...v0.3.0
