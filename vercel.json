@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "echo 'Static landing page, no build step'",
+  "outputDirectory": "landing",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- landing/ vercel.json"
+}
