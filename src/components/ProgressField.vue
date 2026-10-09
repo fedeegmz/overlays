@@ -8,10 +8,12 @@ const props = withDefaults(
     disabled?: boolean;
     min?: number;
     max?: number;
+    step?: number;
   }>(),
   {
     min: 0,
     max: 100,
+    step: 1,
   },
 );
 
@@ -64,7 +66,7 @@ function handleNumber(event: Event) {
       type="range"
       :min="props.min"
       :max="props.max"
-      :step="1"
+      :step="props.step"
       :value="numeric"
       :disabled="disabled"
       @input="handleRange"
@@ -75,6 +77,7 @@ function handleNumber(event: Event) {
       type="number"
       :min="props.min"
       :max="props.max"
+      :step="props.step"
       :value="numeric"
       :disabled="disabled"
       @input="handleNumber"

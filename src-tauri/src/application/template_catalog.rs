@@ -66,6 +66,7 @@ mod tests {
                     default: None,
                     min: None,
                     max: None,
+                    step: None,
                     accept: None,
                 }],
             }])

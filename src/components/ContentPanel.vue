@@ -110,6 +110,7 @@ function handleDelete(name: string) {
             :disabled="sending"
             :min="field.min"
             :max="field.max"
+            :step="field.step"
             @update:model-value="updateField(field.key, $event)"
           />
           <BooleanField

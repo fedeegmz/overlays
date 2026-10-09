@@ -13,6 +13,8 @@ pub struct OverlayField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub accept: Option<Vec<String>>,
 }
 

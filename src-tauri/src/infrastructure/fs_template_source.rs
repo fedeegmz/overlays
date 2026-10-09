@@ -13,13 +13,13 @@ struct OverlayMeta {
 
 fn validate_field(field: &OverlayField, meta_path: &Path) -> bool {
     if field.field_type == "progress" {
-        if let (Some(min), Some(max)) = (field.min, field.max) {
-            if min < max {
-                return true;
-            }
+        let range_ok = matches!((field.min, field.max), (Some(min), Some(max)) if min < max);
+        let step_ok = field.step.is_none_or(|step| step > 0.0);
+        if range_ok && step_ok {
+            return true;
         }
         eprintln!(
-            "[overlays] skipping field {:?} in {:?}: progress fields require min and max with min < max",
+            "[overlays] skipping field {:?} in {:?}: progress fields require min and max with min < max, and step > 0 when present",
             field.key, meta_path
         );
         return false;
@@ -267,6 +267,41 @@ mod tests {
         assert_eq!(field.min, Some(0.0));
         assert_eq!(field.max, Some(100.0));
         assert_eq!(field.default.as_deref(), Some("50"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn progress_field_with_positive_step_is_kept() {
+        let dir = temp_dir("overlays-src-test");
+        write_template(
+            &dir,
+            "tpl-step",
+            r#"[{ "key": "p", "label": "P", "type": "progress", "min": 0, "max": 100, "step": 0.1 }]"#,
+        );
+
+        let templates = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(templates[0].fields[0].step, Some(0.1));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn progress_field_with_non_positive_step_is_dropped() {
+        let dir = temp_dir("overlays-src-test");
+        write_template(
+            &dir,
+            "tpl-bad-step",
+            r#"[
+                { "key": "zero", "label": "Z", "type": "progress", "min": 0, "max": 100, "step": 0 },
+                { "key": "neg", "label": "N", "type": "progress", "min": 0, "max": 100, "step": -1 },
+                { "key": "texto", "label": "T", "type": "text" }
+            ]"#,
+        );
+
+        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
+        assert_eq!(keys, vec!["texto"]);
 
         let _ = std::fs::remove_dir_all(&dir);
     }

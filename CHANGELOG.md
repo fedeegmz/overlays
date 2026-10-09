@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional `step` for progress fields in `overlay.json` (defaults to `1`), applied to both the slider and the numeric input. Enables decimal values such as relative percentages (`"step": 0.1`). Fields with a non-positive `step` are discarded at discovery.
+
 ## [0.4.0] - 2026-09-22
 
 ### Added
