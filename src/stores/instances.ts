@@ -96,7 +96,7 @@ export const useInstanceStore = defineStore("instances", () => {
     });
   }
 
-  function instanceDisplayName(instance: OverlayInstance): string {
+  function instanceDefaultName(instance: OverlayInstance): string {
     const baseName =
       templateStore.getById(instance.templateId)?.name ?? instance.templateId;
     const sameTemplate = instances.value.filter(
@@ -105,6 +105,17 @@ export const useInstanceStore = defineStore("instances", () => {
     if (sameTemplate.length <= 1) return baseName;
     const index = sameTemplate.indexOf(instance) + 1;
     return `${baseName} #${index}`;
+  }
+
+  function instanceDisplayName(instance: OverlayInstance): string {
+    return instance.customName ?? instanceDefaultName(instance);
+  }
+
+  function renameInstance(id: string, name: string): void {
+    const instance = instances.value.find((i) => i.id === id);
+    if (!instance) return;
+    const trimmed = name.trim();
+    instance.customName = trimmed === "" ? undefined : trimmed;
   }
 
   function createInstance(templateId: string): string {
@@ -203,7 +214,9 @@ export const useInstanceStore = defineStore("instances", () => {
     overlayUrl,
     previewInstanceId,
     previewUrl,
+    instanceDefaultName,
     instanceDisplayName,
+    renameInstance,
     createInstance,
     removeInstance,
     selectInstance,

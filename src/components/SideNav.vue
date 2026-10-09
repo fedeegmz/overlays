@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { nextTick, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
 import { useInstanceStore } from "../stores/instances";
+import type { OverlayInstance } from "../types";
 
 defineProps<{
   currentPage: "overlays" | "settings";
@@ -17,11 +19,40 @@ const { t } = useI18n();
 
 const instanceStore = useInstanceStore();
 const { instances, activeInstanceId } = storeToRefs(instanceStore);
-const { instanceDisplayName, selectInstance, removeInstance } = instanceStore;
+const {
+  instanceDefaultName,
+  instanceDisplayName,
+  renameInstance,
+  selectInstance,
+  removeInstance,
+} = instanceStore;
+
+const editingId = ref<string | null>(null);
+const draftName = ref("");
+const renameInput = ref<HTMLInputElement[]>([]);
 
 function handleInstanceClick(id: string) {
+  if (editingId.value === id) return;
   selectInstance(id);
   emit("openDetail");
+}
+
+async function startRename(instance: OverlayInstance) {
+  editingId.value = instance.id;
+  draftName.value = instance.customName ?? "";
+  await nextTick();
+  renameInput.value[0]?.focus();
+  renameInput.value[0]?.select();
+}
+
+function commitRename() {
+  if (!editingId.value) return;
+  renameInstance(editingId.value, draftName.value);
+  editingId.value = null;
+}
+
+function cancelRename() {
+  editingId.value = null;
 }
 </script>
 
@@ -72,12 +103,31 @@ function handleInstanceClick(id: string) {
           tabindex="0"
           @click="handleInstanceClick(instance.id)"
           @keydown.enter.prevent="handleInstanceClick(instance.id)"
+          @dblclick="startRename(instance)"
+          @keydown.f2.prevent="startRename(instance)"
         >
           <span
             class="instance-dot"
             :class="instance.visible ? 'dot-live' : 'dot-idle'"
           ></span>
-          <span class="instance-name">{{ instanceDisplayName(instance) }}</span>
+          <input
+            v-if="editingId === instance.id"
+            ref="renameInput"
+            v-model="draftName"
+            class="instance-rename"
+            type="text"
+            :placeholder="instanceDefaultName(instance)"
+            :aria-label="t('sidebar.renameInstance')"
+            @click.stop
+            @dblclick.stop
+            @keydown.enter.stop.prevent="commitRename"
+            @keydown.esc.stop.prevent="cancelRename"
+            @keydown.f2.stop
+            @blur="commitRename"
+          >
+          <span v-else class="instance-name" :title="t('sidebar.renameHint')"
+            >{{ instanceDisplayName(instance) }}</span
+          >
           <button
             type="button"
             class="instance-close"
@@ -267,6 +317,19 @@ function handleInstanceClick(id: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.instance-rename {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 4px;
+  margin: -2px 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  outline: none;
 }
 
 .instance-close {

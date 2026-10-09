@@ -3,6 +3,8 @@
     "overlays": "Overlays",
     "instances": "Instances",
     "closeInstance": "Close instance",
+    "renameInstance": "Instance name",
+    "renameHint": "Double-click or press F2 to rename",
     "settings": "Settings"
   },
   "overlaysPage": {

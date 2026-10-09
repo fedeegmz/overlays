@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Optional `step` for progress fields in `overlay.json` (defaults to `1`), applied to both the slider and the numeric input. Enables decimal values such as relative percentages (`"step": 0.1`). Fields with a non-positive `step` are discarded at discovery.
+- Custom names for overlay instances in the sidebar: double-click a tab (or press F2 while it is focused) to rename it inline. Enter or clicking away saves, Escape cancels, and an empty name restores the default `Template name #n` label. Custom names live in memory only, like the instances themselves, and are lost on restart.
 
 ## [0.4.0] - 2026-09-22
 

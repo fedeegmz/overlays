@@ -3,6 +3,8 @@
     "overlays": "Overlays",
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
+    "renameInstance": "Nombre de la instancia",
+    "renameHint": "Doble clic o F2 para renombrar",
     "settings": "Ajustes"
   },
   "overlaysPage": {
