@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="overlay-logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="overlay-logo.png">
+    <title>Overlays — Control de overlays para OBS</title>
+    <meta
+      name="description"
+      content="App de escritorio gratuita y de código abierto para controlar overlays de OBS en tiempo real desde un servidor local. Sin cuentas ni servicios de terceros."
+    >
+    <meta name="theme-color" content="#7C5CFC">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Overlays — Control de overlays para OBS">
+    <meta
+      property="og:description"
+      content="Zócalos, títulos y más para OBS, editables en tiempo real desde una app de escritorio local. Gratis y de código abierto."
+    >
+    <meta property="og:locale" content="es_AR">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+    <script src="main.js" defer></script>
+  </head>
+
+  <body>
+    <header>
+      <div class="wrap">
+        <nav>
+          <a href="/" class="brand">
+            <img
+              src="overlay-logo.svg"
+              alt=""
+              width="30"
+              height="30"
+              class="brand-mark"
+            >
+            Overlays
+          </a>
+          <div class="nav-links">
+            <a href="#features">Funciones</a>
+            <a href="#como-funciona">Cómo funciona</a>
+            <a href="#stack">Stack</a>
+            <a href="#descargar">Descargar</a>
+          </div>
+          <div class="nav-cta">
+            <a
+              class="btn btn-sm"
+              href="https://github.com/fedeegmz/overlays"
+              target="_blank"
+              rel="noopener"
+            >
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 .5C5.73.5.5 5.73.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.78 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.21.66.8.55A11.51 11.51 0 0 0 23.5 12c0-6.27-5.23-11.5-11.5-11.5Z"
+                />
+              </svg>
+              GitHub
+            </a>
+            <a class="btn btn-primary btn-sm" href="#descargar">Descargar</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============ HERO ============ -->
+      <section class="hero" style="border-top:none;">
+        <div class="wrap">
+          <div class="hero-inner">
+            <span class="eyebrow"
+              ><span class="dot"></span>Código abierto · MIT</span
+            >
+            <h1>
+              Controlá tus overlays de <span class="accent">OBS</span> sin
+              depender de servicios de terceros
+            </h1>
+            <p class="hero-sub">
+              Overlays es una app de escritorio que sirve zócalos, títulos,
+              barras de progreso y cualquier plantilla HTML que armes como
+              Browser Source para OBS, y te deja editarlos en tiempo real desde
+              un panel de control local. Sin cuentas, sin conexión a internet,
+              sin límites de overlays.uno.
+            </p>
+            <div class="hero-actions">
+              <a
+                href="#descargar"
+                class="btn btn-primary btn-lg"
+                id="hero-download-btn"
+                >Descargar para tu sistema</a
+              >
+              <a
+                href="https://github.com/fedeegmz/overlays"
+                target="_blank"
+                rel="noopener"
+                class="btn btn-lg"
+                >Ver código fuente</a
+              >
+            </div>
+            <div class="hero-meta">
+              Tauri + Rust + Vue 3 · Gratis y de código abierto · Español e
+              inglés
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="visual-titlebar">
+              <span class="visual-dot"></span><span class="visual-dot"></span
+              ><span class="visual-dot"></span>
+            </div>
+            <div class="visual-body">
+              <div class="visual-sidebar">
+                <div class="visual-nav-item active">Overlays</div>
+                <div class="visual-nav-item">Ajustes</div>
+              </div>
+              <div class="visual-content">
+                <div class="visual-grid">
+                  <div class="visual-card">
+                    <div class="visual-preview">
+                      <div class="visual-lt">
+                        <div class="t">FedeGMZ</div>
+                        <div class="s">
+                          Programando en vivo — Rust &amp; Vue
+                        </div>
+                      </div>
+                    </div>
+                    <div class="visual-card-name">Zócalo básico</div>
+                  </div>
+                  <div class="visual-card">
+                    <div class="visual-preview" style="align-items:flex-start;">
+                      <div class="visual-lt" style="border-left-color:#E8A24C;">
+                        <div class="t">¡Nuevo sub!</div>
+                        <div class="s">gracias fede123</div>
+                      </div>
+                    </div>
+                    <div class="visual-card-name">Título centrado</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FEATURES ============ -->
+      <section id="features">
+        <div class="wrap">
+          <div class="section-head">
+            <div class="section-eyebrow">Funciones</div>
+            <div class="section-title">
+              Todo lo que necesitás para tus overlays
+            </div>
+            <p class="section-sub">
+              Un servidor local, plantillas que podés crear vos mismo y control
+              en tiempo real desde una sola app.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
+              </div>
+              <div class="feature-title">Servidor embebido</div>
+              <div class="feature-desc">
+                Cada overlay se sirve por HTTP + WebSocket en
+                <code>127.0.0.1:4848</code>
+                (con fallback automático a 4849–4851), directo desde la app.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </div>
+              <div class="feature-title">Plantillas propias</div>
+              <div class="feature-desc">
+                Cada overlay es una carpeta con <code>overlay.json</code>, HTML,
+                CSS y JS. Creá las tuyas o partí de los ejemplos: zócalo, título
+                centrado, barra de progreso y marco de cámara.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" />
+                  <circle cx="16" cy="6" r="2" />
+                  <circle cx="10" cy="12" r="2" />
+                  <circle cx="18" cy="18" r="2" />
+                </svg>
+              </div>
+              <div class="feature-title">Campos tipados</div>
+              <div class="feature-desc">
+                Texto, color, interruptores, sliders de progreso y selector de
+                archivos. La plantilla define sus campos y la app arma el panel
+                de edición sola.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </div>
+              <div class="feature-title">Vista previa en vivo</div>
+              <div class="feature-desc">
+                Mirá cómo queda el overlay mientras lo editás, sin tocar lo que
+                está saliendo al aire en OBS. También podés abrirlo en una
+                ventana aparte.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2" />
+                </svg>
+              </div>
+              <div class="feature-title">Multi-instancia</div>
+              <div class="feature-desc">
+                Abrí varias instancias de la misma plantilla a la vez, cada una
+                con su propia URL, estado en vivo/inactivo y un nombre que podés
+                personalizar.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  aria-hidden="true"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <div class="feature-title">Presets</div>
+              <div class="feature-desc">
+                Guardá combinaciones de plantilla + campos para reutilizarlas en
+                cualquier momento con un clic.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CÓMO FUNCIONA ============ -->
+      <section id="como-funciona">
+        <div class="wrap">
+          <div class="section-head">
+            <div class="section-eyebrow">Cómo funciona</div>
+            <div class="section-title">
+              De la app a tu stream en cinco pasos
+            </div>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">01</div>
+              <div>
+                <div class="step-title">Elegí una plantilla</div>
+                <div class="step-desc">
+                  La app lee las plantillas de tu carpeta de overlays
+                  (configurable en Ajustes). Al elegir una se crea una nueva
+                  instancia con su propia URL.
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">02</div>
+              <div>
+                <div class="step-title">Agregala a OBS</div>
+                <div class="step-desc">
+                  Copiá la URL con un clic y pegala en una fuente de tipo
+                  <code>Navegador</code>
+                  en OBS. El fondo es transparente.
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">03</div>
+              <div>
+                <div class="step-title">Completá los campos</div>
+                <div class="step-desc">
+                  Editá textos, colores y demás campos de la plantilla desde el
+                  panel de contenido, con vista previa en vivo.
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">04</div>
+              <div>
+                <div class="step-title">Mostrá, actualizá u ocultá</div>
+                <div class="step-desc">
+                  Los cambios se reflejan al instante en OBS vía WebSocket, sin
+                  recargar la fuente de navegador.
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">05</div>
+              <div>
+                <div class="step-title">Guardá presets (opcional)</div>
+                <div class="step-desc">
+                  Combinaciones de plantilla + campos que podés volver a aplicar
+                  con un clic, ideales para segmentos recurrentes.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STACK ============ -->
+      <section id="stack">
+        <div class="wrap">
+          <div class="section-head">
+            <div class="section-eyebrow">Bajo el capó</div>
+            <div class="section-title">
+              Liviana, local y sin dependencias externas
+            </div>
+          </div>
+
+          <div class="stack-strip">
+            <div class="stack-item"><span class="sw"></span>Tauri</div>
+            <div class="stack-item"><span class="sw"></span>Rust + Axum</div>
+            <div class="stack-item"><span class="sw"></span>Vue 3</div>
+            <div class="stack-item">
+              <span class="sw"></span>WebSocket en tiempo real
+            </div>
+            <span class="stack-note">servidor local · 127.0.0.1:4848</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DESCARGAR ============ -->
+      <section id="descargar">
+        <div class="wrap">
+          <div class="section-head">
+            <div class="section-eyebrow">Descargar</div>
+            <div class="section-title">Instalá Overlays en tu sistema</div>
+            <p class="section-sub">
+              Los instaladores se publican como releases en GitHub. Elegí tu
+              sistema operativo:
+            </p>
+          </div>
+
+          <div class="download-grid" id="download-grid">
+            <div class="os-card" data-os="windows">
+              <div class="os-icon">
+                <svg
+                  aria-hidden="true"
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                >
+                  <path
+                    d="M3 5.5 10.5 4.4V11H3V5.5ZM11.4 4.3 21 3v8h-9.6V4.3ZM3 12h7.5v6.6L3 17.6V12Zm8.4 0H21v8l-9.6-1.3V12Z"
+                  />
+                </svg>
+              </div>
+              <div class="os-name">
+                Windows<span class="os-recommended-tag">Tu sistema</span>
+              </div>
+              <div class="os-formats">.exe</div>
+              <a
+                class="btn"
+                href="https://github.com/fedeegmz/overlays/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Descargar</a
+              >
+            </div>
+
+            <div class="os-card" data-os="mac">
+              <div class="os-icon">
+                <svg
+                  aria-hidden="true"
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                >
+                  <path
+                    d="M16.7 12.9c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.1 1.7 2.4 3 2.4 1.2 0 1.6-.8 3.1-.8s1.9.8 3.1.7c1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.6-1-2.7-3.9-.1-2.4 2-3.5 2.1-3.6M14.5 5.4c.6-.8 1-1.9.9-3-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.9-1 2.9 1 .1 2.1-.5 2.8-1.3Z"
+                  />
+                </svg>
+              </div>
+              <div class="os-name">
+                macOS<span class="os-recommended-tag">Tu sistema</span>
+              </div>
+              <div class="os-formats">.dmg</div>
+              <a
+                class="btn"
+                href="https://github.com/fedeegmz/overlays/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Descargar</a
+              >
+            </div>
+
+            <div class="os-card" data-os="linux">
+              <div class="os-icon">
+                <svg
+                  aria-hidden="true"
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                >
+                  <circle cx="12" cy="8" r="3.2" />
+                  <path
+                    d="M9 10.5c-1 1.8-2.5 2.6-2.5 5 0 2.5 1 3.5 1 4.5h9c0-1 1-2 1-4.5 0-2.4-1.5-3.2-2.5-5"
+                  />
+                  <path
+                    d="M9.5 6.5c-.3-1-.1-2 .5-2.7M14.5 6.5c.3-1 .1-2-.5-2.7"
+                  />
+                </svg>
+              </div>
+              <div class="os-name">
+                Linux<span class="os-recommended-tag">Tu sistema</span>
+              </div>
+              <div class="os-formats">.AppImage · .deb</div>
+              <a
+                class="btn"
+                href="https://github.com/fedeegmz/overlays/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Descargar</a
+              >
+            </div>
+          </div>
+
+          <div class="download-note">
+            <svg
+              aria-hidden="true"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <div>
+              <p>
+                Los instaladores todavía no incluyen las plantillas de ejemplo.
+                Descargalas desde la
+                <a
+                  href="https://github.com/fedeegmz/overlays/tree/main/examples"
+                  target="_blank"
+                  rel="noopener"
+                  >carpeta <code>examples</code> del repositorio</a
+                >
+                y elegí esa carpeta en Ajustes, o creá tus propias plantillas.
+              </p>
+              <p>
+                Si todavía no hay una versión para tu sistema en
+                <a
+                  href="https://github.com/fedeegmz/overlays/releases"
+                  target="_blank"
+                  rel="noopener"
+                  >Releases</a
+                >, podés correr la app en modo desarrollo siguiendo la guía del
+                README (<code>pnpm install && pnpm tauri dev</code>).
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <img
+              src="overlay-logo.svg"
+              alt=""
+              width="24"
+              height="24"
+              class="brand-mark"
+            >
+            Overlays · MIT License
+          </div>
+          <div class="footer-links">
+            <a
+              href="https://github.com/fedeegmz/overlays"
+              target="_blank"
+              rel="noopener"
+              >Repositorio</a
+            >
+            <a
+              href="https://github.com/fedeegmz/overlays/releases"
+              target="_blank"
+              rel="noopener"
+              >Releases</a
+            >
+            <a
+              href="https://github.com/fedeegmz/overlays/blob/main/README.md"
+              target="_blank"
+              rel="noopener"
+              >Documentación</a
+            >
+            <a
+              href="https://github.com/fedeegmz/overlays/issues"
+              target="_blank"
+              rel="noopener"
+              >Reportar un problema</a
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
