@@ -211,6 +211,16 @@ export const useInstanceStore = defineStore("instances", () => {
     }
   }
 
+  function moveInstance(fromIndex: number, toIndex: number): void {
+    const list = instances.value;
+    const isValid = (index: number) =>
+      Number.isInteger(index) && index >= 0 && index < list.length;
+    if (!isValid(fromIndex) || !isValid(toIndex) || fromIndex === toIndex)
+      return;
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+  }
+
   async function fetchServerPort(): Promise<void> {
     const status = await getServerStatus();
     if (status) serverPort.value = status.port;
@@ -230,6 +240,7 @@ export const useInstanceStore = defineStore("instances", () => {
     renameInstance,
     createInstance,
     removeInstance,
+    moveInstance,
     selectInstance,
     buildFields,
     sendPreviewShow,

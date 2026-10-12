@@ -4,7 +4,7 @@
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
     "renameInstance": "Nombre de la instancia",
-    "renameHint": "Doble clic o F2 para renombrar",
+    "renameHint": "Doble clic o F2 para renombrar · Arrastra o usa Alt+↑/↓ para reordenar",
     "settings": "Ajustes"
   },
   "overlaysPage": {

@@ -26,6 +26,7 @@ const {
   renameInstance,
   selectInstance,
   removeInstance,
+  moveInstance,
 } = instanceStore;
 
 const editingId = ref<string | null>(null);
@@ -58,6 +59,66 @@ function cancelRename() {
 
 const { pending: confirmingClose, confirmClick: handleClose } =
   useConfirmClick<string>(removeInstance);
+
+const instancesList = ref<HTMLElement | null>(null);
+const dragFromIndex = ref<number | null>(null);
+const dropTarget = ref<{ index: number; after: boolean } | null>(null);
+
+function handleDragStart(event: DragEvent, index: number) {
+  dragFromIndex.value = index;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    // Firefox/WebKit only start a drag when some data is set.
+    event.dataTransfer.setData("text/plain", String(index));
+  }
+}
+
+function handleDragOver(event: DragEvent, index: number) {
+  if (dragFromIndex.value === null) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  const row = event.currentTarget as HTMLElement;
+  const rect = row.getBoundingClientRect();
+  const after = event.clientY > rect.top + rect.height / 2;
+  dropTarget.value = { index, after };
+}
+
+function handleDragLeave(event: DragEvent, index: number) {
+  const row = event.currentTarget as HTMLElement;
+  const next = event.relatedTarget as Node | null;
+  if (next && row.contains(next)) return;
+  if (dropTarget.value?.index === index) dropTarget.value = null;
+}
+
+function handleDrop(event: DragEvent) {
+  event.preventDefault();
+  const from = dragFromIndex.value;
+  const target = dropTarget.value;
+  resetDrag();
+  if (from === null || !target) return;
+  // Insertion point in the original list, then shift left if the source
+  // sits before it (it is removed before being re-inserted).
+  const insertAt = target.after ? target.index + 1 : target.index;
+  const to = insertAt > from ? insertAt - 1 : insertAt;
+  moveInstance(from, to);
+}
+
+function resetDrag() {
+  dragFromIndex.value = null;
+  dropTarget.value = null;
+}
+
+async function moveByKeyboard(instance: OverlayInstance, delta: number) {
+  const from = instances.value.indexOf(instance);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= instances.value.length) return;
+  moveInstance(from, to);
+  await nextTick();
+  const row = instancesList.value?.querySelector<HTMLElement>(
+    `[data-instance-id="${instance.id}"]`,
+  );
+  row?.focus();
+}
 </script>
 
 <template>
@@ -96,19 +157,39 @@ const { pending: confirmingClose, confirmClick: handleClose } =
 
     <div v-if="instances.length > 0" class="instances-section">
       <div class="instances-header">{{ t("sidebar.instances") }}</div>
-      <div class="instances-list">
+      <div ref="instancesList" class="instances-list">
         <!-- biome-ignore lint/a11y/useSemanticElements: row contains a nested close button, so a real button element would be invalid HTML -->
         <div
-          v-for="instance in instances"
+          v-for="(instance, index) in instances"
           :key="instance.id"
           class="instance-item"
-          :class="{ active: instance.id === activeInstanceId }"
+          :class="{
+            active: instance.id === activeInstanceId,
+            dragging: dragFromIndex === index,
+            'drop-before':
+              dropTarget?.index === index &&
+              !dropTarget.after &&
+              dragFromIndex !== index,
+            'drop-after':
+              dropTarget?.index === index &&
+              dropTarget.after &&
+              dragFromIndex !== index,
+          }"
+          :data-instance-id="instance.id"
           role="button"
           tabindex="0"
+          :draggable="editingId !== instance.id"
           @click="handleInstanceClick(instance.id)"
           @keydown.enter.prevent="handleInstanceClick(instance.id)"
           @dblclick="startRename(instance)"
           @keydown.f2.prevent="startRename(instance)"
+          @keydown.alt.up.prevent="moveByKeyboard(instance, -1)"
+          @keydown.alt.down.prevent="moveByKeyboard(instance, 1)"
+          @dragstart="handleDragStart($event, index)"
+          @dragover="handleDragOver($event, index)"
+          @dragleave="handleDragLeave($event, index)"
+          @drop="handleDrop"
+          @dragend="resetDrag"
         >
           <span
             class="instance-dot"
@@ -127,6 +208,8 @@ const { pending: confirmingClose, confirmClick: handleClose } =
             @keydown.enter.stop.prevent="commitRename"
             @keydown.esc.stop.prevent="cancelRename"
             @keydown.f2.stop
+            @keydown.alt.up.stop
+            @keydown.alt.down.stop
             @blur="commitRename"
           >
           <span v-else class="instance-name" :title="t('sidebar.renameHint')"
@@ -292,6 +375,18 @@ const { pending: confirmingClose, confirmClick: handleClose } =
   transition:
     background 0.12s ease,
     color 0.12s ease;
+}
+
+.instance-item.dragging {
+  opacity: 0.45;
+}
+
+.instance-item.drop-before {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.instance-item.drop-after {
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .instance-item:hover {

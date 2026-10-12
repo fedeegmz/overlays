@@ -26,7 +26,7 @@ Instances are listed in creation order with no way to rearrange them. Default la
 ## Tasks
 
 - [x] T1 — Fixed instance number: add `number` to `OverlayInstance`, assign the lowest free positive number per template at creation, use it in `instanceDefaultName` (still no suffix when the template has a single instance). Route: delegated (writer trigger with T2).
-- [ ] T2 — Reorder: `moveInstance` in the store, drag and drop + Alt+Arrow keyboard in `SideNav.vue`, `dragDropEnabled: false` in `tauri.conf.json`, hint strings in both locales, CHANGELOG entries. Route: delegated (writer trigger: store + SideNav non-trivial).
+- [x] T2 — Reorder: `moveInstance` in the store, drag and drop + Alt+Arrow keyboard in `SideNav.vue`, `dragDropEnabled: false` in `tauri.conf.json`, hint strings in both locales, CHANGELOG entries. Route: delegated (writer trigger: store + SideNav non-trivial).
 
 ## Acceptance criteria
 
@@ -42,4 +42,5 @@ Instances are listed in creation order with no way to rearrange them. Default la
 ## Progress
 
 - 2026-10-11: document created; branch created.
-- 2026-10-11: T1 done (commit: see git log `feat: keep a fixed number for each overlay instance`). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0.
+- 2026-10-11: T1 done (commit `2a0cb16`). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0.
+- 2026-10-11: T2 done (commit: `feat: reorder overlay instances in the sidebar`, SHA recorded in the next update). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0. Manual run in the app still pending.

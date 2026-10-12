@@ -4,7 +4,7 @@
     "instances": "Instances",
     "closeInstance": "Close instance",
     "renameInstance": "Instance name",
-    "renameHint": "Double-click or press F2 to rename",
+    "renameHint": "Double-click or press F2 to rename · Drag or press Alt+↑/↓ to reorder",
     "settings": "Settings"
   },
   "overlaysPage": {
