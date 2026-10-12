@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Closing an overlay instance from the sidebar now requires a two-step confirmation, matching preset deletion: the first click on the `×` arms it (highlighted in red and kept visible), and a second click within 2 seconds closes the instance. Clicking the `×` no longer triggers the row's double-click rename.
+- Default overlay instance labels (`Template name #n`) now keep a fixed number assigned when the instance is created (the lowest free number for that template) instead of being renumbered by their position in the list. Closing an instance frees its number for the next one created from the same template.
 
 ## [0.5.0] - 2026-10-09
 

@@ -103,8 +103,18 @@ export const useInstanceStore = defineStore("instances", () => {
       (i) => i.templateId === instance.templateId,
     );
     if (sameTemplate.length <= 1) return baseName;
-    const index = sameTemplate.indexOf(instance) + 1;
-    return `${baseName} #${index}`;
+    return `${baseName} #${instance.number}`;
+  }
+
+  function nextInstanceNumber(templateId: string): number {
+    const used = new Set(
+      instances.value
+        .filter((i) => i.templateId === templateId)
+        .map((i) => i.number),
+    );
+    let candidate = 1;
+    while (used.has(candidate)) candidate++;
+    return candidate;
   }
 
   function instanceDisplayName(instance: OverlayInstance): string {
@@ -124,6 +134,7 @@ export const useInstanceStore = defineStore("instances", () => {
     const instance: OverlayInstance = {
       id,
       templateId,
+      number: nextInstanceNumber(templateId),
       fields: templateStore.getDefaults(templateId),
       visible: false,
     };
