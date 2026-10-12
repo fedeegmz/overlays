@@ -13,6 +13,22 @@
     "empty": "No templates available.",
     "reload": "Reload"
   },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "Save all open instances as a group and start them together",
+    "empty": "No groups saved yet.",
+    "namePlaceholder": "Group name",
+    "saveCurrent": "Save open instances",
+    "confirmOverwrite": "Overwrite \"{name}\"?",
+    "start": "Start",
+    "delete": "Delete",
+    "confirmDelete": "Confirm?",
+    "noInstances": "Open at least one instance to save a group.",
+    "startDone": "Started {count} instances.",
+    "startPartial": "Started {ok} of {total} instances.",
+    "entryFailed": "{template}: {reason}",
+    "sendFailed": "Could not send the overlay."
+  },
   "content": {
     "title": "Content",
     "presets": "Presets",
@@ -75,6 +91,14 @@
     },
     "config": {
       "save_failed": "Could not save the configuration."
+    },
+    "group_preset": {
+      "empty_name": "Group name cannot be empty.",
+      "no_entries": "A group needs at least one instance.",
+      "invalid_entry": "Group entry {index} is invalid.",
+      "not_found": "Group \"{name}\" was not found.",
+      "load_failed": "Could not read the groups file.",
+      "save_failed": "Could not save the groups file."
     }
   },
   "settings": {
