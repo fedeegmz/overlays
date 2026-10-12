@@ -43,4 +43,4 @@ Instances are listed in creation order with no way to rearrange them. Default la
 
 - 2026-10-11: document created; branch created.
 - 2026-10-11: T1 done (commit `2a0cb16`). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0.
-- 2026-10-11: T2 done (commit: `feat: reorder overlay instances in the sidebar`, SHA recorded in the next update). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0. Manual run in the app still pending.
+- 2026-10-11: T2 done (commit `2e29d7d`). Checks: `pnpm check` clean (73 files), `vue-tsc --noEmit` exit 0. Manual run in the app still pending.
