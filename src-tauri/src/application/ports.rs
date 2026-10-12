@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::domain::config::AppConfig;
 use crate::domain::error::DomainResult;
+use crate::domain::group_preset::GroupPreset;
 use crate::domain::overlay::OverlayPayload;
 use crate::domain::preset::Preset;
 use crate::domain::template::TemplateInfo;
@@ -9,6 +10,13 @@ use crate::domain::template::TemplateInfo;
 pub trait PresetRepository: Send + Sync {
     fn load(&self) -> Vec<Preset>;
     fn save(&self, presets: &[Preset]) -> DomainResult<()>;
+}
+
+/// Unlike `PresetRepository`, loading is strict: a corrupt store is an error,
+/// never an empty list, so a later save cannot wipe the user's data.
+pub trait GroupPresetRepository: Send + Sync {
+    fn load(&self) -> DomainResult<Vec<GroupPreset>>;
+    fn save(&self, groups: &[GroupPreset]) -> DomainResult<()>;
 }
 
 pub trait ConfigRepository: Send + Sync {
