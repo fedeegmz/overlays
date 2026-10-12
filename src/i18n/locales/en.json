@@ -1,6 +1,6 @@
 {
   "sidebar": {
-    "overlays": "Overlays",
+    "overlays": "Home",
     "instances": "Instances",
     "closeInstance": "Close instance",
     "renameInstance": "Instance name",

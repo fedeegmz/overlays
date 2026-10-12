@@ -14,9 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Tauri's native drag and drop handling (`dragDropEnabled`) is now disabled on the main window so HTML5 drag and drop works in the webview (required on Windows). Files dropped from the OS onto the window are no longer captured by Tauri; the app did not use them.
-
 - Closing an overlay instance from the sidebar now requires a two-step confirmation, matching preset deletion: the first click on the `×` arms it (highlighted in red and kept visible), and a second click within 2 seconds closes the instance. Clicking the `×` no longer triggers the row's double-click rename.
 - Default overlay instance labels (`Template name #n`) now keep a fixed number assigned when the instance is created (the lowest free number for that template) instead of being renumbered by their position in the list. Closing an instance frees its number for the next one created from the same template.
+- The "Overlays" tab in the sidebar is now labeled "Inicio" in Spanish and "Home" in English.
 
 ## [0.5.0] - 2026-10-09
 
