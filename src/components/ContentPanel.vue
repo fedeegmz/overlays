@@ -2,6 +2,7 @@
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useConfirmClick } from "../composables/useConfirmClick";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
@@ -20,8 +21,8 @@ const { savePreset, applyPreset, deletePreset } = presetStore;
 const presetName = ref("");
 const sending = ref(false);
 const sendError = ref<string | null>(null);
-const confirmingDelete = ref<string | null>(null);
-let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+const { pending: confirmingDelete, confirmClick: handleDelete } =
+  useConfirmClick<string>((name) => void deletePreset(name));
 
 const filteredPresets = computed(() =>
   presets.value.filter((p) => p.template === activeInstance.value?.templateId),
@@ -66,20 +67,6 @@ async function handleApply(preset: { name: string }) {
   } finally {
     sending.value = false;
   }
-}
-
-function handleDelete(name: string) {
-  if (confirmingDelete.value !== name) {
-    confirmingDelete.value = name;
-    if (confirmTimer) clearTimeout(confirmTimer);
-    confirmTimer = setTimeout(() => {
-      confirmingDelete.value = null;
-    }, 2000);
-    return;
-  }
-  if (confirmTimer) clearTimeout(confirmTimer);
-  confirmingDelete.value = null;
-  void deletePreset(name);
 }
 </script>
 

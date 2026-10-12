@@ -3,6 +3,7 @@ import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
+import { useConfirmClick } from "../composables/useConfirmClick";
 import { useInstanceStore } from "../stores/instances";
 import type { OverlayInstance } from "../types";
 
@@ -54,6 +55,9 @@ function commitRename() {
 function cancelRename() {
   editingId.value = null;
 }
+
+const { pending: confirmingClose, confirmClick: handleClose } =
+  useConfirmClick<string>(removeInstance);
 </script>
 
 <template>
@@ -131,8 +135,12 @@ function cancelRename() {
           <button
             type="button"
             class="instance-close"
+            :class="{ 'confirm-close': confirmingClose === instance.id }"
             :title="t('sidebar.closeInstance')"
-            @click.stop="removeInstance(instance.id)"
+            @click.stop="handleClose(instance.id)"
+            @dblclick.stop
+            @keydown.enter.stop
+            @keydown.f2.stop
           >
             ×
           </button>
@@ -357,6 +365,12 @@ function cancelRename() {
 }
 
 .instance-close:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.instance-close.confirm-close {
+  opacity: 1;
   background: var(--danger-soft);
   color: var(--danger);
 }
