@@ -3,45 +3,19 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
-    PresetSaveFailed {
-        detail: String,
-    },
+    PresetSaveFailed { detail: String },
     GroupPresetEmptyName,
     GroupPresetNoEntries,
-    GroupPresetInvalidEntry {
-        index: usize,
-    },
-    // Constructed by the group preset service and store in later commits.
-    #[allow(dead_code)]
-    GroupPresetNotFound {
-        name: String,
-    },
-    #[allow(dead_code)]
-    GroupPresetLoadFailed {
-        detail: String,
-    },
-    #[allow(dead_code)]
-    GroupPresetSaveFailed {
-        detail: String,
-    },
-    TemplateDiscoveryFailed {
-        detail: String,
-    },
-    LanguageUnsupported {
-        lang: String,
-    },
-    OverlaysDirInvalid {
-        path: String,
-    },
-    ConfigSaveFailed {
-        detail: String,
-    },
-    AssetOutsideOverlaysDir {
-        path: String,
-    },
-    AssetResolveFailed {
-        path: String,
-    },
+    GroupPresetInvalidEntry { index: usize },
+    GroupPresetNotFound { name: String },
+    GroupPresetLoadFailed { detail: String },
+    GroupPresetSaveFailed { detail: String },
+    TemplateDiscoveryFailed { detail: String },
+    LanguageUnsupported { lang: String },
+    OverlaysDirInvalid { path: String },
+    ConfigSaveFailed { detail: String },
+    AssetOutsideOverlaysDir { path: String },
+    AssetResolveFailed { path: String },
 }
 
 impl fmt::Display for DomainError {

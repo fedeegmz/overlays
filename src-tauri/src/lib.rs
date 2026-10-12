@@ -6,12 +6,15 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use application::config_service::ConfigService;
+use application::group_preset_service::GroupPresetService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
-use infrastructure::json_store::{JsonConfigRepository, JsonPresetRepository};
+use infrastructure::json_store::{
+    JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
+};
 use infrastructure::overlay_bus::BroadcastOverlayBus;
 use tauri::Manager;
 
@@ -30,12 +33,14 @@ pub fn run() {
             };
             let config_path = data_dir.join("config.json");
             let presets_path = data_dir.join("presets.json");
+            let group_presets_path = data_dir.join("group_presets.json");
 
             eprintln!("[overlays] config_path = {config_path:?}");
             eprintln!("[overlays] presets_path = {presets_path:?}");
 
             let config_repo = Arc::new(JsonConfigRepository::new(config_path));
             let preset_repo = Arc::new(JsonPresetRepository::new(presets_path));
+            let group_preset_repo = Arc::new(JsonGroupPresetRepository::new(group_presets_path));
 
             let app_config = config_repo.load();
             let overlays_dir =
@@ -49,12 +54,14 @@ pub fn run() {
                 overlays_dir.clone(),
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
+            let group_presets = Arc::new(GroupPresetService::new(group_preset_repo));
             let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
             let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
 
             app.manage(http_state.clone());
             app.manage(catalog);
             app.manage(presets);
+            app.manage(group_presets);
             app.manage(config_service);
 
             tauri::async_runtime::spawn(async move {
@@ -73,6 +80,9 @@ pub fn run() {
             infrastructure::tauri::commands::save_preset,
             infrastructure::tauri::commands::list_presets,
             infrastructure::tauri::commands::delete_preset,
+            infrastructure::tauri::commands::list_group_presets,
+            infrastructure::tauri::commands::save_group_preset,
+            infrastructure::tauri::commands::delete_group_preset,
             infrastructure::tauri::commands::get_config,
             infrastructure::tauri::commands::set_overlays_dir,
             infrastructure::tauri::commands::set_language,

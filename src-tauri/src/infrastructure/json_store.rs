@@ -47,13 +47,10 @@ impl PresetRepository for JsonPresetRepository {
     }
 }
 
-// Wired into the app state in a later commit.
-#[allow(dead_code)]
 pub struct JsonGroupPresetRepository {
     path: PathBuf,
 }
 
-#[allow(dead_code)]
 impl JsonGroupPresetRepository {
     pub fn new(path: PathBuf) -> Self {
         Self { path }
