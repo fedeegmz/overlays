@@ -3,13 +3,45 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
-    PresetSaveFailed { detail: String },
-    TemplateDiscoveryFailed { detail: String },
-    LanguageUnsupported { lang: String },
-    OverlaysDirInvalid { path: String },
-    ConfigSaveFailed { detail: String },
-    AssetOutsideOverlaysDir { path: String },
-    AssetResolveFailed { path: String },
+    PresetSaveFailed {
+        detail: String,
+    },
+    GroupPresetEmptyName,
+    GroupPresetNoEntries,
+    GroupPresetInvalidEntry {
+        index: usize,
+    },
+    // Constructed by the group preset service and store in later commits.
+    #[allow(dead_code)]
+    GroupPresetNotFound {
+        name: String,
+    },
+    #[allow(dead_code)]
+    GroupPresetLoadFailed {
+        detail: String,
+    },
+    #[allow(dead_code)]
+    GroupPresetSaveFailed {
+        detail: String,
+    },
+    TemplateDiscoveryFailed {
+        detail: String,
+    },
+    LanguageUnsupported {
+        lang: String,
+    },
+    OverlaysDirInvalid {
+        path: String,
+    },
+    ConfigSaveFailed {
+        detail: String,
+    },
+    AssetOutsideOverlaysDir {
+        path: String,
+    },
+    AssetResolveFailed {
+        path: String,
+    },
 }
 
 impl fmt::Display for DomainError {
@@ -17,6 +49,18 @@ impl fmt::Display for DomainError {
         match self {
             Self::PresetEmptyName => write!(f, "preset name is empty"),
             Self::PresetSaveFailed { detail } => write!(f, "preset save failed: {detail}"),
+            Self::GroupPresetEmptyName => write!(f, "group preset name is empty"),
+            Self::GroupPresetNoEntries => write!(f, "group preset has no entries"),
+            Self::GroupPresetInvalidEntry { index } => {
+                write!(f, "group preset entry {index} has an empty template")
+            }
+            Self::GroupPresetNotFound { name } => write!(f, "group preset not found: {name}"),
+            Self::GroupPresetLoadFailed { detail } => {
+                write!(f, "group preset load failed: {detail}")
+            }
+            Self::GroupPresetSaveFailed { detail } => {
+                write!(f, "group preset save failed: {detail}")
+            }
             Self::TemplateDiscoveryFailed { detail } => {
                 write!(f, "template discovery failed: {detail}")
             }

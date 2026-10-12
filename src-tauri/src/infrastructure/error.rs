@@ -18,6 +18,12 @@ pub struct CommandError {
 impl CommandError {
     pub const PRESET_EMPTY_NAME: &str = "preset.empty_name";
     pub const PRESET_SAVE_FAILED: &str = "preset.save_failed";
+    pub const GROUP_PRESET_EMPTY_NAME: &str = "group_preset.empty_name";
+    pub const GROUP_PRESET_NO_ENTRIES: &str = "group_preset.no_entries";
+    pub const GROUP_PRESET_INVALID_ENTRY: &str = "group_preset.invalid_entry";
+    pub const GROUP_PRESET_NOT_FOUND: &str = "group_preset.not_found";
+    pub const GROUP_PRESET_LOAD_FAILED: &str = "group_preset.load_failed";
+    pub const GROUP_PRESET_SAVE_FAILED: &str = "group_preset.save_failed";
     pub const TEMPLATE_DISCOVERY_FAILED: &str = "template.discovery_failed";
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
@@ -44,6 +50,20 @@ impl From<DomainError> for CommandError {
             DomainError::PresetEmptyName => Self::new(Self::PRESET_EMPTY_NAME),
             DomainError::PresetSaveFailed { detail } => {
                 Self::new(Self::PRESET_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::GroupPresetEmptyName => Self::new(Self::GROUP_PRESET_EMPTY_NAME),
+            DomainError::GroupPresetNoEntries => Self::new(Self::GROUP_PRESET_NO_ENTRIES),
+            DomainError::GroupPresetInvalidEntry { index } => {
+                Self::new(Self::GROUP_PRESET_INVALID_ENTRY).param("index", index.to_string())
+            }
+            DomainError::GroupPresetNotFound { name } => {
+                Self::new(Self::GROUP_PRESET_NOT_FOUND).param("name", name)
+            }
+            DomainError::GroupPresetLoadFailed { detail } => {
+                Self::new(Self::GROUP_PRESET_LOAD_FAILED).param("detail", detail)
+            }
+            DomainError::GroupPresetSaveFailed { detail } => {
+                Self::new(Self::GROUP_PRESET_SAVE_FAILED).param("detail", detail)
             }
             DomainError::TemplateDiscoveryFailed { detail } => {
                 Self::new(Self::TEMPLATE_DISCOVERY_FAILED).param("detail", detail)
@@ -113,6 +133,41 @@ mod tests {
         assert_eq!(
             json,
             serde_json::json!({ "code": "overlays_dir.invalid", "params": { "path": "/tmp/x" } })
+        );
+    }
+
+    #[test]
+    fn maps_group_preset_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::GroupPresetEmptyName),
+            serde_json::json!({ "code": "group_preset.empty_name" })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetNoEntries),
+            serde_json::json!({ "code": "group_preset.no_entries" })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetInvalidEntry { index: 2 }),
+            serde_json::json!({ "code": "group_preset.invalid_entry", "params": { "index": "2" } })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetNotFound {
+                name: "Show".into()
+            }),
+            serde_json::json!({ "code": "group_preset.not_found", "params": { "name": "Show" } })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetLoadFailed {
+                detail: "bad".into()
+            }),
+            serde_json::json!({ "code": "group_preset.load_failed", "params": { "detail": "bad" } })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetSaveFailed {
+                detail: "io".into()
+            }),
+            serde_json::json!({ "code": "group_preset.save_failed", "params": { "detail": "io" } })
         );
     }
 }
