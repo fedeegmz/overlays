@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use crate::application::ports::{ConfigRepository, PresetRepository};
+use crate::application::ports::{ConfigRepository, GroupPresetRepository, PresetRepository};
 use crate::domain::config::AppConfig;
 use crate::domain::error::{DomainError, DomainResult};
+use crate::domain::group_preset::GroupPreset;
 use crate::domain::preset::Preset;
 
 fn write_json(
@@ -42,6 +43,41 @@ impl PresetRepository for JsonPresetRepository {
     fn save(&self, presets: &[Preset]) -> DomainResult<()> {
         write_json(&self.path, &presets, |detail| {
             DomainError::PresetSaveFailed { detail }
+        })
+    }
+}
+
+// Wired into the app state in a later commit.
+#[allow(dead_code)]
+pub struct JsonGroupPresetRepository {
+    path: PathBuf,
+}
+
+#[allow(dead_code)]
+impl JsonGroupPresetRepository {
+    pub fn new(path: PathBuf) -> Self {
+        Self { path }
+    }
+}
+
+impl GroupPresetRepository for JsonGroupPresetRepository {
+    fn load(&self) -> DomainResult<Vec<GroupPreset>> {
+        if !self.path.exists() {
+            return Ok(Vec::new());
+        }
+        let content = std::fs::read_to_string(&self.path).map_err(|e| {
+            DomainError::GroupPresetLoadFailed {
+                detail: format!("could not read {:?}: {e}", self.path),
+            }
+        })?;
+        serde_json::from_str(&content).map_err(|e| DomainError::GroupPresetLoadFailed {
+            detail: format!("could not parse {:?}: {e}", self.path),
+        })
+    }
+
+    fn save(&self, groups: &[GroupPreset]) -> DomainResult<()> {
+        write_json(&self.path, &groups, |detail| {
+            DomainError::GroupPresetSaveFailed { detail }
         })
     }
 }
@@ -144,6 +180,79 @@ mod tests {
             loaded.overlays_dir,
             Some(PathBuf::from("/home/user/overlays"))
         );
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    fn group(name: &str, templates: &[&str]) -> GroupPreset {
+        let entries = templates
+            .iter()
+            .map(|t| crate::domain::group_preset::GroupPresetEntry {
+                template: t.to_string(),
+                fields: HashMap::from([("titulo".to_string(), t.to_string())]),
+            })
+            .collect();
+        GroupPreset::new(name, entries).unwrap()
+    }
+
+    #[test]
+    fn missing_group_file_loads_empty() {
+        let repo =
+            JsonGroupPresetRepository::new(std::env::temp_dir().join("overlays-groups-missing"));
+        assert!(repo.load().unwrap().is_empty());
+    }
+
+    #[test]
+    fn groups_round_trip_preserves_order_and_duplicates() {
+        let path = temp_path("overlays-test-groups");
+        let repo = JsonGroupPresetRepository::new(path.clone());
+
+        repo.save(&[group("Show", &["a", "b", "a"]), group("Other", &["c"])])
+            .unwrap();
+        let loaded = repo.load().unwrap();
+
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].name, "Show");
+        let templates: Vec<_> = loaded[0]
+            .entries
+            .iter()
+            .map(|e| e.template.as_str())
+            .collect();
+        assert_eq!(templates, ["a", "b", "a"]);
+        assert_eq!(loaded[0].entries[1].fields["titulo"], "b");
+        assert_eq!(loaded[1].name, "Other");
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn corrupt_group_file_fails_to_load() {
+        let path = temp_path("overlays-test-groups-corrupt-load");
+        std::fs::write(&path, "{ not json").unwrap();
+        let repo = JsonGroupPresetRepository::new(path.clone());
+
+        assert!(matches!(
+            repo.load(),
+            Err(DomainError::GroupPresetLoadFailed { .. })
+        ));
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn corrupt_group_file_is_untouched_by_failed_save() {
+        use crate::application::group_preset_service::GroupPresetService;
+
+        let path = temp_path("overlays-test-groups-corrupt-save");
+        std::fs::write(&path, "{ not json").unwrap();
+        let svc = GroupPresetService::new(std::sync::Arc::new(JsonGroupPresetRepository::new(
+            path.clone(),
+        )));
+
+        let entries = group("Show", &["a"]).entries;
+        assert!(svc.save("Show".into(), entries).is_err());
+        assert!(svc.delete("Show").is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ not json");
 
         let _ = std::fs::remove_file(&path);
     }
