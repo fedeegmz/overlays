@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useInstanceStore } from "../stores/instances";
 import { useTemplateStore } from "../stores/templates";
+import GroupPresetsSection from "./GroupPresetsSection.vue";
 import OverlayGrid from "./OverlayGrid.vue";
 
 const { t } = useI18n();
@@ -74,6 +75,8 @@ async function handleReload() {
       {{ t("overlaysPage.empty") }}
     </p>
     <OverlayGrid v-else :templates="templates" @select="handleSelect" />
+
+    <GroupPresetsSection />
   </div>
 </template>
 

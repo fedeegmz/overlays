@@ -5,10 +5,12 @@ use serde::Serialize;
 use tauri::State;
 
 use crate::application::config_service::ConfigService;
+use crate::application::group_preset_service::GroupPresetService;
 use crate::application::ports::OverlayBus;
 use crate::application::preset_service::PresetService;
 use crate::application::template_catalog::TemplateCatalog;
 use crate::domain::config::AppConfig;
+use crate::domain::group_preset::{GroupPreset, GroupPresetEntry};
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::preset::Preset;
 use crate::domain::template::Manifest;
@@ -89,6 +91,30 @@ pub fn delete_preset(
     name: String,
 ) -> Result<Vec<Preset>, CommandError> {
     presets.delete(&name).map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn list_group_presets(
+    groups: State<'_, Arc<GroupPresetService>>,
+) -> Result<Vec<GroupPreset>, CommandError> {
+    groups.list().map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn save_group_preset(
+    groups: State<'_, Arc<GroupPresetService>>,
+    name: String,
+    entries: Vec<GroupPresetEntry>,
+) -> Result<Vec<GroupPreset>, CommandError> {
+    groups.save(name, entries).map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn delete_group_preset(
+    groups: State<'_, Arc<GroupPresetService>>,
+    name: String,
+) -> Result<Vec<GroupPreset>, CommandError> {
+    groups.delete(&name).map_err(CommandError::from)
 }
 
 #[tauri::command]

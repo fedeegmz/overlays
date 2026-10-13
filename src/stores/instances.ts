@@ -148,13 +148,19 @@ export const useInstanceStore = defineStore("instances", () => {
     activeInstanceId.value = id;
   }
 
-  function buildFields(): Record<string, string> {
-    if (!activeInstance.value || !activeTemplate.value) return {};
+  function fieldsFor(instance: OverlayInstance): Record<string, string> {
+    const template = templateStore.getById(instance.templateId);
+    if (!template) return {};
     const result: Record<string, string> = {};
-    for (const field of activeTemplate.value.fields) {
-      result[field.key] = activeInstance.value.fields[field.key] ?? "";
+    for (const field of template.fields) {
+      result[field.key] = instance.fields[field.key] ?? "";
     }
     return result;
+  }
+
+  function buildFields(): Record<string, string> {
+    if (!activeInstance.value) return {};
+    return fieldsFor(activeInstance.value);
   }
 
   async function sendToInstance(
@@ -170,6 +176,16 @@ export const useInstanceStore = defineStore("instances", () => {
       action,
       fields,
     });
+  }
+
+  async function showInstance(
+    id: string,
+    fields: Record<string, string>,
+  ): Promise<void> {
+    const instance = instances.value.find((i) => i.id === id);
+    if (!instance) return;
+    await sendToInstance(id, "show", fields);
+    instance.visible = true;
   }
 
   async function show(): Promise<void> {
@@ -242,7 +258,9 @@ export const useInstanceStore = defineStore("instances", () => {
     removeInstance,
     moveInstance,
     selectInstance,
+    fieldsFor,
     buildFields,
+    showInstance,
     sendPreviewShow,
     openPreviewWindow,
     show,

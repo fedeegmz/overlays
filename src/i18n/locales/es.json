@@ -13,6 +13,22 @@
     "empty": "No hay plantillas disponibles.",
     "reload": "Recargar"
   },
+  "groups": {
+    "title": "Grupos",
+    "subtitle": "Guardá todas las instancias abiertas como grupo e iniciálas juntas",
+    "empty": "Todavía no hay grupos guardados.",
+    "namePlaceholder": "Nombre del grupo",
+    "saveCurrent": "Guardar instancias abiertas",
+    "confirmOverwrite": "¿Sobrescribir \"{name}\"?",
+    "start": "Iniciar",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Confirmar?",
+    "noInstances": "Abrí al menos una instancia para guardar un grupo.",
+    "startDone": "Se iniciaron {count} instancias.",
+    "startPartial": "Se iniciaron {ok} de {total} instancias.",
+    "entryFailed": "{template}: {reason}",
+    "sendFailed": "No se pudo enviar el overlay."
+  },
   "content": {
     "title": "Contenido",
     "presets": "Presets",
@@ -75,6 +91,14 @@
     },
     "config": {
       "save_failed": "No se pudo guardar la configuración."
+    },
+    "group_preset": {
+      "empty_name": "El nombre del grupo no puede estar vacío.",
+      "no_entries": "Un grupo necesita al menos una instancia.",
+      "invalid_entry": "La entrada {index} del grupo no es válida.",
+      "not_found": "No se encontró el grupo \"{name}\".",
+      "load_failed": "No se pudo leer el archivo de grupos.",
+      "save_failed": "No se pudo guardar el archivo de grupos."
     }
   },
   "settings": {
