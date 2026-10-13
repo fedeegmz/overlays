@@ -64,7 +64,13 @@
     "placeholder": "Ruta del archivo"
   },
   "dialog": {
-    "selectOverlaysDir": "Elegir directorio de overlays"
+    "selectOverlaysDir": "Elegir directorio de overlays",
+    "confirmClose": {
+      "title": "¿Cerrar la aplicación?",
+      "message": "Hay {count} overlay en vivo en OBS. Al cerrar la aplicación, dejará de mostrarse. | Hay {count} overlays en vivo en OBS. Al cerrar la aplicación, dejarán de mostrarse.",
+      "ok": "Cerrar",
+      "cancel": "Cancelar"
+    }
   },
   "errors": {
     "fallback": "Ocurrió un error inesperado.",

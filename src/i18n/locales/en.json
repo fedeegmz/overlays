@@ -64,7 +64,13 @@
     "placeholder": "File path"
   },
   "dialog": {
-    "selectOverlaysDir": "Select overlays directory"
+    "selectOverlaysDir": "Select overlays directory",
+    "confirmClose": {
+      "title": "Close app?",
+      "message": "There is {count} overlay live in OBS. Closing the app will take it off the air. | There are {count} overlays live in OBS. Closing the app will take them off the air.",
+      "ok": "Close",
+      "cancel": "Cancel"
+    }
   },
   "errors": {
     "fallback": "Something went wrong.",

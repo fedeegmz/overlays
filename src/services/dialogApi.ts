@@ -1,3 +1,18 @@
+export async function confirmWarning(opts: {
+  title: string;
+  message: string;
+  okLabel: string;
+  cancelLabel: string;
+}): Promise<boolean> {
+  const { ask } = await import("@tauri-apps/plugin-dialog");
+  return ask(opts.message, {
+    title: opts.title,
+    kind: "warning",
+    okLabel: opts.okLabel,
+    cancelLabel: opts.cancelLabel,
+  });
+}
+
 export async function pickOverlaysDir(title: string): Promise<string | null> {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const selected = await open({

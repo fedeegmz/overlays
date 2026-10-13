@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Reorder overlay instances in the sidebar: drag a tab and drop it above or below another (an accent line marks the drop position), or focus a tab and press Alt+↑ / Alt+↓ to move it one step. The active instance and custom names are kept. The order lives in memory only, like the instances themselves.
+- Confirmation dialog when closing the app while overlays are live in OBS: if any instance is currently shown, a native warning asks before quitting (closing stops the local server and takes those overlays off the air). With no live instances the app closes immediately. Requires the `core:window:allow-destroy` capability on the main window.
 
 ### Changed
 
