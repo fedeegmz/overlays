@@ -131,14 +131,14 @@
       },
       "dir": {
         "label": "Destino de las subidas",
-        "description": "Carpeta donde se guardan los archivos recibidos. Si se deja vacío, se usa Descargas/Overlays",
+        "description": "Carpeta donde se guardan los archivos recibidos. Si lo dejás vacío, se usa Descargas/Overlays",
         "placeholder": "Descargas/Overlays (predeterminado)",
         "choose": "Elegir carpeta de subidas",
         "variablesHint": "Variables: %CCYY año, %YY año corto, %MM mes, %DD día, %hh hora, %mm minuto, %ss segundo, %% porcentaje literal"
       },
       "lanUrl": {
         "label": "Dirección de la página de subida",
-        "description": "Abrir esta dirección desde un teléfono u otro equipo de la misma red",
+        "description": "Abrí esta dirección desde un teléfono u otro equipo de la misma red",
         "unavailable": "No hay dirección de red disponible",
         "copy": "Copiar"
       }
