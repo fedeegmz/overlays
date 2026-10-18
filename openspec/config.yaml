@@ -1,0 +1,48 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Tauri v2 (Rust 2021, axum 0.8 + tokio) backend in src-tauri/; Vue 3 + TypeScript strict + Pinia + vue-i18n (es/en) frontend in src/.
+  Architecture: backend layered (domain / application / infrastructure); frontend components -> stores -> services (IPC). No component calls invoke directly.
+  Testing: Rust only (cargo test, in-module tests + axum oneshot + tokio-tungstenite). No frontend unit runner; frontend gate is Biome + vue-tsc.
+  Style: Biome (frontend), cargo fmt + clippy -D warnings (backend), conventional commits, lefthook hooks.
+  Conventions: structured CommandError over IPC; new UI strings in both es.json and en.json.
+
+strict_tdd: true   # backend-scoped; frontend has no unit runner
+
+testing:
+  backend:
+    test_command: "cd src-tauri && cargo test"
+    quality: "cd src-tauri && cargo fmt --check --all && cargo clippy -- -D warnings"
+  frontend:
+    unit_runner: none
+    gate: "pnpm check && pnpm exec vue-tsc --noEmit"
+    build: "pnpm build"
+  layers:
+    unit: true
+    integration: true
+    e2e: false
+  coverage: false
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    - Follow existing code patterns
+    - Strict TDD applies to Rust/backend changes only
+    tdd: true
+    test_command: "cd src-tauri && cargo test"
+  verify:
+    test_command: "cd src-tauri && cargo test"
+    build_command: "pnpm build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
