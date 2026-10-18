@@ -30,6 +30,14 @@ impl CommandError {
     pub const CONFIG_SAVE_FAILED: &str = "config.save_failed";
     pub const FILE_ASSET_OUTSIDE_OVERLAYS_DIR: &str = "file.asset_outside_overlays_dir";
     pub const FILE_RESOLVE_FAILED: &str = "file.resolve_failed";
+    pub const UPLOAD_DISABLED: &str = "upload.disabled";
+    pub const UPLOAD_TOO_LARGE: &str = "upload.too_large";
+    pub const UPLOAD_MISSING_FILE: &str = "upload.missing_file";
+    pub const UPLOAD_BAD_REQUEST: &str = "upload.bad_request";
+    pub const UPLOAD_NAME_EXHAUSTED: &str = "upload.name_exhausted";
+    pub const UPLOAD_DESTINATION_UNAVAILABLE: &str = "upload.destination_unavailable";
+    pub const UPLOAD_WRITE_FAILED: &str = "upload.write_failed";
+    pub const UPLOAD_DIR_INVALID: &str = "upload_dir.invalid";
 
     pub fn new(code: &str) -> Self {
         Self {
@@ -82,6 +90,22 @@ impl From<DomainError> for CommandError {
             }
             DomainError::AssetResolveFailed { path } => {
                 Self::new(Self::FILE_RESOLVE_FAILED).param("path", path)
+            }
+            DomainError::UploadDisabled => Self::new(Self::UPLOAD_DISABLED),
+            DomainError::UploadTooLarge => Self::new(Self::UPLOAD_TOO_LARGE),
+            DomainError::UploadMissingFile => Self::new(Self::UPLOAD_MISSING_FILE),
+            DomainError::UploadBadRequest { detail } => {
+                Self::new(Self::UPLOAD_BAD_REQUEST).param("detail", detail)
+            }
+            DomainError::UploadNameExhausted => Self::new(Self::UPLOAD_NAME_EXHAUSTED),
+            DomainError::UploadDestinationUnavailable => {
+                Self::new(Self::UPLOAD_DESTINATION_UNAVAILABLE)
+            }
+            DomainError::UploadWriteFailed { detail } => {
+                Self::new(Self::UPLOAD_WRITE_FAILED).param("detail", detail)
+            }
+            DomainError::UploadDirInvalid { path } => {
+                Self::new(Self::UPLOAD_DIR_INVALID).param("path", path)
             }
         }
     }
@@ -168,6 +192,45 @@ mod tests {
                 detail: "io".into()
             }),
             serde_json::json!({ "code": "group_preset.save_failed", "params": { "detail": "io" } })
+        );
+    }
+
+    #[test]
+    fn maps_upload_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::UploadDisabled),
+            serde_json::json!({ "code": "upload.disabled" })
+        );
+        assert_eq!(
+            code(DomainError::UploadTooLarge),
+            serde_json::json!({ "code": "upload.too_large" })
+        );
+        assert_eq!(
+            code(DomainError::UploadMissingFile),
+            serde_json::json!({ "code": "upload.missing_file" })
+        );
+        assert_eq!(
+            code(DomainError::UploadBadRequest { detail: "x".into() }),
+            serde_json::json!({ "code": "upload.bad_request", "params": { "detail": "x" } })
+        );
+        assert_eq!(
+            code(DomainError::UploadNameExhausted),
+            serde_json::json!({ "code": "upload.name_exhausted" })
+        );
+        assert_eq!(
+            code(DomainError::UploadDestinationUnavailable),
+            serde_json::json!({ "code": "upload.destination_unavailable" })
+        );
+        assert_eq!(
+            code(DomainError::UploadWriteFailed {
+                detail: "io".into()
+            }),
+            serde_json::json!({ "code": "upload.write_failed", "params": { "detail": "io" } })
+        );
+        assert_eq!(
+            code(DomainError::UploadDirInvalid { path: "rel".into() }),
+            serde_json::json!({ "code": "upload_dir.invalid", "params": { "path": "rel" } })
         );
     }
 }

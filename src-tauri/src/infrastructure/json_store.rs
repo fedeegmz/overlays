@@ -153,6 +153,7 @@ mod tests {
         let config = AppConfig {
             overlays_dir: Some(PathBuf::from("/home/user/overlays")),
             language: Some("es".to_string()),
+            ..AppConfig::default()
         };
 
         repo.save(&config).unwrap();
