@@ -57,7 +57,6 @@ pub fn run() {
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
             let group_presets = Arc::new(GroupPresetService::new(group_preset_repo));
-            let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
             let downloads_dir = match app.path().download_dir() {
                 Ok(dir) => Some(dir),
                 Err(e) => {
@@ -69,6 +68,11 @@ pub fn run() {
                 enabled: app_config.uploads_enabled,
                 dir_template: app_config.upload_dir.clone(),
             });
+            let config_service = Arc::new(ConfigService::new(
+                config_repo,
+                overlays_dir.clone(),
+                upload_settings.clone(),
+            ));
             let upload_service = Arc::new(UploadService::new(
                 Arc::new(ChronoClock),
                 upload_settings,
@@ -109,6 +113,8 @@ pub fn run() {
             infrastructure::tauri::commands::get_config,
             infrastructure::tauri::commands::set_overlays_dir,
             infrastructure::tauri::commands::set_language,
+            infrastructure::tauri::commands::set_uploads_enabled,
+            infrastructure::tauri::commands::set_upload_dir,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

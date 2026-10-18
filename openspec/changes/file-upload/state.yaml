@@ -1,13 +1,13 @@
 change: file-upload
 artifact_store: hybrid
-phase: tasks
+phase: apply
 completed:
   - explore
   - propose
   - spec
   - design
   - tasks
-pending:
   - apply
+pending:
   - verify
   - archive

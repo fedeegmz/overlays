@@ -405,6 +405,33 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn page_contains_form_markers_and_both_dictionaries() {
+        let h = harness(true);
+        let res = h
+            .router
+            .clone()
+            .oneshot(Request::get("/upload").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let bytes = axum::body::to_bytes(res.into_body(), 1024 * 1024)
+            .await
+            .unwrap();
+        let html = String::from_utf8(bytes.to_vec()).unwrap();
+        for marker in [
+            "type=\"file\"",
+            "name=\"name\"",
+            "/upload/status",
+            "XMLHttpRequest",
+            "navigator.language",
+            "upload.disabled",
+            "en:",
+            "es:",
+        ] {
+            assert!(html.contains(marker), "page is missing {marker}");
+        }
+    }
+
+    #[tokio::test]
     async fn page_is_served_when_disabled() {
         let h = harness(false);
         let res = h

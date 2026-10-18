@@ -91,6 +91,9 @@
     "overlays_dir": {
       "invalid": "\"{path}\" is not a valid directory."
     },
+    "upload_dir": {
+      "invalid": "\"{path}\" is not a valid upload folder. Use an absolute path without \"..\"."
+    },
     "file": {
       "asset_outside_overlays_dir": "The file \"{path}\" is outside the overlays directory.",
       "resolve_failed": "Could not resolve the file \"{path}\"."
@@ -120,6 +123,25 @@
     "language": {
       "label": "Language",
       "description": "Application interface language"
+    },
+    "uploads": {
+      "enabled": {
+        "label": "Receive uploads over the network",
+        "description": "Lets other devices on your network send files to this computer"
+      },
+      "dir": {
+        "label": "Upload destination",
+        "description": "Folder where received files are saved. Leave empty to use Downloads/Overlays",
+        "placeholder": "Downloads/Overlays (default)",
+        "choose": "Choose upload folder",
+        "variablesHint": "Variables: %CCYY year, %YY short year, %MM month, %DD day, %hh hour, %mm minute, %ss second, %% literal percent"
+      },
+      "lanUrl": {
+        "label": "Upload page address",
+        "description": "Open this address from a phone or another computer on the same network",
+        "unavailable": "No network address available",
+        "copy": "Copy"
+      }
     },
     "appearance": {
       "label": "Appearance",

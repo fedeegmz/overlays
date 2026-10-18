@@ -35,14 +35,10 @@ impl UploadSettingsHandle {
         self.0.read().unwrap().enabled
     }
 
-    // TODO(file-upload slice 3): used by the ConfigService setters.
-    #[allow(dead_code)]
     pub fn set_enabled(&self, enabled: bool) {
         self.0.write().unwrap().enabled = enabled;
     }
 
-    // TODO(file-upload slice 3): used by the ConfigService setters.
-    #[allow(dead_code)]
     pub fn set_dir_template(&self, template: Option<String>) {
         self.0.write().unwrap().dir_template = template;
     }
