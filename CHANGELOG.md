@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-18
+
 ### Added
 
 - LAN file upload: other devices on the same network (a phone, another PC) can send files to this computer through a self-contained page at `http://<LAN IP>:<port>/upload` (default port 4848, fallback 4849-4851). The page lets the visitor pick one or more files and optionally type a file name, shows per-file progress, and reports success or errors (too large, uploads disabled, bad request). It follows the browser language (Spanish or English) and shows a notice instead of the form while uploads are off. Files go to `Downloads/Overlays` by default and never overwrite existing files (repeated names become `name (1).ext`); writes are atomic and each file is capped at 2 GiB. New Settings rows control the feature: an on/off switch (on by default, applied immediately without restart), a destination folder template (absolute path; supports `%CCYY %YY %MM %DD %hh %mm %ss %%`, unknown sequences are kept as-is, empty restores the default), and a copyable read-only display of the LAN upload URL. New `set_uploads_enabled` and `set_upload_dir` commands return structured `CommandError`s (`upload_dir.invalid`) with localized messages; `get_server_status` now also returns `lan_urls`.
@@ -91,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/fedeegmz/overlays/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fedeegmz/overlays/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fedeegmz/overlays/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/fedeegmz/overlays/compare/v0.3.0...v0.3.1
