@@ -10,6 +10,8 @@ use application::group_preset_service::GroupPresetService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
+use application::upload_service::{UploadService, UploadSettings, UploadSettingsHandle};
+use infrastructure::clock::ChronoClock;
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::json_store::{
@@ -56,7 +58,28 @@ pub fn run() {
             let presets = Arc::new(PresetService::new(preset_repo));
             let group_presets = Arc::new(GroupPresetService::new(group_preset_repo));
             let config_service = Arc::new(ConfigService::new(config_repo, overlays_dir.clone()));
-            let http_state = Arc::new(HttpState::new(bus, catalog.clone(), overlays_dir.clone()));
+            let downloads_dir = match app.path().download_dir() {
+                Ok(dir) => Some(dir),
+                Err(e) => {
+                    eprintln!("[overlays] could not resolve download_dir: {e}");
+                    None
+                }
+            };
+            let upload_settings = UploadSettingsHandle::new(UploadSettings {
+                enabled: app_config.uploads_enabled,
+                dir_template: app_config.upload_dir.clone(),
+            });
+            let upload_service = Arc::new(UploadService::new(
+                Arc::new(ChronoClock),
+                upload_settings,
+                downloads_dir,
+            ));
+            let http_state = Arc::new(HttpState::new(
+                bus,
+                catalog.clone(),
+                overlays_dir.clone(),
+                upload_service,
+            ));
 
             app.manage(http_state.clone());
             app.manage(catalog);

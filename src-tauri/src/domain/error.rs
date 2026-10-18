@@ -1,7 +1,5 @@
 use std::fmt;
 
-// TODO(file-upload slice 2): drop allow once the Upload* variants are constructed.
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
