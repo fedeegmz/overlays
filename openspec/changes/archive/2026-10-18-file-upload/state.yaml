@@ -1,0 +1,20 @@
+change: file-upload
+artifact_store: hybrid
+phase: archived
+completed:
+  - explore
+  - propose
+  - spec
+  - design
+  - tasks
+  - apply
+  - verify
+  - archive
+pending: []
+verify_verdict: PASS WITH WARNINGS (0 CRITICAL)
+archived_on: 2026-10-18
+archive_path: openspec/changes/archive/2026-10-18-file-upload/
+main_specs:
+  - openspec/specs/lan-file-upload/spec.md
+  - openspec/specs/path-template-variables/spec.md
+  - openspec/specs/upload-settings/spec.md

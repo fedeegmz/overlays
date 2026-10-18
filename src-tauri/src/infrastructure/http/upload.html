@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Upload</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f5f7;
+        --surface: #ffffff;
+        --border: #e4e4e7;
+        --text: #18181b;
+        --muted: #71717a;
+        --accent: #4f46e5;
+        --accent-text: #ffffff;
+        --ok: #16a34a;
+        --danger: #dc2626;
+        --track: #e4e4e7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111113;
+          --surface: #1b1b1f;
+          --border: #2e2e33;
+          --text: #f4f4f5;
+          --muted: #a1a1aa;
+          --accent: #6366f1;
+          --track: #2e2e33;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 24px 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      main {
+        width: 100%;
+        max-width: 520px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .subtitle {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      label {
+        display: block;
+        margin: 14px 0 6px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .hint {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      input[type="text"],
+      input[type="file"] {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--text);
+        font: inherit;
+      }
+      button {
+        width: 100%;
+        margin-top: 18px;
+        padding: 13px;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .notice {
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--muted);
+      }
+      .results {
+        list-style: none;
+        margin: 18px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .item {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 14px;
+        word-break: break-word;
+      }
+      .item .file {
+        font-weight: 600;
+      }
+      .item .msg {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .item.ok .msg {
+        color: var(--ok);
+      }
+      .item.error .msg {
+        color: var(--danger);
+      }
+      .bar {
+        height: 6px;
+        margin-top: 8px;
+        border-radius: 3px;
+        background: var(--track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--accent);
+        transition: width 0.1s linear;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title">Upload files</h1>
+      <p class="subtitle" id="subtitle">Send files to the computer running Overlays.</p>
+
+      <div id="disabled" class="notice hidden" role="status"></div>
+
+      <form id="form" class="hidden">
+        <label for="file" id="fileLabel">Files</label>
+        <input id="file" type="file" name="file" multiple />
+
+        <label for="name" id="nameLabel">File name (optional)</label>
+        <input id="name" type="text" name="name" autocomplete="off" />
+        <p class="hint" id="nameHint"></p>
+
+        <button type="submit" id="submit">Upload</button>
+      </form>
+
+      <ul id="results" class="results"></ul>
+    </main>
+
+    <script>
+      "use strict";
+
+      const DICT = {
+        en: {
+          "page.title": "Upload files",
+          "page.subtitle": "Send files to the computer running Overlays.",
+          "form.files": "Files",
+          "form.name": "File name (optional)",
+          "form.nameHint":
+            "Leave empty to keep the original name. With several files, the same name is used for each and numbered automatically.",
+          "form.submit": "Upload",
+          "form.uploading": "Uploading...",
+          "upload.disabled": "Uploads are turned off on this computer.",
+          "upload.noFiles": "Choose at least one file.",
+          "upload.saved": "Saved as {name}",
+          "upload.too_large": "The file is too large (limit 2 GiB).",
+          "upload.disabled.error": "Uploads are turned off on this computer.",
+          "upload.bad_request": "The request was not valid. Please try again.",
+          "upload.missing_file": "No file was received.",
+          "upload.name_exhausted": "Too many files share this name.",
+          "upload.server_error": "The computer could not save the file.",
+          "upload.network": "Connection lost. Check the network and try again.",
+
+        },
+        es: {
+          "page.title": "Subir archivos",
+          "page.subtitle": "Envía archivos al equipo que ejecuta Overlays.",
+          "form.files": "Archivos",
+          "form.name": "Nombre del archivo (opcional)",
+          "form.nameHint":
+            "Déjalo vacío para conservar el nombre original. Con varios archivos se usa el mismo nombre y se numeran automáticamente.",
+          "form.submit": "Subir",
+          "form.uploading": "Subiendo...",
+          "upload.disabled": "Las subidas están desactivadas en este equipo.",
+          "upload.noFiles": "Elige al menos un archivo.",
+          "upload.saved": "Guardado como {name}",
+          "upload.too_large": "El archivo es demasiado grande (límite 2 GiB).",
+          "upload.disabled.error": "Las subidas están desactivadas en este equipo.",
+          "upload.bad_request": "La solicitud no es válida. Inténtalo de nuevo.",
+          "upload.missing_file": "No se recibió ningún archivo.",
+          "upload.name_exhausted": "Hay demasiados archivos con este nombre.",
+          "upload.server_error": "El equipo no pudo guardar el archivo.",
+          "upload.network": "Se perdió la conexión. Revisa la red e inténtalo de nuevo.",
+
+        },
+      };
+
+      const lang = (navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
+      const t = (key, vars) => {
+        let text = DICT[lang][key] || DICT.en[key] || key;
+        for (const k in vars || {}) text = text.replace("{" + k + "}", vars[k]);
+        return text;
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const form = $("form");
+      const fileInput = $("file");
+      const nameInput = $("name");
+      const submit = $("submit");
+      const results = $("results");
+      const disabledBox = $("disabled");
+
+      document.documentElement.lang = lang;
+      document.title = t("page.title");
+      $("title").textContent = t("page.title");
+      $("subtitle").textContent = t("page.subtitle");
+      $("fileLabel").textContent = t("form.files");
+      $("nameLabel").textContent = t("form.name");
+      $("nameHint").textContent = t("form.nameHint");
+      submit.textContent = t("form.submit");
+
+      function showDisabled() {
+        form.classList.add("hidden");
+        disabledBox.textContent = t("upload.disabled");
+        disabledBox.classList.remove("hidden");
+      }
+
+      async function loadStatus() {
+        try {
+          const res = await fetch("/upload/status", { cache: "no-store" });
+          const body = await res.json();
+          if (body.enabled) {
+            disabledBox.classList.add("hidden");
+            form.classList.remove("hidden");
+          } else {
+            showDisabled();
+          }
+        } catch (_) {
+          // Unknown state: show the form and let the server answer on upload.
+          form.classList.remove("hidden");
+        }
+      }
+
+      function errorMessage(status, code) {
+        if (status === 413 || code === "upload.too_large") return t("upload.too_large");
+        if (status === 503 || code === "upload.disabled") return t("upload.disabled.error");
+        if (code === "upload.missing_file") return t("upload.missing_file");
+        if (code === "upload.name_exhausted") return t("upload.name_exhausted");
+        if (status === 400) return t("upload.bad_request");
+        return t("upload.server_error");
+      }
+
+      function addItem(fileName) {
+        const li = document.createElement("li");
+        li.className = "item";
+        const file = document.createElement("div");
+        file.className = "file";
+        file.textContent = fileName;
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("span");
+        bar.appendChild(fill);
+        li.append(file, msg, bar);
+        results.prepend(li);
+        return { li, msg, bar, fill };
+      }
+
+      function uploadOne(file, typedName) {
+        return new Promise((resolve) => {
+          const item = addItem(file.name);
+          item.msg.textContent = t("form.uploading");
+
+          const data = new FormData();
+          // The name field must precede the file field so the server can read it first.
+          data.append("name", typedName);
+          data.append("file", file, file.name);
+
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/upload");
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) item.fill.style.width = (e.loaded / e.total) * 100 + "%";
+          };
+          xhr.onload = () => {
+            item.bar.classList.add("hidden");
+            let body = null;
+            try {
+              body = JSON.parse(xhr.responseText);
+            } catch (_) {}
+            if (xhr.status === 201 && body && body.file_name) {
+              item.li.classList.add("ok");
+              item.msg.textContent = t("upload.saved", { name: body.file_name });
+            } else {
+              item.li.classList.add("error");
+              item.msg.textContent = errorMessage(xhr.status, body && body.code);
+              if (xhr.status === 503) showDisabled();
+            }
+            resolve();
+          };
+          xhr.onerror = () => {
+            item.bar.classList.add("hidden");
+            item.li.classList.add("error");
+            item.msg.textContent = t("upload.network");
+            resolve();
+          };
+          xhr.send(data);
+        });
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const files = Array.from(fileInput.files || []);
+        if (files.length === 0) {
+          const item = addItem("");
+          item.bar.classList.add("hidden");
+          item.li.classList.add("error");
+          item.msg.textContent = t("upload.noFiles");
+          return;
+        }
+        submit.disabled = true;
+        submit.textContent = t("form.uploading");
+        const typedName = nameInput.value;
+        // One request per file; the server numbers repeated names, so sequential is safe.
+        for (const file of files) {
+          await uploadOne(file, typedName);
+        }
+        fileInput.value = "";
+        submit.disabled = false;
+        submit.textContent = t("form.submit");
+      });
+
+      loadStatus();
+    </script>
+  </body>
+</html>

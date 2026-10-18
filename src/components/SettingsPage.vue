@@ -1,17 +1,62 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { LOCALES } from "../i18n";
 import { getAppVersion } from "../services/appApi";
+import { copyText } from "../services/clipboardApi";
 import { useConfigStore } from "../stores/config";
+import BooleanField from "./BooleanField.vue";
 
 const configStore = useConfigStore();
-const { appConfig, configError } = storeToRefs(configStore);
-const { pickOverlaysDir, setLanguage } = configStore;
+const { appConfig, configError, lanUrls } = storeToRefs(configStore);
+const {
+  pickOverlaysDir,
+  setLanguage,
+  setUploadsEnabled,
+  setUploadDir,
+  pickUploadDir,
+  refreshLanUrls,
+} = configStore;
+
+const uploadDirDraft = ref(appConfig.value.upload_dir ?? "");
+watch(
+  () => appConfig.value.upload_dir,
+  (value) => {
+    uploadDirDraft.value = value ?? "";
+  },
+);
+
+async function commitUploadDir() {
+  if (uploadDirDraft.value.trim() === (appConfig.value.upload_dir ?? "")) {
+    return;
+  }
+  await setUploadDir(uploadDirDraft.value);
+  // Restore the stored value when the backend rejected the input.
+  uploadDirDraft.value = appConfig.value.upload_dir ?? "";
+}
+
+const lanUrl = computed(() => lanUrls.value[0] ?? null);
+const lanUrlCopied = ref(false);
+let copyTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function copyLanUrl() {
+  if (!lanUrl.value) return;
+  try {
+    await copyText(lanUrl.value);
+    lanUrlCopied.value = true;
+  } catch {
+    lanUrlCopied.value = false;
+  }
+  if (copyTimer) clearTimeout(copyTimer);
+  copyTimer = setTimeout(() => {
+    lanUrlCopied.value = false;
+  }, 1500);
+}
 
 const appVersion = ref("");
 onMounted(async () => {
+  void refreshLanUrls();
   try {
     appVersion.value = await getAppVersion();
   } catch {
@@ -72,6 +117,73 @@ const { t, locale } = useI18n();
           </span>
           <button type="button" class="btn" @click="pickOverlaysDir">
             {{ appConfig.overlays_dir ? t('settings.overlaysDir.change') : t('settings.overlaysDir.choose') }}
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">
+            {{ t("settings.uploads.enabled.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.uploads.enabled.description") }}
+          </div>
+        </div>
+        <BooleanField
+          :model-value="appConfig.uploads_enabled ? 'true' : 'false'"
+          @update:model-value="setUploadsEnabled($event === 'true')"
+        />
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">
+            {{ t("settings.uploads.dir.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.uploads.dir.description") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.uploads.dir.variablesHint") }}
+          </div>
+        </div>
+        <div class="settings-row-right">
+          <input
+            v-model="uploadDirDraft"
+            type="text"
+            class="settings-input"
+            :placeholder="t('settings.uploads.dir.placeholder')"
+            spellcheck="false"
+            @change="commitUploadDir"
+          >
+          <button type="button" class="btn" @click="pickUploadDir">
+            {{ t("settings.uploads.dir.choose") }}
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">
+            {{ t("settings.uploads.lanUrl.label") }}
+          </div>
+          <div class="settings-row-desc">
+            {{ t("settings.uploads.lanUrl.description") }}
+          </div>
+        </div>
+        <div class="settings-row-right">
+          <span v-if="lanUrl" class="settings-row-value">{{ lanUrl }}</span>
+          <span v-else class="settings-row-value settings-row-empty">
+            {{ t("settings.uploads.lanUrl.unavailable") }}
+          </span>
+          <button
+            type="button"
+            class="btn"
+            :disabled="!lanUrl"
+            @click="copyLanUrl"
+          >
+            {{ lanUrlCopied ? t("overlayDetail.copied") : t("settings.uploads.lanUrl.copy") }}
           </button>
         </div>
       </div>
@@ -207,6 +319,17 @@ const { t, locale } = useI18n();
 .theme-toggle button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.settings-input {
+  width: 260px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+  font-size: 12px;
 }
 
 .config-error {

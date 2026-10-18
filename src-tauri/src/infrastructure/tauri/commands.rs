@@ -17,11 +17,14 @@ use crate::domain::template::Manifest;
 use crate::infrastructure::error::CommandError;
 use crate::infrastructure::fs_template_source;
 use crate::infrastructure::http::state::HttpState;
+use crate::infrastructure::lan;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ServerStatus {
     pub running: bool,
     pub port: u16,
+    /// Upload page URLs reachable from the LAN; empty when no LAN address is found.
+    pub lan_urls: Vec<String>,
 }
 
 #[tauri::command]
@@ -51,9 +54,11 @@ pub fn list_templates(
 #[tauri::command]
 pub fn get_server_status(http: State<'_, Arc<HttpState>>) -> ServerStatus {
     let port = *http.port.lock().unwrap();
+    let lan_urls = port.map(lan::lan_upload_urls).unwrap_or_default();
     ServerStatus {
         running: port.is_some(),
         port: port.unwrap_or(0),
+        lan_urls,
     }
 }
 
@@ -136,4 +141,22 @@ pub fn set_overlays_dir(
     path: String,
 ) -> Result<AppConfig, CommandError> {
     config.set_overlays_dir(path).map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn set_uploads_enabled(
+    config: State<'_, Arc<ConfigService>>,
+    enabled: bool,
+) -> Result<AppConfig, CommandError> {
+    config
+        .set_uploads_enabled(enabled)
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn set_upload_dir(
+    config: State<'_, Arc<ConfigService>>,
+    template: Option<String>,
+) -> Result<AppConfig, CommandError> {
+    config.set_upload_dir(template).map_err(CommandError::from)
 }

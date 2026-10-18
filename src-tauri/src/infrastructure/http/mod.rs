@@ -1,5 +1,7 @@
+pub mod guard;
 pub mod routes;
 pub mod state;
+pub mod upload;
 pub mod ws;
 
 use std::net::SocketAddr;
@@ -14,12 +16,19 @@ pub async fn start_server(state: Arc<HttpState>) -> anyhow::Result<()> {
 
     let mut last_err: Option<std::io::Error> = None;
     for port in 4848..=4851 {
-        let addr = SocketAddr::from(([127, 0, 0, 1], port));
+        // All interfaces: LAN peers may reach `/upload*`; everything else is loopback-guarded.
+        let addr = SocketAddr::from(([0, 0, 0, 0], port));
         match TcpListener::bind(addr).await {
             Ok(listener) => {
                 *state.port.lock().unwrap() = Some(port);
-                eprintln!("[overlays] server listening on 127.0.0.1:{port}");
-                axum::serve(listener, router.clone()).await?;
+                eprintln!("[overlays] server listening on 0.0.0.0:{port}");
+                axum::serve(
+                    listener,
+                    router
+                        .clone()
+                        .into_make_service_with_connect_info::<SocketAddr>(),
+                )
+                .await?;
                 return Ok(());
             }
             Err(e) => {
@@ -37,45 +46,113 @@ pub async fn start_server(state: Arc<HttpState>) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::net::SocketAddr;
     use std::sync::atomic::Ordering;
     use std::sync::Arc;
     use tokio::net::TcpListener;
 
     use axum::body::Body;
-    use axum::http::Request;
+    use axum::extract::connect_info::MockConnectInfo;
+    use axum::http::{Request, StatusCode};
+    use axum::Router;
     use futures_util::StreamExt;
     use tower::ServiceExt;
 
     use super::routes::build_router;
     use super::state::HttpState;
     use crate::application::ports::OverlayBus;
-    use crate::application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
+    use crate::application::upload_service::{UploadSettings, UploadSettingsHandle};
     use crate::domain::overlay::{OverlayAction, OverlayPayload};
-    use crate::infrastructure::fs_template_source::FsTemplateSource;
-    use crate::infrastructure::overlay_bus::BroadcastOverlayBus;
     use std::collections::HashMap;
 
     fn test_state() -> Arc<HttpState> {
-        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("examples");
-        HttpState::new(
-            Arc::new(BroadcastOverlayBus::new()),
-            Arc::new(TemplateCatalog::new(
-                Arc::new(FsTemplateSource),
-                OverlaysDirHandle::new(dir),
-            )),
-            OverlaysDirHandle::default(),
-        )
-        .into()
+        Arc::new(HttpState::for_test(UploadSettingsHandle::new(
+            UploadSettings {
+                enabled: true,
+                dir_template: None,
+            },
+        )))
+    }
+
+    fn from_peer(router: Router, ip: &str) -> Router {
+        let addr = SocketAddr::new(ip.parse().unwrap(), 5000);
+        router.layer(MockConnectInfo(addr))
+    }
+
+    /// Serves the router the way `start_server` does, so the guard sees real peer addresses.
+    fn serve(listener: TcpListener, router: Router) {
+        tokio::spawn(async move {
+            axum::serve(
+                listener,
+                router.into_make_service_with_connect_info::<SocketAddr>(),
+            )
+            .await
+            .unwrap();
+        });
+    }
+
+    async fn get_status(router: Router, uri: &str) -> (StatusCode, Vec<u8>) {
+        let res = router
+            .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let status = res.status();
+        let body = axum::body::to_bytes(res.into_body(), 1024 * 1024)
+            .await
+            .unwrap();
+        (status, body.to_vec())
+    }
+
+    #[tokio::test]
+    async fn guarded_routes_reject_lan_and_non_loopback_peers() {
+        for peer in [
+            "192.168.1.50",
+            "fe80::1",
+            "2001:db8::1",
+            "::ffff:192.168.1.50",
+        ] {
+            for uri in [
+                "/api/templates",
+                "/overlay/lower-third-basico/index.html",
+                "/ws",
+            ] {
+                let router = from_peer(build_router(test_state()), peer);
+                let (status, body) = get_status(router, uri).await;
+                assert_eq!(status, StatusCode::FORBIDDEN, "{peer} {uri}");
+                assert!(body.is_empty(), "{peer} {uri} must not leak data");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn guarded_routes_allow_loopback_peers() {
+        for peer in ["127.0.0.1", "::1", "::ffff:127.0.0.1"] {
+            let router = from_peer(build_router(test_state()), peer);
+            let (status, _) = get_status(router, "/api/templates").await;
+            assert_eq!(status, StatusCode::OK, "{peer}");
+        }
+    }
+
+    #[tokio::test]
+    async fn upload_routes_are_open_to_lan_peers() {
+        for uri in ["/upload", "/upload/status"] {
+            let router = from_peer(build_router(test_state()), "192.168.1.50");
+            let (status, _) = get_status(router, uri).await;
+            assert_eq!(status, StatusCode::OK, "{uri}");
+        }
+    }
+
+    #[tokio::test]
+    async fn guarded_routes_reject_when_connect_info_is_missing() {
+        let (status, body) = get_status(build_router(test_state()), "/api/templates").await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert!(body.is_empty());
     }
 
     #[tokio::test]
     async fn templates_endpoint_returns_manifest() {
         let state = test_state();
-        let router = build_router(state);
+        let router = from_peer(build_router(state), "127.0.0.1");
         let res = router
             .oneshot(
                 Request::builder()
@@ -106,20 +183,7 @@ mod tests {
 
     #[tokio::test]
     async fn static_overlay_is_served() {
-        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("examples");
-        let state = HttpState::new(
-            Arc::new(BroadcastOverlayBus::new()),
-            Arc::new(TemplateCatalog::new(
-                Arc::new(FsTemplateSource),
-                OverlaysDirHandle::default(),
-            )),
-            OverlaysDirHandle::new(dir),
-        )
-        .into();
-        let router = build_router(state);
+        let router = from_peer(build_router(test_state()), "127.0.0.1");
         let res = router
             .oneshot(
                 Request::builder()
@@ -145,9 +209,7 @@ mod tests {
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
-        tokio::spawn(async move {
-            axum::serve(listener, router).await.unwrap();
-        });
+        serve(listener, router);
 
         let (mut ws, _) = tokio_tungstenite::connect_async(format!("ws://{addr}/ws"))
             .await
@@ -182,9 +244,7 @@ mod tests {
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
-        tokio::spawn(async move {
-            axum::serve(listener, router).await.unwrap();
-        });
+        serve(listener, router);
 
         let (_ws1, _) = tokio_tungstenite::connect_async(format!("ws://{addr}/ws"))
             .await

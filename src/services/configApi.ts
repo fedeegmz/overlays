@@ -13,3 +13,11 @@ export function setOverlaysDir(path: string): Promise<AppConfig> {
 export function setLanguage(lang: string): Promise<AppConfig> {
   return invoke<AppConfig>("set_language", { lang });
 }
+
+export function setUploadsEnabled(enabled: boolean): Promise<AppConfig> {
+  return invoke<AppConfig>("set_uploads_enabled", { enabled });
+}
+
+export function setUploadDir(template: string | null): Promise<AppConfig> {
+  return invoke<AppConfig>("set_upload_dir", { template });
+}

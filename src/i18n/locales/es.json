@@ -91,6 +91,9 @@
     "overlays_dir": {
       "invalid": "\"{path}\" no es un directorio válido."
     },
+    "upload_dir": {
+      "invalid": "\"{path}\" no es una carpeta de subidas válida. Debe ser una ruta absoluta sin \"..\"."
+    },
     "file": {
       "asset_outside_overlays_dir": "El archivo \"{path}\" está fuera de la carpeta de overlays.",
       "resolve_failed": "No se pudo resolver el archivo \"{path}\"."
@@ -120,6 +123,25 @@
     "language": {
       "label": "Idioma",
       "description": "Idioma de la interfaz de la aplicación"
+    },
+    "uploads": {
+      "enabled": {
+        "label": "Recibir archivos por la red",
+        "description": "Permite que otros dispositivos de la red envíen archivos a este equipo"
+      },
+      "dir": {
+        "label": "Destino de las subidas",
+        "description": "Carpeta donde se guardan los archivos recibidos. Si lo dejás vacío, se usa Descargas/Overlays",
+        "placeholder": "Descargas/Overlays (predeterminado)",
+        "choose": "Elegir carpeta de subidas",
+        "variablesHint": "Variables: %CCYY año, %YY año corto, %MM mes, %DD día, %hh hora, %mm minuto, %ss segundo, %% porcentaje literal"
+      },
+      "lanUrl": {
+        "label": "Dirección de la página de subida",
+        "description": "Abrí esta dirección desde un teléfono u otro equipo de la misma red",
+        "unavailable": "No hay dirección de red disponible",
+        "copy": "Copiar"
+      }
     },
     "appearance": {
       "label": "Apariencia",

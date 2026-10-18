@@ -5,6 +5,7 @@ export type OverlayAction = "show" | "update" | "hide";
 export interface ServerStatus {
   running: boolean;
   port: number;
+  lan_urls: string[];
 }
 
 export interface SendOverlayUpdateArgs {

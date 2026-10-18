@@ -2,11 +2,14 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::http::{header, StatusCode};
+use axum::middleware::from_fn;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
 
+use super::guard::loopback_only;
 use super::state::HttpState;
+use super::upload;
 use super::ws;
 use crate::infrastructure::error::CommandError;
 
@@ -55,9 +58,15 @@ async fn list_templates(State(state): State<Arc<HttpState>>) -> Response {
 }
 
 pub fn build_router(state: Arc<HttpState>) -> Router {
-    Router::new()
+    // Overlay control surface: reachable from the local machine only.
+    let guarded = Router::new()
         .route("/overlay/{*path}", get(serve_overlay))
         .route("/api/templates", get(list_templates))
         .route("/ws", get(ws::ws_handler))
+        .route_layer(from_fn(loopback_only));
+
+    // Upload routes are the only ones open to the LAN.
+    guarded
+        .merge(upload::routes(state.max_upload_bytes))
         .with_state(state)
 }

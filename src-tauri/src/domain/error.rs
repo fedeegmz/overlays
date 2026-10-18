@@ -16,6 +16,14 @@ pub enum DomainError {
     ConfigSaveFailed { detail: String },
     AssetOutsideOverlaysDir { path: String },
     AssetResolveFailed { path: String },
+    UploadDisabled,
+    UploadTooLarge,
+    UploadMissingFile,
+    UploadBadRequest { detail: String },
+    UploadNameExhausted,
+    UploadDestinationUnavailable,
+    UploadWriteFailed { detail: String },
+    UploadDirInvalid { path: String },
 }
 
 impl fmt::Display for DomainError {
@@ -45,6 +53,14 @@ impl fmt::Display for DomainError {
                 write!(f, "asset outside overlays dir: {path}")
             }
             Self::AssetResolveFailed { path } => write!(f, "could not resolve asset: {path}"),
+            Self::UploadDisabled => write!(f, "uploads are disabled"),
+            Self::UploadTooLarge => write!(f, "uploaded file is too large"),
+            Self::UploadMissingFile => write!(f, "upload has no file"),
+            Self::UploadBadRequest { detail } => write!(f, "bad upload request: {detail}"),
+            Self::UploadNameExhausted => write!(f, "no free file name available"),
+            Self::UploadDestinationUnavailable => write!(f, "upload destination unavailable"),
+            Self::UploadWriteFailed { detail } => write!(f, "upload write failed: {detail}"),
+            Self::UploadDirInvalid { path } => write!(f, "invalid upload dir: {path}"),
         }
     }
 }
