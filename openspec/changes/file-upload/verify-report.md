@@ -20,7 +20,7 @@ Commits: 7e7d23c, acc82e8, 5583c0f (base a554fba)
 - Frontend: no invoke in components; es/en have 98 matching keys each; CommandError mapped (errors.upload_dir.invalid).
 
 ## Findings
-WARNING 1: Manual smoke (pnpm tauri dev, phone/LAN browser) still pending per tasks 2.8/3.4; real LAN reachability and 0.0.0.0 bind not exercised end to end.
+WARNING 1 (RESOLVED 2026-10-18): Manual smoke (pnpm tauri dev, phone/LAN browser) passed, confirmed by the user.
 WARNING 2: Name field ignored if sent after the file part (upload.rs:68-73); by design (D-name-before-file) but silent. Upload page must keep name first.
 SUGGESTION 1: pnpm build (task 3.8 gate) not re-run here; run before PR.
 SUGGESTION 2: Windows 127.0.0.1 shadow-bind risk is documented in tasks only; confirm it landed in README/CHANGELOG (CHANGELOG +3 lines present).
