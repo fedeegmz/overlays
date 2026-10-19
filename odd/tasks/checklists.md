@@ -59,11 +59,11 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU4 — `feat(checklists): add checklist page with list and run views` (route: delegated)
 
-- [ ] 4.1 `NavPage` + SideNav entry + `App.vue` page
-- [ ] 4.2 `ChecklistsPage.vue` container
-- [ ] 4.3 `ChecklistListView.vue`
-- [ ] 4.4 `ChecklistRunView.vue`
-- [ ] 4.5 i18n page strings
+- [x] 4.1 `NavPage` + SideNav entry + `App.vue` page
+- [x] 4.2 `ChecklistsPage.vue` container
+- [x] 4.3 `ChecklistListView.vue`
+- [x] 4.4 `ChecklistRunView.vue`
+- [x] 4.5 i18n page strings
 
 ### WU5 — `refactor(dnd): extract useDragReorder composable` (route: delegated)
 
@@ -86,8 +86,9 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 |---|---|---|---|
 | WU1 | ca40248 | cargo test 171 pass (9 new), clippy -D warnings, fmt OK | RED: missing-symbol compile errors; temporary dead_code allows later removed in WU2 |
 | WU2 | b82e99d | cargo test 185 pass (14 new; parent spot check 185 pass), clippy -D warnings, fmt OK | Assess: medium (RDD off → writer self-verification). 4 dead_code allows with `TODO(checklists WU3)` remain |
-| WU3 | see git log | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
+| WU3 | e247649 | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
+| WU4 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
 
 ## Next step
 
-WU3 (Tauri commands, lib.rs wiring, store). Remove the temporary `#[allow(dead_code)]` (with TODO markers) on `application::checklist_service`, `ChecklistRepository`, and `JsonChecklistRepository` once commands construct them.
+WU5 (`useDragReorder` composable), then WU6 (editor; replace the `noop` create/edit handlers in `ChecklistsPage.vue`).

@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "overlays": "Home",
+    "checklists": "Checklists",
     "instances": "Instances",
     "closeInstance": "Close instance",
     "renameInstance": "Instance name",
@@ -28,6 +29,19 @@
     "startPartial": "Started {ok} of {total} instances.",
     "entryFailed": "{template}: {reason}",
     "sendFailed": "Could not send the overlay."
+  },
+  "checklists": {
+    "title": "Checklists",
+    "subtitle": "Track repetitive steps and tick them off as you go",
+    "create": "Create checklist",
+    "empty": "No checklists yet. Create the first one.",
+    "progress": "{done} of {total}",
+    "completed": "Completed",
+    "delete": "Delete",
+    "confirmDelete": "Confirm?",
+    "back": "Back",
+    "edit": "Edit",
+    "uncheckAll": "Uncheck all"
   },
   "content": {
     "title": "Content",

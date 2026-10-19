@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "overlays": "Inicio",
+    "checklists": "Listas",
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
     "renameInstance": "Nombre de la instancia",
@@ -28,6 +29,19 @@
     "startPartial": "Se iniciaron {ok} de {total} instancias.",
     "entryFailed": "{template}: {reason}",
     "sendFailed": "No se pudo enviar el overlay."
+  },
+  "checklists": {
+    "title": "Listas",
+    "subtitle": "Seguí tus pasos repetitivos y marcalos a medida que avanzás",
+    "create": "Crear lista",
+    "empty": "Todavía no hay listas. Creá la primera.",
+    "progress": "{done} de {total}",
+    "completed": "Completada",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Confirmar?",
+    "back": "Volver",
+    "edit": "Editar",
+    "uncheckAll": "Desmarcar todo"
   },
   "content": {
     "title": "Contenido",

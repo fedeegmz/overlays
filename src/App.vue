@@ -4,6 +4,7 @@ import { onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { bootstrapStores } from "./bootstrap";
 import AppShell from "./components/AppShell.vue";
+import ChecklistsPage from "./components/ChecklistsPage.vue";
 import OverlayDetailPage from "./components/OverlayDetailPage.vue";
 import OverlaysPage from "./components/OverlaysPage.vue";
 import SettingsPage from "./components/SettingsPage.vue";
@@ -64,6 +65,7 @@ watch(instances, (list) => {
       v-else-if="currentPage === 'detail'"
       @back="backToOverlays"
     />
+    <ChecklistsPage v-else-if="currentPage === 'checklists'" />
     <SettingsPage v-else-if="currentPage === 'settings'" />
   </AppShell>
 </template>

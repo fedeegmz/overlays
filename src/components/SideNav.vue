@@ -153,6 +153,30 @@ async function moveByKeyboard(instance: OverlayInstance, delta: number) {
         </svg>
         {{ t("sidebar.overlays") }}
       </button>
+      <button
+        type="button"
+        class="nav-item"
+        :class="{ active: currentPage === 'checklists' }"
+        @click="emit('navigate', 'checklists')"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m3 6 2 2 4-4" />
+          <path d="m3 14 2 2 4-4" />
+          <path d="M13 6h8" />
+          <path d="M13 14h8" />
+        </svg>
+        {{ t("sidebar.checklists") }}
+      </button>
     </nav>
 
     <div v-if="instances.length > 0" class="instances-section">
