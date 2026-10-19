@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::domain::checklist::Checklist;
 use crate::domain::config::AppConfig;
 use crate::domain::error::DomainResult;
 use crate::domain::group_preset::GroupPreset;
@@ -17,6 +18,15 @@ pub trait PresetRepository: Send + Sync {
 pub trait GroupPresetRepository: Send + Sync {
     fn load(&self) -> DomainResult<Vec<GroupPreset>>;
     fn save(&self, groups: &[GroupPreset]) -> DomainResult<()>;
+}
+
+/// Strict like `GroupPresetRepository`: a corrupt store is an error, never an
+/// empty list, so a later save cannot wipe the user's data.
+// TODO(checklists WU3): drop once commands wire this up.
+#[allow(dead_code)]
+pub trait ChecklistRepository: Send + Sync {
+    fn load(&self) -> DomainResult<Vec<Checklist>>;
+    fn save(&self, checklists: &[Checklist]) -> DomainResult<()>;
 }
 
 pub trait ConfigRepository: Send + Sync {

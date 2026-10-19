@@ -1,7 +1,5 @@
 use std::fmt;
 
-// TODO(checklists WU2): drop once the Checklist* service variants are constructed.
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,

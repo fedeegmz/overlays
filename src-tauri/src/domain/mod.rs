@@ -1,5 +1,3 @@
-// TODO(checklists WU3): drop the dead_code allows once commands wire this up.
-#[allow(dead_code)]
 pub mod checklist;
 pub mod config;
 pub mod error;

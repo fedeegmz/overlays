@@ -1,6 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use crate::application::ports::{ConfigRepository, GroupPresetRepository, PresetRepository};
+use crate::application::ports::{
+    ChecklistRepository, ConfigRepository, GroupPresetRepository, PresetRepository,
+};
+use crate::domain::checklist::Checklist;
 use crate::domain::config::AppConfig;
 use crate::domain::error::{DomainError, DomainResult};
 use crate::domain::group_preset::GroupPreset;
@@ -79,6 +82,41 @@ impl GroupPresetRepository for JsonGroupPresetRepository {
     }
 }
 
+// TODO(checklists WU3): drop once commands wire this up.
+#[allow(dead_code)]
+pub struct JsonChecklistRepository {
+    path: PathBuf,
+}
+
+// TODO(checklists WU3): drop once commands wire this up.
+#[allow(dead_code)]
+impl JsonChecklistRepository {
+    pub fn new(path: PathBuf) -> Self {
+        Self { path }
+    }
+}
+
+impl ChecklistRepository for JsonChecklistRepository {
+    fn load(&self) -> DomainResult<Vec<Checklist>> {
+        if !self.path.exists() {
+            return Ok(Vec::new());
+        }
+        let content =
+            std::fs::read_to_string(&self.path).map_err(|e| DomainError::ChecklistLoadFailed {
+                detail: format!("could not read {:?}: {e}", self.path),
+            })?;
+        serde_json::from_str(&content).map_err(|e| DomainError::ChecklistLoadFailed {
+            detail: format!("could not parse {:?}: {e}", self.path),
+        })
+    }
+
+    fn save(&self, checklists: &[Checklist]) -> DomainResult<()> {
+        write_json(&self.path, &checklists, |detail| {
+            DomainError::ChecklistSaveFailed { detail }
+        })
+    }
+}
+
 pub struct JsonConfigRepository {
     path: PathBuf,
 }
@@ -110,6 +148,7 @@ impl ConfigRepository for JsonConfigRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::checklist::ChecklistItem;
     use std::collections::HashMap;
 
     fn temp_path(prefix: &str) -> PathBuf {
@@ -250,6 +289,99 @@ mod tests {
         let entries = group("Show", &["a"]).entries;
         assert!(svc.save("Show".into(), entries).is_err());
         assert!(svc.delete("Show").is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ not json");
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    fn checklist(id: &str, name: &str, texts: &[&str]) -> Checklist {
+        let items = texts
+            .iter()
+            .enumerate()
+            .map(|(n, t)| ChecklistItem {
+                id: format!("{id}-i{n}"),
+                text: t.to_string(),
+            })
+            .collect();
+        Checklist::new(id, name, items).unwrap()
+    }
+
+    #[test]
+    fn missing_checklist_file_loads_empty() {
+        let repo =
+            JsonChecklistRepository::new(std::env::temp_dir().join("overlays-checklists-missing"));
+        assert!(repo.load().unwrap().is_empty());
+    }
+
+    #[test]
+    fn checklists_round_trip_preserves_order_ids_and_duplicates() {
+        let path = temp_path("overlays-test-checklists");
+        let repo = JsonChecklistRepository::new(path.clone());
+
+        repo.save(&[
+            checklist("l1", "Show", &["a", "b", "a"]),
+            checklist("l2", "Other", &["c"]),
+        ])
+        .unwrap();
+        let loaded = repo.load().unwrap();
+
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].id, "l1");
+        assert_eq!(loaded[0].name, "Show");
+        let texts: Vec<_> = loaded[0].items.iter().map(|i| i.text.as_str()).collect();
+        assert_eq!(texts, ["a", "b", "a"]);
+        assert_eq!(loaded[0].items[1].id, "l1-i1");
+        assert_eq!(loaded[1].name, "Other");
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn saved_checklist_file_has_no_check_state() {
+        let path = temp_path("overlays-test-checklists-shape");
+        let repo = JsonChecklistRepository::new(path.clone());
+
+        repo.save(&[checklist("l1", "Show", &["a"])]).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+
+        assert_eq!(
+            json,
+            serde_json::json!([
+                { "id": "l1", "name": "Show", "items": [{ "id": "l1-i0", "text": "a" }] }
+            ])
+        );
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn corrupt_checklist_file_fails_to_load() {
+        let path = temp_path("overlays-test-checklists-corrupt-load");
+        std::fs::write(&path, "{ not json").unwrap();
+        let repo = JsonChecklistRepository::new(path.clone());
+
+        assert!(matches!(
+            repo.load(),
+            Err(DomainError::ChecklistLoadFailed { .. })
+        ));
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn corrupt_checklist_file_is_untouched_by_failed_save() {
+        use crate::application::checklist_service::ChecklistService;
+
+        let path = temp_path("overlays-test-checklists-corrupt-save");
+        std::fs::write(&path, "{ not json").unwrap();
+        let svc = ChecklistService::new(std::sync::Arc::new(JsonChecklistRepository::new(
+            path.clone(),
+        )));
+
+        let items = checklist("l1", "Show", &["a"]).items;
+        assert!(svc.save("l1".into(), "Show".into(), items).is_err());
+        assert!(svc.delete("l1").is_err());
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ not json");
 
         let _ = std::fs::remove_file(&path);

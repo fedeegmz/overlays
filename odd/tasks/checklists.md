@@ -45,10 +45,10 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU2 — `feat(checklists): add checklist service and JSON repository` (route: delegated)
 
-- [ ] 2.1 `ChecklistRepository` port (strict load)
-- [ ] 2.2 RED: service tests with in-memory repo
-- [ ] 2.3 GREEN: `ChecklistService::{list,save,delete}` (validate → load → mutate → write)
-- [ ] 2.4 RED → GREEN: `JsonChecklistRepository` (missing, round trip, no check fields, corrupt untouched)
+- [x] 2.1 `ChecklistRepository` port (strict load)
+- [x] 2.2 RED: service tests with in-memory repo
+- [x] 2.3 GREEN: `ChecklistService::{list,save,delete}` (validate → load → mutate → write)
+- [x] 2.4 RED → GREEN: `JsonChecklistRepository` (missing, round trip, no check fields, corrupt untouched)
 
 ### WU3 — `feat(checklists): expose checklist commands and frontend store` (route: delegated)
 
@@ -84,8 +84,8 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 | WU | Commit | Checks | Notes |
 |---|---|---|---|
-| WU1 | recorded in the WU2 commit | cargo test 171 pass (9 new), clippy -D warnings, fmt OK | RED: missing-symbol compile errors; temporary `#[allow(dead_code)]` on `domain::checklist` and `DomainError` (lib.rs mods are private) |
+| WU1 | ca40248 | cargo test 171 pass (9 new), clippy -D warnings, fmt OK | RED: missing-symbol compile errors; temporary dead_code allows later removed in WU2 |
 
 ## Next step
 
-WU2.
+WU3 (Tauri commands, lib.rs wiring, store). Remove the temporary `#[allow(dead_code)]` (with TODO markers) on `application::checklist_service`, `ChecklistRepository`, and `JsonChecklistRepository` once commands construct them.
