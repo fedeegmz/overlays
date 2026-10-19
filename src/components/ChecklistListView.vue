@@ -71,9 +71,6 @@ const { pending: confirmingDelete, confirmClick: handleDelete } =
     </div>
     <div v-else class="empty">
       <p class="muted">{{ t("checklists.empty") }}</p>
-      <button type="button" class="btn" @click="emit('create')">
-        {{ t("checklists.create") }}
-      </button>
     </div>
   </div>
 </template>
