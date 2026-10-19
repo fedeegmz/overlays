@@ -71,10 +71,10 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU6 — `feat(checklists): add checklist editor with drag reorder` (route: delegated)
 
-- [ ] 6.1 `ChecklistEditor.vue`
-- [ ] 6.2 Wire create/edit/rename in the page
-- [ ] 6.3 Editor i18n strings
-- [ ] 6.4 `CHANGELOG.md` entry under [Unreleased] → Added
+- [x] 6.1 `ChecklistEditor.vue`
+- [x] 6.2 Wire create/edit/rename in the page
+- [x] 6.3 Editor i18n strings
+- [x] 6.4 `CHANGELOG.md` entry under [Unreleased] → Added
 
 ### WU7 (optional) — `refactor(nav): use useDragReorder in SideNav` (route: delegated)
 
@@ -88,8 +88,9 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 | WU2 | b82e99d | cargo test 185 pass (14 new; parent spot check 185 pass), clippy -D warnings, fmt OK | Assess: medium (RDD off → writer self-verification). 4 dead_code allows with `TODO(checklists WU3)` remain |
 | WU3 | e247649 | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
 | WU4 | 32e04ee | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
-| WU5 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass | Composable only; SideNav untouched (WU7 optional); not yet imported (Biome/tsc accept it). No Rust change |
+| WU5 | 2416bed | vue-tsc, pnpm check OK; cargo test 185 pass | Composable only; SideNav untouched (WU7 optional); not yet imported (Biome/tsc accept it). No Rust change |
+| WU6 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass | Editor + page wiring + CHANGELOG. Manual smoke pending (user) |
 
 ## Next step
 
-WU5 (`useDragReorder` composable), then WU6 (editor; replace the `noop` create/edit handlers in `ChecklistsPage.vue`).
+Optional WU7 (SideNav adopts `useDragReorder`), then manual smoke in `pnpm tauri dev`.

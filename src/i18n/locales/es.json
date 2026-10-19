@@ -41,7 +41,21 @@
     "confirmDelete": "¿Confirmar?",
     "back": "Volver",
     "edit": "Editar",
-    "uncheckAll": "Desmarcar todo"
+    "uncheckAll": "Desmarcar todo",
+    "editor": {
+      "createTitle": "Nueva lista",
+      "editTitle": "Editar lista",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre de la lista",
+      "itemsLabel": "Ítems",
+      "itemPlaceholder": "Texto del ítem",
+      "itemLabel": "Ítem {n}",
+      "addItem": "Agregar ítem",
+      "removeItem": "Quitar ítem",
+      "reorderHint": "Arrastrá los ítems o usá Alt+↑ / Alt+↓ para reordenarlos."
+    }
   },
   "content": {
     "title": "Contenido",

@@ -41,7 +41,21 @@
     "confirmDelete": "Confirm?",
     "back": "Back",
     "edit": "Edit",
-    "uncheckAll": "Uncheck all"
+    "uncheckAll": "Uncheck all",
+    "editor": {
+      "createTitle": "New checklist",
+      "editTitle": "Edit checklist",
+      "cancel": "Cancel",
+      "save": "Save",
+      "nameLabel": "Name",
+      "namePlaceholder": "Checklist name",
+      "itemsLabel": "Items",
+      "itemPlaceholder": "Item text",
+      "itemLabel": "Item {n}",
+      "addItem": "Add item",
+      "removeItem": "Remove item",
+      "reorderHint": "Drag items or use Alt+↑ / Alt+↓ to reorder them."
+    }
   },
   "content": {
     "title": "Content",
