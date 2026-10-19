@@ -67,7 +67,7 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU5 — `refactor(dnd): extract useDragReorder composable` (route: delegated)
 
-- [ ] 5.1 `src/composables/useDragReorder.ts` from `SideNav.vue`
+- [x] 5.1 `src/composables/useDragReorder.ts` from `SideNav.vue`
 
 ### WU6 — `feat(checklists): add checklist editor with drag reorder` (route: delegated)
 
@@ -87,7 +87,8 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 | WU1 | ca40248 | cargo test 171 pass (9 new), clippy -D warnings, fmt OK | RED: missing-symbol compile errors; temporary dead_code allows later removed in WU2 |
 | WU2 | b82e99d | cargo test 185 pass (14 new; parent spot check 185 pass), clippy -D warnings, fmt OK | Assess: medium (RDD off → writer self-verification). 4 dead_code allows with `TODO(checklists WU3)` remain |
 | WU3 | e247649 | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
-| WU4 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
+| WU4 | 32e04ee | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
+| WU5 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass | Composable only; SideNav untouched (WU7 optional); not yet imported (Biome/tsc accept it). No Rust change |
 
 ## Next step
 
