@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Language selector (Español / English) on the LAN upload page. The initial language still follows the device (Spanish or English); the visitor's choice is remembered per browser in `localStorage` (falling back to the device language when storage is unavailable) and applied instantly without reloading. Result messages already shown keep the language they were created in.
+
+### Changed
+
+- Spanish strings on the LAN upload page now use voseo, matching the rest of the app.
+
 ## [0.6.0] - 2026-10-18
 
 ### Added
