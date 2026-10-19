@@ -78,7 +78,7 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU7 (optional) — `refactor(nav): use useDragReorder in SideNav` (route: delegated)
 
-- [ ] 7.1 Migrate SideNav drag code to the composable
+- [x] 7.1 Migrate SideNav drag code to the composable
 
 ## Progress
 
@@ -88,6 +88,8 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 | WU2 | b82e99d | cargo test 185 pass (14 new; parent spot check 185 pass), clippy -D warnings, fmt OK | Assess: medium (RDD off → writer self-verification). 4 dead_code allows with `TODO(checklists WU3)` remain |
 | WU3 | e247649 | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
 | WU4 | 32e04ee | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
+| fix | 4f1eb9e | vue-tsc, pnpm check OK | Removed duplicate create button from the empty state (user request) |
+| WU7 | (this commit) | vue-tsc, pnpm check OK | SideNav uses useDragReorder; manual smoke: sidebar tab reorder unchanged (pending, user) |
 | WU5 | 2416bed | vue-tsc, pnpm check OK; cargo test 185 pass | Composable only; SideNav untouched (WU7 optional); not yet imported (Biome/tsc accept it). No Rust change |
 | WU6 | 141ccb0 | vue-tsc, pnpm check OK; cargo test 185 pass | Editor + page wiring + CHANGELOG. Manual smoke pending (user) |
 
