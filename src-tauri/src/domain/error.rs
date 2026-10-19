@@ -1,5 +1,7 @@
 use std::fmt;
 
+// TODO(checklists WU2): drop once the Checklist* service variants are constructed.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
@@ -10,6 +12,14 @@ pub enum DomainError {
     GroupPresetNotFound { name: String },
     GroupPresetLoadFailed { detail: String },
     GroupPresetSaveFailed { detail: String },
+    ChecklistInvalidId,
+    ChecklistEmptyName,
+    ChecklistNoItems,
+    ChecklistEmptyItem { index: usize },
+    ChecklistDuplicateName { name: String },
+    ChecklistNotFound { id: String },
+    ChecklistLoadFailed { detail: String },
+    ChecklistSaveFailed { detail: String },
     TemplateDiscoveryFailed { detail: String },
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
@@ -42,6 +52,22 @@ impl fmt::Display for DomainError {
             }
             Self::GroupPresetSaveFailed { detail } => {
                 write!(f, "group preset save failed: {detail}")
+            }
+            Self::ChecklistInvalidId => write!(f, "checklist or item id is empty or duplicated"),
+            Self::ChecklistEmptyName => write!(f, "checklist name is empty"),
+            Self::ChecklistNoItems => write!(f, "checklist has no items"),
+            Self::ChecklistEmptyItem { index } => {
+                write!(f, "checklist item {index} has empty text")
+            }
+            Self::ChecklistDuplicateName { name } => {
+                write!(f, "checklist name already in use: {name}")
+            }
+            Self::ChecklistNotFound { id } => write!(f, "checklist not found: {id}"),
+            Self::ChecklistLoadFailed { detail } => {
+                write!(f, "checklist load failed: {detail}")
+            }
+            Self::ChecklistSaveFailed { detail } => {
+                write!(f, "checklist save failed: {detail}")
             }
             Self::TemplateDiscoveryFailed { detail } => {
                 write!(f, "template discovery failed: {detail}")
