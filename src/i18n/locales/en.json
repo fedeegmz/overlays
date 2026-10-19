@@ -108,6 +108,16 @@
       "not_found": "Group \"{name}\" was not found.",
       "load_failed": "Could not read the groups file.",
       "save_failed": "Could not save the groups file."
+    },
+    "checklist": {
+      "invalid_id": "The list or one of its items has an invalid identifier.",
+      "empty_name": "The list name cannot be empty.",
+      "no_items": "A list needs at least one item.",
+      "empty_item": "There is an empty item. Fill it in or remove it.",
+      "duplicate_name": "A list named \"{name}\" already exists.",
+      "not_found": "The list was not found.",
+      "load_failed": "Could not read the lists file.",
+      "save_failed": "Could not save the lists file."
     }
   },
   "settings": {

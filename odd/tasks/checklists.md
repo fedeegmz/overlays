@@ -52,10 +52,10 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 
 ### WU3 — `feat(checklists): expose checklist commands and frontend store` (route: delegated)
 
-- [ ] 3.1 Tauri commands + `lib.rs` wiring
-- [ ] 3.2 TS types + `checklistsApi`
-- [ ] 3.3 Pinia store with ephemeral checks and `pruneChecked`
-- [ ] 3.4 `errors.checklist.*` i18n keys (es voseo, en)
+- [x] 3.1 Tauri commands + `lib.rs` wiring
+- [x] 3.2 TS types + `checklistsApi`
+- [x] 3.3 Pinia store with ephemeral checks and `pruneChecked`
+- [x] 3.4 `errors.checklist.*` i18n keys (es voseo, en)
 
 ### WU4 — `feat(checklists): add checklist page with list and run views` (route: delegated)
 
@@ -85,6 +85,8 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 | WU | Commit | Checks | Notes |
 |---|---|---|---|
 | WU1 | ca40248 | cargo test 171 pass (9 new), clippy -D warnings, fmt OK | RED: missing-symbol compile errors; temporary dead_code allows later removed in WU2 |
+| WU2 | b82e99d | cargo test 185 pass (14 new; parent spot check 185 pass), clippy -D warnings, fmt OK | Assess: medium (RDD off → writer self-verification). 4 dead_code allows with `TODO(checklists WU3)` remain |
+| WU3 | see git log | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
 
 ## Next step
 

@@ -82,14 +82,10 @@ impl GroupPresetRepository for JsonGroupPresetRepository {
     }
 }
 
-// TODO(checklists WU3): drop once commands wire this up.
-#[allow(dead_code)]
 pub struct JsonChecklistRepository {
     path: PathBuf,
 }
 
-// TODO(checklists WU3): drop once commands wire this up.
-#[allow(dead_code)]
 impl JsonChecklistRepository {
     pub fn new(path: PathBuf) -> Self {
         Self { path }

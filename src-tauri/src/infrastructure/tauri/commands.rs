@@ -4,11 +4,13 @@ use std::sync::Arc;
 use serde::Serialize;
 use tauri::State;
 
+use crate::application::checklist_service::ChecklistService;
 use crate::application::config_service::ConfigService;
 use crate::application::group_preset_service::GroupPresetService;
 use crate::application::ports::OverlayBus;
 use crate::application::preset_service::PresetService;
 use crate::application::template_catalog::TemplateCatalog;
+use crate::domain::checklist::{Checklist, ChecklistItem};
 use crate::domain::config::AppConfig;
 use crate::domain::group_preset::{GroupPreset, GroupPresetEntry};
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
@@ -120,6 +122,31 @@ pub fn delete_group_preset(
     name: String,
 ) -> Result<Vec<GroupPreset>, CommandError> {
     groups.delete(&name).map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn list_checklists(
+    checklists: State<'_, Arc<ChecklistService>>,
+) -> Result<Vec<Checklist>, CommandError> {
+    checklists.list().map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn save_checklist(
+    checklists: State<'_, Arc<ChecklistService>>,
+    id: String,
+    name: String,
+    items: Vec<ChecklistItem>,
+) -> Result<Vec<Checklist>, CommandError> {
+    checklists.save(id, name, items).map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn delete_checklist(
+    checklists: State<'_, Arc<ChecklistService>>,
+    id: String,
+) -> Result<Vec<Checklist>, CommandError> {
+    checklists.delete(&id).map_err(CommandError::from)
 }
 
 #[tauri::command]

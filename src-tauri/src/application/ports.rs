@@ -22,8 +22,6 @@ pub trait GroupPresetRepository: Send + Sync {
 
 /// Strict like `GroupPresetRepository`: a corrupt store is an error, never an
 /// empty list, so a later save cannot wipe the user's data.
-// TODO(checklists WU3): drop once commands wire this up.
-#[allow(dead_code)]
 pub trait ChecklistRepository: Send + Sync {
     fn load(&self) -> DomainResult<Vec<Checklist>>;
     fn save(&self, checklists: &[Checklist]) -> DomainResult<()>;

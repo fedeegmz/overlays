@@ -108,6 +108,16 @@
       "not_found": "No se encontró el grupo \"{name}\".",
       "load_failed": "No se pudo leer el archivo de grupos.",
       "save_failed": "No se pudo guardar el archivo de grupos."
+    },
+    "checklist": {
+      "invalid_id": "La lista o alguno de sus ítems tiene un identificador inválido.",
+      "empty_name": "El nombre de la lista no puede estar vacío.",
+      "no_items": "Una lista necesita al menos un ítem.",
+      "empty_item": "Hay un ítem vacío. Completalo o eliminalo.",
+      "duplicate_name": "Ya existe una lista llamada \"{name}\".",
+      "not_found": "No se encontró la lista.",
+      "load_failed": "No se pudo leer el archivo de listas.",
+      "save_failed": "No se pudo guardar el archivo de listas."
     }
   },
   "settings": {
