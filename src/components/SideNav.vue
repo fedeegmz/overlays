@@ -5,14 +5,14 @@ import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
 import { useConfirmClick } from "../composables/useConfirmClick";
 import { useInstanceStore } from "../stores/instances";
-import type { OverlayInstance } from "../types";
+import type { NavPage, OverlayInstance } from "../types";
 
 defineProps<{
-  currentPage: "overlays" | "settings";
+  currentPage: NavPage;
 }>();
 
 const emit = defineEmits<{
-  navigate: [page: "overlays" | "settings"];
+  navigate: [page: NavPage];
   openDetail: [];
 }>();
 

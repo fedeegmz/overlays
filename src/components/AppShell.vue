@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import type { NavPage } from "../types";
 import SideNav from "./SideNav.vue";
 
 defineProps<{
-  currentPage: "overlays" | "settings";
+  currentPage: NavPage;
 }>();
 
 const emit = defineEmits<{
-  navigate: [page: "overlays" | "settings"];
+  navigate: [page: NavPage];
   openDetail: [];
 }>();
 </script>

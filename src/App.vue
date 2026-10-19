@@ -10,6 +10,7 @@ import SettingsPage from "./components/SettingsPage.vue";
 import { onCloseRequested } from "./services/appApi";
 import { confirmWarning } from "./services/dialogApi";
 import { useInstanceStore } from "./stores/instances";
+import type { NavPage, Page } from "./types";
 
 bootstrapStores();
 
@@ -31,11 +32,9 @@ onUnmounted(() => {
   void unlistenClose.then((unlisten) => unlisten());
 });
 
-type Page = "overlays" | "detail" | "settings";
-
 const currentPage = ref<Page>("overlays");
 
-function navigate(page: "overlays" | "settings") {
+function navigate(page: NavPage) {
   currentPage.value = page;
 }
 
