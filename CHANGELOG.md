@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Spanish strings on the LAN upload page now use voseo, matching the rest of the app.
 - Frontend page types are now defined once in `src/types/navigation.ts` (`NavPage` for sidebar pages, `Page` for every rendered page) instead of being repeated as inline unions in `App.vue`, `AppShell.vue`, and `SideNav.vue`. No user-visible change.
+- The sidebar's drag-and-drop reorder logic now lives in a shared `useDragReorder` composable (`src/composables/useDragReorder.ts`), also used by the checklist editor, instead of being implemented inline in `SideNav.vue`. Dragging and Alt+↑ / Alt+↓ keep working as before. No user-visible change.
 
 ## [0.6.0] - 2026-10-18
 
