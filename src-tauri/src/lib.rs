@@ -5,6 +5,7 @@ mod infrastructure;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use application::checklist_service::ChecklistService;
 use application::config_service::ConfigService;
 use application::group_preset_service::GroupPresetService;
 use application::ports::ConfigRepository;
@@ -15,7 +16,7 @@ use infrastructure::clock::ChronoClock;
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::json_store::{
-    JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
+    JsonChecklistRepository, JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
 };
 use infrastructure::overlay_bus::BroadcastOverlayBus;
 use tauri::Manager;
@@ -36,6 +37,7 @@ pub fn run() {
             let config_path = data_dir.join("config.json");
             let presets_path = data_dir.join("presets.json");
             let group_presets_path = data_dir.join("group_presets.json");
+            let checklists_path = data_dir.join("checklists.json");
 
             eprintln!("[overlays] config_path = {config_path:?}");
             eprintln!("[overlays] presets_path = {presets_path:?}");
@@ -43,6 +45,7 @@ pub fn run() {
             let config_repo = Arc::new(JsonConfigRepository::new(config_path));
             let preset_repo = Arc::new(JsonPresetRepository::new(presets_path));
             let group_preset_repo = Arc::new(JsonGroupPresetRepository::new(group_presets_path));
+            let checklist_repo = Arc::new(JsonChecklistRepository::new(checklists_path));
 
             let app_config = config_repo.load();
             let overlays_dir =
@@ -57,6 +60,7 @@ pub fn run() {
             ));
             let presets = Arc::new(PresetService::new(preset_repo));
             let group_presets = Arc::new(GroupPresetService::new(group_preset_repo));
+            let checklists = Arc::new(ChecklistService::new(checklist_repo));
             let downloads_dir = match app.path().download_dir() {
                 Ok(dir) => Some(dir),
                 Err(e) => {
@@ -89,6 +93,7 @@ pub fn run() {
             app.manage(catalog);
             app.manage(presets);
             app.manage(group_presets);
+            app.manage(checklists);
             app.manage(config_service);
 
             tauri::async_runtime::spawn(async move {
@@ -110,6 +115,9 @@ pub fn run() {
             infrastructure::tauri::commands::list_group_presets,
             infrastructure::tauri::commands::save_group_preset,
             infrastructure::tauri::commands::delete_group_preset,
+            infrastructure::tauri::commands::list_checklists,
+            infrastructure::tauri::commands::save_checklist,
+            infrastructure::tauri::commands::delete_checklist,
             infrastructure::tauri::commands::get_config,
             infrastructure::tauri::commands::set_overlays_dir,
             infrastructure::tauri::commands::set_language,

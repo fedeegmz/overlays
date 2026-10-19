@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "overlays": "Home",
+    "checklists": "Checklists",
     "instances": "Instances",
     "closeInstance": "Close instance",
     "renameInstance": "Instance name",
@@ -28,6 +29,33 @@
     "startPartial": "Started {ok} of {total} instances.",
     "entryFailed": "{template}: {reason}",
     "sendFailed": "Could not send the overlay."
+  },
+  "checklists": {
+    "title": "Checklists",
+    "subtitle": "Track repetitive steps and tick them off as you go",
+    "create": "Create checklist",
+    "empty": "No checklists yet. Create the first one.",
+    "progress": "{done} of {total}",
+    "completed": "Completed",
+    "delete": "Delete",
+    "confirmDelete": "Confirm?",
+    "back": "Back",
+    "edit": "Edit",
+    "uncheckAll": "Uncheck all",
+    "editor": {
+      "createTitle": "New checklist",
+      "editTitle": "Edit checklist",
+      "cancel": "Cancel",
+      "save": "Save",
+      "nameLabel": "Name",
+      "namePlaceholder": "Checklist name",
+      "itemsLabel": "Items",
+      "itemPlaceholder": "Item text",
+      "itemLabel": "Item {n}",
+      "addItem": "Add item",
+      "removeItem": "Remove item",
+      "reorderHint": "Drag items or use Alt+↑ / Alt+↓ to reorder them."
+    }
   },
   "content": {
     "title": "Content",
@@ -108,6 +136,16 @@
       "not_found": "Group \"{name}\" was not found.",
       "load_failed": "Could not read the groups file.",
       "save_failed": "Could not save the groups file."
+    },
+    "checklist": {
+      "invalid_id": "The list or one of its items has an invalid identifier.",
+      "empty_name": "The list name cannot be empty.",
+      "no_items": "A list needs at least one item.",
+      "empty_item": "There is an empty item. Fill it in or remove it.",
+      "duplicate_name": "A list named \"{name}\" already exists.",
+      "not_found": "The list was not found.",
+      "load_failed": "Could not read the lists file.",
+      "save_failed": "Could not save the lists file."
     }
   },
   "settings": {

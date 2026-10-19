@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "overlays": "Inicio",
+    "checklists": "Listas",
     "instances": "Instancias",
     "closeInstance": "Cerrar instancia",
     "renameInstance": "Nombre de la instancia",
@@ -28,6 +29,33 @@
     "startPartial": "Se iniciaron {ok} de {total} instancias.",
     "entryFailed": "{template}: {reason}",
     "sendFailed": "No se pudo enviar el overlay."
+  },
+  "checklists": {
+    "title": "Listas",
+    "subtitle": "Seguí tus pasos repetitivos y marcalos a medida que avanzás",
+    "create": "Crear lista",
+    "empty": "Todavía no hay listas. Creá la primera.",
+    "progress": "{done} de {total}",
+    "completed": "Completada",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Confirmar?",
+    "back": "Volver",
+    "edit": "Editar",
+    "uncheckAll": "Desmarcar todo",
+    "editor": {
+      "createTitle": "Nueva lista",
+      "editTitle": "Editar lista",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre de la lista",
+      "itemsLabel": "Ítems",
+      "itemPlaceholder": "Texto del ítem",
+      "itemLabel": "Ítem {n}",
+      "addItem": "Agregar ítem",
+      "removeItem": "Quitar ítem",
+      "reorderHint": "Arrastrá los ítems o usá Alt+↑ / Alt+↓ para reordenarlos."
+    }
   },
   "content": {
     "title": "Contenido",
@@ -108,6 +136,16 @@
       "not_found": "No se encontró el grupo \"{name}\".",
       "load_failed": "No se pudo leer el archivo de grupos.",
       "save_failed": "No se pudo guardar el archivo de grupos."
+    },
+    "checklist": {
+      "invalid_id": "La lista o alguno de sus ítems tiene un identificador inválido.",
+      "empty_name": "El nombre de la lista no puede estar vacío.",
+      "no_items": "Una lista necesita al menos un ítem.",
+      "empty_item": "Hay un ítem vacío. Completalo o eliminalo.",
+      "duplicate_name": "Ya existe una lista llamada \"{name}\".",
+      "not_found": "No se encontró la lista.",
+      "load_failed": "No se pudo leer el archivo de listas.",
+      "save_failed": "No se pudo guardar el archivo de listas."
     }
   },
   "settings": {

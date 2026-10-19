@@ -24,6 +24,14 @@ impl CommandError {
     pub const GROUP_PRESET_NOT_FOUND: &str = "group_preset.not_found";
     pub const GROUP_PRESET_LOAD_FAILED: &str = "group_preset.load_failed";
     pub const GROUP_PRESET_SAVE_FAILED: &str = "group_preset.save_failed";
+    pub const CHECKLIST_INVALID_ID: &str = "checklist.invalid_id";
+    pub const CHECKLIST_EMPTY_NAME: &str = "checklist.empty_name";
+    pub const CHECKLIST_NO_ITEMS: &str = "checklist.no_items";
+    pub const CHECKLIST_EMPTY_ITEM: &str = "checklist.empty_item";
+    pub const CHECKLIST_DUPLICATE_NAME: &str = "checklist.duplicate_name";
+    pub const CHECKLIST_NOT_FOUND: &str = "checklist.not_found";
+    pub const CHECKLIST_LOAD_FAILED: &str = "checklist.load_failed";
+    pub const CHECKLIST_SAVE_FAILED: &str = "checklist.save_failed";
     pub const TEMPLATE_DISCOVERY_FAILED: &str = "template.discovery_failed";
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
@@ -72,6 +80,24 @@ impl From<DomainError> for CommandError {
             }
             DomainError::GroupPresetSaveFailed { detail } => {
                 Self::new(Self::GROUP_PRESET_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::ChecklistInvalidId => Self::new(Self::CHECKLIST_INVALID_ID),
+            DomainError::ChecklistEmptyName => Self::new(Self::CHECKLIST_EMPTY_NAME),
+            DomainError::ChecklistNoItems => Self::new(Self::CHECKLIST_NO_ITEMS),
+            DomainError::ChecklistEmptyItem { index } => {
+                Self::new(Self::CHECKLIST_EMPTY_ITEM).param("index", index.to_string())
+            }
+            DomainError::ChecklistDuplicateName { name } => {
+                Self::new(Self::CHECKLIST_DUPLICATE_NAME).param("name", name)
+            }
+            DomainError::ChecklistNotFound { id } => {
+                Self::new(Self::CHECKLIST_NOT_FOUND).param("id", id)
+            }
+            DomainError::ChecklistLoadFailed { detail } => {
+                Self::new(Self::CHECKLIST_LOAD_FAILED).param("detail", detail)
+            }
+            DomainError::ChecklistSaveFailed { detail } => {
+                Self::new(Self::CHECKLIST_SAVE_FAILED).param("detail", detail)
             }
             DomainError::TemplateDiscoveryFailed { detail } => {
                 Self::new(Self::TEMPLATE_DISCOVERY_FAILED).param("detail", detail)
@@ -192,6 +218,49 @@ mod tests {
                 detail: "io".into()
             }),
             serde_json::json!({ "code": "group_preset.save_failed", "params": { "detail": "io" } })
+        );
+    }
+
+    #[test]
+    fn maps_checklist_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::ChecklistInvalidId),
+            serde_json::json!({ "code": "checklist.invalid_id" })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistEmptyName),
+            serde_json::json!({ "code": "checklist.empty_name" })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistNoItems),
+            serde_json::json!({ "code": "checklist.no_items" })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistEmptyItem { index: 2 }),
+            serde_json::json!({ "code": "checklist.empty_item", "params": { "index": "2" } })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistDuplicateName {
+                name: "Show".into()
+            }),
+            serde_json::json!({ "code": "checklist.duplicate_name", "params": { "name": "Show" } })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistNotFound { id: "l1".into() }),
+            serde_json::json!({ "code": "checklist.not_found", "params": { "id": "l1" } })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistLoadFailed {
+                detail: "bad".into()
+            }),
+            serde_json::json!({ "code": "checklist.load_failed", "params": { "detail": "bad" } })
+        );
+        assert_eq!(
+            code(DomainError::ChecklistSaveFailed {
+                detail: "io".into()
+            }),
+            serde_json::json!({ "code": "checklist.save_failed", "params": { "detail": "io" } })
         );
     }
 

@@ -4,15 +4,16 @@ import { nextTick, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import logoSvg from "../assets/logo.svg";
 import { useConfirmClick } from "../composables/useConfirmClick";
+import { useDragReorder } from "../composables/useDragReorder";
 import { useInstanceStore } from "../stores/instances";
-import type { OverlayInstance } from "../types";
+import type { NavPage, OverlayInstance } from "../types";
 
 defineProps<{
-  currentPage: "overlays" | "settings";
+  currentPage: NavPage;
 }>();
 
 const emit = defineEmits<{
-  navigate: [page: "overlays" | "settings"];
+  navigate: [page: NavPage];
   openDetail: [];
 }>();
 
@@ -61,52 +62,15 @@ const { pending: confirmingClose, confirmClick: handleClose } =
   useConfirmClick<string>(removeInstance);
 
 const instancesList = ref<HTMLElement | null>(null);
-const dragFromIndex = ref<number | null>(null);
-const dropTarget = ref<{ index: number; after: boolean } | null>(null);
-
-function handleDragStart(event: DragEvent, index: number) {
-  dragFromIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = "move";
-    // Firefox/WebKit only start a drag when some data is set.
-    event.dataTransfer.setData("text/plain", String(index));
-  }
-}
-
-function handleDragOver(event: DragEvent, index: number) {
-  if (dragFromIndex.value === null) return;
-  event.preventDefault();
-  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-  const row = event.currentTarget as HTMLElement;
-  const rect = row.getBoundingClientRect();
-  const after = event.clientY > rect.top + rect.height / 2;
-  dropTarget.value = { index, after };
-}
-
-function handleDragLeave(event: DragEvent, index: number) {
-  const row = event.currentTarget as HTMLElement;
-  const next = event.relatedTarget as Node | null;
-  if (next && row.contains(next)) return;
-  if (dropTarget.value?.index === index) dropTarget.value = null;
-}
-
-function handleDrop(event: DragEvent) {
-  event.preventDefault();
-  const from = dragFromIndex.value;
-  const target = dropTarget.value;
-  resetDrag();
-  if (from === null || !target) return;
-  // Insertion point in the original list, then shift left if the source
-  // sits before it (it is removed before being re-inserted).
-  const insertAt = target.after ? target.index + 1 : target.index;
-  const to = insertAt > from ? insertAt - 1 : insertAt;
-  moveInstance(from, to);
-}
-
-function resetDrag() {
-  dragFromIndex.value = null;
-  dropTarget.value = null;
-}
+const {
+  dragFromIndex,
+  dropTarget,
+  handleDragStart,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
+  resetDrag,
+} = useDragReorder(moveInstance);
 
 async function moveByKeyboard(instance: OverlayInstance, delta: number) {
   const from = instances.value.indexOf(instance);
@@ -152,6 +116,30 @@ async function moveByKeyboard(instance: OverlayInstance, delta: number) {
           <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
         {{ t("sidebar.overlays") }}
+      </button>
+      <button
+        type="button"
+        class="nav-item"
+        :class="{ active: currentPage === 'checklists' }"
+        @click="emit('navigate', 'checklists')"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m3 6 2 2 4-4" />
+          <path d="m3 14 2 2 4-4" />
+          <path d="M13 6h8" />
+          <path d="M13 14h8" />
+        </svg>
+        {{ t("sidebar.checklists") }}
       </button>
     </nav>
 

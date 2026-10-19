@@ -1,3 +1,4 @@
+pub mod checklist_service;
 pub mod config_service;
 pub mod group_preset_service;
 pub mod ports;
