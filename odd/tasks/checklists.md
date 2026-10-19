@@ -89,7 +89,7 @@ Repetitive stream setup steps have no in-app place to be tracked. Checks must st
 | WU3 | e247649 | cargo test 185 pass, clippy -D warnings, fmt OK; vue-tsc, pnpm check OK | Commands + lib.rs wiring; 4 dead_code allows removed; `empty_item` copy omits the 0-based `index` param |
 | WU4 | 32e04ee | vue-tsc, pnpm check OK; cargo test 185 pass, clippy, fmt OK | Create/Edit emit to no-op handlers in `ChecklistsPage` until WU6. Manual smoke pending (user) |
 | WU5 | 2416bed | vue-tsc, pnpm check OK; cargo test 185 pass | Composable only; SideNav untouched (WU7 optional); not yet imported (Biome/tsc accept it). No Rust change |
-| WU6 | see git log | vue-tsc, pnpm check OK; cargo test 185 pass | Editor + page wiring + CHANGELOG. Manual smoke pending (user) |
+| WU6 | 141ccb0 | vue-tsc, pnpm check OK; cargo test 185 pass | Editor + page wiring + CHANGELOG. Manual smoke pending (user) |
 
 ## Next step
 
