@@ -90,6 +90,8 @@ mod tests {
         GroupPresetEntry {
             template: template.to_string(),
             fields: HashMap::new(),
+            instance_id: None,
+            custom_name: None,
         }
     }
 

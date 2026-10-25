@@ -223,6 +223,8 @@ mod tests {
             .map(|t| crate::domain::group_preset::GroupPresetEntry {
                 template: t.to_string(),
                 fields: HashMap::from([("titulo".to_string(), t.to_string())]),
+                instance_id: None,
+                custom_name: None,
             })
             .collect();
         GroupPreset::new(name, entries).unwrap()

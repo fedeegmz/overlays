@@ -7,6 +7,7 @@ pub enum DomainError {
     GroupPresetEmptyName,
     GroupPresetNoEntries,
     GroupPresetInvalidEntry { index: usize },
+    GroupPresetDuplicateInstanceId { index: usize },
     GroupPresetNotFound { name: String },
     GroupPresetLoadFailed { detail: String },
     GroupPresetSaveFailed { detail: String },
@@ -43,6 +44,9 @@ impl fmt::Display for DomainError {
             Self::GroupPresetNoEntries => write!(f, "group preset has no entries"),
             Self::GroupPresetInvalidEntry { index } => {
                 write!(f, "group preset entry {index} has an empty template")
+            }
+            Self::GroupPresetDuplicateInstanceId { index } => {
+                write!(f, "group preset entry {index} repeats an instance id")
             }
             Self::GroupPresetNotFound { name } => write!(f, "group preset not found: {name}"),
             Self::GroupPresetLoadFailed { detail } => {
