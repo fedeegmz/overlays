@@ -42,14 +42,14 @@ Note: if the frontend WU grows past budget, split WU3 into its own PR (stacked-t
 
 ## Phase 3: Frontend (WU3, gate `pnpm check && pnpm exec vue-tsc --noEmit`)
 
-- [ ] 3.1 `src/types/groupPreset.ts`: add `instance_id?`, `custom_name?`; `idConflict: boolean` on success `GroupStartResult`.
-- [ ] 3.2 `src/stores/instances.ts`: `createInstance(templateId, opts?: { id?, customName? })`; throw if `opts.id` is live.
-- [ ] 3.3 `src/stores/groupPresets.ts`: save maps `instance_id: i.id`, `custom_name: i.customName`.
-- [ ] 3.4 `src/stores/groupPresets.ts` `startGroup`: per-entry reconcile (no id / free / same-template update / other-template or claimed to fresh id + `idConflict`); update keeps live name unless `entry.custom_name`; claimed set; on send failure remove only newly created.
-- [ ] 3.5 `src/components/GroupPresetsSection.vue`: render localized conflict notice per `idConflict` result only.
-- [ ] 3.6 `src/i18n/locales/{es,en}.json`: add `groups.idConflict`, `errors.group_preset.duplicate_instance_id`.
-- [ ] 3.7 `CHANGELOG.md`: add entry under Unreleased.
-- [ ] 3.8 Run gate; manual checklist below. Commit `feat(groups): restore instance id and name on group load`.
+- [x] 3.1 `src/types/groupPreset.ts`: add `instance_id?`, `custom_name?`; `idConflict: boolean` on success `GroupStartResult`.
+- [x] 3.2 `src/stores/instances.ts`: `createInstance(templateId, opts?: { id?, customName? })`; throw if `opts.id` is live.
+- [x] 3.3 `src/stores/groupPresets.ts`: save maps `instance_id: i.id`, `custom_name: i.customName`.
+- [x] 3.4 `src/stores/groupPresets.ts` `startGroup`: per-entry reconcile (no id / free / same-template update / other-template or claimed to fresh id + `idConflict`); update keeps live name unless `entry.custom_name`; claimed set; on send failure remove only newly created.
+- [x] 3.5 `src/components/GroupPresetsSection.vue`: render localized conflict notice per `idConflict` result only.
+- [x] 3.6 `src/i18n/locales/{es,en}.json`: add `groups.idConflict`, `errors.group_preset.duplicate_instance_id`.
+- [x] 3.7 `CHANGELOG.md`: add entry under Unreleased.
+- [x] 3.8 Run gate; manual checklist below. Commit `feat(groups): restore instance id and name on group load`.
 
 ## Phase 4: Manual verification
 

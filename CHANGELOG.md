@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Group presets now remember each instance's ID and user-set name. Saving a group records them (default numbered labels are not stored), and starting it restores the same IDs so OBS browser-source URLs keep working: an instance that is already open with the same ID and overlay is updated in place instead of duplicated (a saved name replaces its name; without one, its current name is kept), a free ID is recreated as-is, and an ID held by a different overlay gets a new ID plus a localized notice to update the OBS URL. Groups saved by earlier versions still load and gain IDs when saved again. A group with a repeated instance ID is rejected with the new `group_preset.duplicate_instance_id` error.
+
 - Spanish strings on the LAN upload page now use voseo, matching the rest of the app.
 - Frontend page types are now defined once in `src/types/navigation.ts` (`NavPage` for sidebar pages, `Page` for every rendered page) instead of being repeated as inline unions in `App.vue`, `AppShell.vue`, and `SideNav.vue`. No user-visible change.
 - The sidebar's drag-and-drop reorder logic now lives in a shared `useDragReorder` composable (`src/composables/useDragReorder.ts`), also used by the checklist editor, instead of being implemented inline in `SideNav.vue`. Dragging and Alt+↑ / Alt+↓ keep working as before. No user-visible change.

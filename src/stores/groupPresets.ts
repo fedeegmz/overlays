@@ -37,6 +37,8 @@ export const useGroupPresetStore = defineStore("groupPresets", () => {
     const entries = instanceStore.instances.map((instance) => ({
       template: instance.templateId,
       fields: instanceStore.fieldsFor(instance),
+      instance_id: instance.id,
+      custom_name: instance.customName,
     }));
     try {
       groups.value = await saveGroupPreset(name, entries);
@@ -56,13 +58,16 @@ export const useGroupPresetStore = defineStore("groupPresets", () => {
   }
 
   /**
-   * Creates a new instance per entry and shows it. A failing entry is
-   * reported without aborting the rest. The previously active instance is
-   * restored afterwards.
+   * Restores each entry's saved instance identity and shows it. A live
+   * same-template instance with the saved id is updated in place; an id held
+   * by another template (or claimed earlier in this run) gets a fresh id and
+   * is flagged as a conflict. A failing entry is reported without aborting the
+   * rest. The previously active instance is restored afterwards.
    */
   async function startGroup(group: GroupPreset): Promise<GroupStartResult[]> {
     const previousActiveId = instanceStore.activeInstanceId;
     const results: GroupStartResult[] = [];
+    const claimed = new Set<string>();
     for (const entry of group.entries) {
       if (!templateStore.getById(entry.template)) {
         results.push({
@@ -72,18 +77,58 @@ export const useGroupPresetStore = defineStore("groupPresets", () => {
         });
         continue;
       }
-      const id = instanceStore.createInstance(entry.template);
-      const instance = instanceStore.instances.find((i) => i.id === id);
-      if (!instance) continue;
-      instance.fields = {
+      const fields = {
         ...templateStore.getDefaults(entry.template),
         ...entry.fields,
       };
+      const savedId = entry.instance_id?.trim() || undefined;
+      const savedName = entry.custom_name?.trim() || undefined;
+      const live = savedId
+        ? instanceStore.instances.find((i) => i.id === savedId)
+        : undefined;
+      const isClaimed = savedId !== undefined && claimed.has(savedId);
+
+      let id: string;
+      let created = false;
+      let idConflict = false;
+      let previous: { fields: Record<string, string>; customName?: string };
+      if (live && !isClaimed && live.templateId === entry.template) {
+        id = live.id;
+        previous = { fields: live.fields, customName: live.customName };
+        live.fields = fields;
+        if (savedName) live.customName = savedName;
+      } else {
+        const free = savedId !== undefined && !live && !isClaimed;
+        idConflict = savedId !== undefined && !free;
+        id = instanceStore.createInstance(
+          entry.template,
+          free
+            ? { id: savedId, customName: savedName }
+            : { customName: savedName },
+        );
+        created = true;
+        previous = { fields: {} };
+      }
+      claimed.add(id);
+
+      const instance = instanceStore.instances.find((i) => i.id === id);
+      if (!instance) continue;
+      if (created) instance.fields = fields;
       try {
         await instanceStore.showInstance(id, instanceStore.fieldsFor(instance));
-        results.push({ template: entry.template, ok: true, instanceId: id });
+        results.push({
+          template: entry.template,
+          ok: true,
+          instanceId: id,
+          idConflict,
+        });
       } catch {
-        instanceStore.removeInstance(id);
+        if (created) {
+          instanceStore.removeInstance(id);
+        } else {
+          instance.fields = previous.fields;
+          instance.customName = previous.customName;
+        }
         results.push({
           template: entry.template,
           ok: false,

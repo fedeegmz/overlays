@@ -128,12 +128,19 @@ export const useInstanceStore = defineStore("instances", () => {
     instance.customName = trimmed === "" ? undefined : trimmed;
   }
 
-  function createInstance(templateId: string): string {
+  function createInstance(
+    templateId: string,
+    opts?: { id?: string; customName?: string },
+  ): string {
+    if (opts?.id && instances.value.some((i) => i.id === opts.id)) {
+      throw new Error(`Instance id already in use: ${opts.id}`);
+    }
     sendPreviewHide();
-    const id = generateId();
+    const id = opts?.id ?? generateId();
     const instance: OverlayInstance = {
       id,
       templateId,
+      customName: opts?.customName,
       number: nextInstanceNumber(templateId),
       fields: templateStore.getDefaults(templateId),
       visible: false,

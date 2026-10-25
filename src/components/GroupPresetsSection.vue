@@ -29,6 +29,9 @@ const saveDisabled = computed(
 const failedResults = computed(
   () => startReport.value?.filter((r) => !r.ok) ?? [],
 );
+const conflictResults = computed(
+  () => startReport.value?.filter((r) => r.ok && r.idConflict) ?? [],
+);
 const startedCount = computed(
   () => (startReport.value?.length ?? 0) - failedResults.value.length,
 );
@@ -76,6 +79,10 @@ async function handleStart(group: GroupPreset) {
   } finally {
     busy.value = false;
   }
+}
+
+function conflictText(result: GroupStartResult): string {
+  return t("groups.idConflict", { template: result.template });
 }
 
 function failureText(result: GroupStartResult): string {
@@ -161,6 +168,13 @@ function failureText(result: GroupStartResult): string {
       </p>
       <p v-for="(result, i) in failedResults" :key="i" class="error">
         {{ failureText(result) }}
+      </p>
+      <p
+        v-for="(result, i) in conflictResults"
+        :key="`conflict-${i}`"
+        class="muted"
+      >
+        {{ conflictText(result) }}
       </p>
     </div>
   </section>
