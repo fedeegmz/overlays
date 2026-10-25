@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-25
+
 ### Added
 
 - Language selector (Español / English) on the LAN upload page. The initial language still follows the device (Spanish or English); the visitor's choice is remembered per browser in `localStorage` (falling back to the device language when storage is unavailable) and applied instantly without reloading. Result messages already shown keep the language they were created in.
@@ -106,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/fedeegmz/overlays/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fedeegmz/overlays/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fedeegmz/overlays/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fedeegmz/overlays/compare/v0.3.1...v0.4.0
