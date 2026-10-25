@@ -36,9 +36,9 @@ Note: if the frontend WU grows past budget, split WU3 into its own PR (stacked-t
 
 ## Phase 2: Persistence and service tests (WU2)
 
-- [ ] 2.1 RED/GREEN: `src-tauri/src/infrastructure/json_store.rs` tests: legacy JSON without keys loads as `None`; id/name round trip; `None` keys omitted on write.
-- [ ] 2.2 `src-tauri/src/application/group_preset_service.rs`: test duplicate ids rejected with `InMemoryRepo.saves == 0` (create and update).
-- [ ] 2.3 Run `cargo test` + clippy. Commit `test(group-presets): cover legacy load and duplicate rejection`.
+- [x] 2.1 RED/GREEN: `src-tauri/src/infrastructure/json_store.rs` tests: legacy JSON without keys loads as `None`; id/name round trip; `None` keys omitted on write.
+- [x] 2.2 `src-tauri/src/application/group_preset_service.rs`: test duplicate ids rejected with `InMemoryRepo.saves == 0` (create and update).
+- [x] 2.3 Run `cargo test` + clippy. Commit `test(group-presets): cover legacy load and duplicate rejection`.
 
 ## Phase 3: Frontend (WU3, gate `pnpm check && pnpm exec vue-tsc --noEmit`)
 

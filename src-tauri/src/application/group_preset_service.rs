@@ -140,6 +140,35 @@ mod tests {
         assert_eq!(*repo.saves.lock().unwrap(), 0);
     }
 
+    fn identified(template: &str, id: &str) -> GroupPresetEntry {
+        GroupPresetEntry {
+            instance_id: Some(id.to_string()),
+            ..entry(template)
+        }
+    }
+
+    #[test]
+    fn save_rejects_duplicate_instance_ids_on_create_and_update_without_writing() {
+        let repo = InMemoryRepo::new(false);
+        let svc = service(&repo);
+        let dup = || vec![identified("a", "x"), identified("b", "x")];
+
+        assert!(matches!(
+            svc.save("Show".into(), dup()),
+            Err(DomainError::GroupPresetDuplicateInstanceId { index: 1 })
+        ));
+        assert_eq!(*repo.saves.lock().unwrap(), 0);
+
+        svc.save("Show".into(), vec![identified("a", "x")]).unwrap();
+        let before = *repo.saves.lock().unwrap();
+        assert!(matches!(
+            svc.save("Show".into(), dup()),
+            Err(DomainError::GroupPresetDuplicateInstanceId { index: 1 })
+        ));
+        assert_eq!(*repo.saves.lock().unwrap(), before);
+        assert_eq!(svc.list().unwrap()[0].entries.len(), 1);
+    }
+
     #[test]
     fn delete_removes_existing_group() {
         let repo = InMemoryRepo::new(false);
