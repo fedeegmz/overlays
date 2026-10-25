@@ -21,6 +21,7 @@ impl CommandError {
     pub const GROUP_PRESET_EMPTY_NAME: &str = "group_preset.empty_name";
     pub const GROUP_PRESET_NO_ENTRIES: &str = "group_preset.no_entries";
     pub const GROUP_PRESET_INVALID_ENTRY: &str = "group_preset.invalid_entry";
+    pub const GROUP_PRESET_DUPLICATE_INSTANCE_ID: &str = "group_preset.duplicate_instance_id";
     pub const GROUP_PRESET_NOT_FOUND: &str = "group_preset.not_found";
     pub const GROUP_PRESET_LOAD_FAILED: &str = "group_preset.load_failed";
     pub const GROUP_PRESET_SAVE_FAILED: &str = "group_preset.save_failed";
@@ -71,6 +72,10 @@ impl From<DomainError> for CommandError {
             DomainError::GroupPresetNoEntries => Self::new(Self::GROUP_PRESET_NO_ENTRIES),
             DomainError::GroupPresetInvalidEntry { index } => {
                 Self::new(Self::GROUP_PRESET_INVALID_ENTRY).param("index", index.to_string())
+            }
+            DomainError::GroupPresetDuplicateInstanceId { index } => {
+                Self::new(Self::GROUP_PRESET_DUPLICATE_INSTANCE_ID)
+                    .param("index", index.to_string())
             }
             DomainError::GroupPresetNotFound { name } => {
                 Self::new(Self::GROUP_PRESET_NOT_FOUND).param("name", name)
@@ -200,6 +205,10 @@ mod tests {
         assert_eq!(
             code(DomainError::GroupPresetInvalidEntry { index: 2 }),
             serde_json::json!({ "code": "group_preset.invalid_entry", "params": { "index": "2" } })
+        );
+        assert_eq!(
+            code(DomainError::GroupPresetDuplicateInstanceId { index: 3 }),
+            serde_json::json!({ "code": "group_preset.duplicate_instance_id", "params": { "index": "3" } })
         );
         assert_eq!(
             code(DomainError::GroupPresetNotFound {

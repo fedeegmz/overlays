@@ -28,7 +28,8 @@
     "startDone": "Started {count} instances.",
     "startPartial": "Started {ok} of {total} instances.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "Could not send the overlay."
+    "sendFailed": "Could not send the overlay.",
+    "idConflict": "{template}: its saved ID is used by another overlay. Started with a new ID; update the OBS source URL."
   },
   "checklists": {
     "title": "Checklists",
@@ -133,6 +134,7 @@
       "empty_name": "Group name cannot be empty.",
       "no_entries": "A group needs at least one instance.",
       "invalid_entry": "Group entry {index} is invalid.",
+      "duplicate_instance_id": "Group entry {index} repeats an instance ID.",
       "not_found": "Group \"{name}\" was not found.",
       "load_failed": "Could not read the groups file.",
       "save_failed": "Could not save the groups file."

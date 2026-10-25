@@ -223,6 +223,8 @@ mod tests {
             .map(|t| crate::domain::group_preset::GroupPresetEntry {
                 template: t.to_string(),
                 fields: HashMap::from([("titulo".to_string(), t.to_string())]),
+                instance_id: None,
+                custom_name: None,
             })
             .collect();
         GroupPreset::new(name, entries).unwrap()
@@ -254,6 +256,66 @@ mod tests {
         assert_eq!(templates, ["a", "b", "a"]);
         assert_eq!(loaded[0].entries[1].fields["titulo"], "b");
         assert_eq!(loaded[1].name, "Other");
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn legacy_group_file_without_identity_keys_loads_as_none() {
+        let path = temp_path("overlays-test-groups-legacy");
+        std::fs::write(
+            &path,
+            r#"[{"name":"Show","entries":[{"template":"a","fields":{"titulo":"x"}}]}]"#,
+        )
+        .unwrap();
+        let loaded = JsonGroupPresetRepository::new(path.clone()).load().unwrap();
+
+        assert_eq!(loaded[0].entries[0].template, "a");
+        assert_eq!(loaded[0].entries[0].fields["titulo"], "x");
+        assert_eq!(loaded[0].entries[0].instance_id, None);
+        assert_eq!(loaded[0].entries[0].custom_name, None);
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn group_identity_round_trips_and_absent_keys_are_omitted() {
+        use crate::domain::group_preset::GroupPresetEntry;
+
+        let path = temp_path("overlays-test-groups-identity");
+        let repo = JsonGroupPresetRepository::new(path.clone());
+        let entries = vec![
+            GroupPresetEntry {
+                template: "a".into(),
+                fields: HashMap::new(),
+                instance_id: Some("abc".into()),
+                custom_name: Some("Main title".into()),
+            },
+            GroupPresetEntry {
+                template: "b".into(),
+                fields: HashMap::new(),
+                instance_id: None,
+                custom_name: None,
+            },
+        ];
+        repo.save(&[GroupPreset::new("Show", entries).unwrap()])
+            .unwrap();
+
+        let raw: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let written = &raw[0]["entries"];
+        assert_eq!(written[0]["instance_id"], "abc");
+        assert_eq!(written[0]["custom_name"], "Main title");
+        assert!(written[1].get("instance_id").is_none());
+        assert!(written[1].get("custom_name").is_none());
+
+        let loaded = repo.load().unwrap();
+        assert_eq!(loaded[0].entries[0].instance_id.as_deref(), Some("abc"));
+        assert_eq!(
+            loaded[0].entries[0].custom_name.as_deref(),
+            Some("Main title")
+        );
+        assert_eq!(loaded[0].entries[1].instance_id, None);
 
         let _ = std::fs::remove_file(&path);
     }

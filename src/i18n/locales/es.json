@@ -28,7 +28,8 @@
     "startDone": "Se iniciaron {count} instancias.",
     "startPartial": "Se iniciaron {ok} de {total} instancias.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "No se pudo enviar el overlay."
+    "sendFailed": "No se pudo enviar el overlay.",
+    "idConflict": "{template}: su ID guardado lo usa otro overlay. Se inició con un ID nuevo; actualiza la URL de la fuente en OBS."
   },
   "checklists": {
     "title": "Listas",
@@ -133,6 +134,7 @@
       "empty_name": "El nombre del grupo no puede estar vacío.",
       "no_entries": "Un grupo necesita al menos una instancia.",
       "invalid_entry": "La entrada {index} del grupo no es válida.",
+      "duplicate_instance_id": "La entrada {index} del grupo repite un ID de instancia.",
       "not_found": "No se encontró el grupo \"{name}\".",
       "load_failed": "No se pudo leer el archivo de grupos.",
       "save_failed": "No se pudo guardar el archivo de grupos."
