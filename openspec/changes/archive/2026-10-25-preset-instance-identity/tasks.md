@@ -53,7 +53,7 @@ Note: if the frontend WU grows past budget, split WU3 into its own PR (stacked-t
 
 ## Phase 4: Manual verification
 
-- [ ] 4.1 Save group, reload app, load group: OBS URL id unchanged, custom name restored.
-- [ ] 4.2 Load same group twice: no duplicates; renamed live instance keeps name when entry has none.
-- [ ] 4.3 Different-template collision: fresh id, localized notice; no notice otherwise.
-- [ ] 4.4 Legacy `groups.json` loads; re-save adds ids; duplicate-id error shows localized in es and en.
+- [x] 4.1 Save group, reload app, load group: OBS URL id unchanged, custom name restored.
+- [x] 4.2 Load same group twice: no duplicates; renamed live instance keeps name when entry has none.
+- [x] 4.3 Different-template collision: fresh id, localized notice; no notice otherwise.
+- [x] 4.4 Legacy `groups.json` loads; re-save adds ids; duplicate-id error shows localized in es and en.
