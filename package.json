@@ -8,6 +8,7 @@
     "build": "biome check . && vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "biome check .",
+    "test": "vitest run",
     "check:fix": "biome check --write .",
     "tauri": "tauri"
   },
@@ -26,6 +27,7 @@
     "lefthook": "^2.1.10",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
+    "vitest": "^5.0.5",
     "vue-tsc": "^3.3.5"
   },
   "pnpm": {
