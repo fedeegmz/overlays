@@ -1,8 +1,9 @@
+use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 
 use crate::application::ports::TemplateSource;
 use crate::domain::error::{DomainError, DomainResult};
-use crate::domain::template::{OverlayField, TemplateInfo};
+use crate::domain::template::{Manifest, OverlayField, TemplateInfo};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct OverlayMeta {
@@ -145,81 +146,135 @@ fn path_to_web(path: PathBuf) -> String {
         .join("/")
 }
 
+/// Deepest folder level that gets listed; its children are not walked.
+const MAX_DEPTH: usize = 5;
+
 pub struct FsTemplateSource;
 
-impl TemplateSource for FsTemplateSource {
-    fn discover(&self, overlay_dir: &Path) -> DomainResult<Vec<TemplateInfo>> {
-        if !overlay_dir.is_dir() {
-            return Ok(Vec::new());
+struct Walk {
+    templates: Vec<TemplateInfo>,
+    folders: Vec<String>,
+    seen_ids: HashSet<String>,
+}
+
+fn join_rel(rel: &str, name: &str) -> String {
+    if rel.is_empty() {
+        name.to_string()
+    } else {
+        format!("{rel}/{name}")
+    }
+}
+
+fn load_template(dir: &Path, rel: &str, child_rel: &str, name: &str) -> Option<TemplateInfo> {
+    let meta_path = dir.join("overlay.json");
+    if !dir.join("index.html").exists() {
+        eprintln!("[overlays] skipping {child_rel:?}: no index.html found");
+        return None;
+    }
+
+    let content = match std::fs::read_to_string(&meta_path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("[overlays] could not read {:?}: {e}", meta_path);
+            return None;
+        }
+    };
+
+    let meta: OverlayMeta = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("[overlays] could not parse {:?}: {e}", meta_path);
+            return None;
+        }
+    };
+
+    let id = meta.id.unwrap_or_else(|| name.to_string());
+    let fields = meta
+        .fields
+        .into_iter()
+        .filter(|field| validate_field(field, &meta_path))
+        .map(normalize_file_field)
+        .collect();
+
+    Some(TemplateInfo {
+        id,
+        name: meta.name,
+        path: format!("{child_rel}/index.html"),
+        folder: rel.to_string(),
+        fields,
+    })
+}
+
+fn walk(abs_dir: &Path, rel: &str, depth: usize, out: &mut Walk) -> DomainResult<()> {
+    let read = std::fs::read_dir(abs_dir).and_then(|it| it.collect::<Result<Vec<_>, _>>());
+    let mut entries = match read {
+        Ok(entries) => entries,
+        Err(e) if depth == 0 => {
+            return Err(DomainError::TemplateDiscoveryFailed {
+                detail: format!("could not read {abs_dir:?}: {e}"),
+            });
+        }
+        Err(e) => {
+            eprintln!("[overlays] could not read {abs_dir:?}: {e}");
+            return Ok(());
+        }
+    };
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+        if !file_type.is_dir() || file_type.is_symlink() {
+            continue;
+        }
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name.starts_with('.') {
+            continue;
         }
 
-        let read_failed = || DomainError::TemplateDiscoveryFailed {
-            detail: format!("could not read {overlay_dir:?}"),
-        };
+        let path = entry.path();
+        let child_rel = join_rel(rel, &name);
 
-        let mut templates = Vec::new();
-        let entries = std::fs::read_dir(overlay_dir).map_err(|_| read_failed())?;
-
-        for entry in entries {
-            let path = entry.map_err(|_| read_failed())?.path();
-            if !path.is_dir() {
+        if path.join("overlay.json").exists() {
+            let Some(info) = load_template(&path, rel, &child_rel, &name) else {
                 continue;
-            }
-
-            let meta_path = path.join("overlay.json");
-            if !meta_path.exists() {
-                continue;
-            }
-
-            let html_path = path.join("index.html");
-            if !html_path.exists() {
+            };
+            if !out.seen_ids.insert(info.id.clone()) {
                 eprintln!(
-                    "[overlays] skipping {:?}: no index.html found",
-                    path.file_name()
+                    "[overlays] skipping duplicate id {:?} at {child_rel:?}",
+                    info.id
                 );
                 continue;
             }
+            out.templates.push(info);
+        } else {
+            out.folders.push(child_rel.clone());
+            if depth + 1 < MAX_DEPTH {
+                walk(&path, &child_rel, depth + 1, out)?;
+            }
+        }
+    }
+    Ok(())
+}
 
-            let content = match std::fs::read_to_string(&meta_path) {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("[overlays] could not read {:?}: {e}", meta_path);
-                    continue;
-                }
-            };
-
-            let meta: OverlayMeta = match serde_json::from_str(&content) {
-                Ok(m) => m,
-                Err(e) => {
-                    eprintln!("[overlays] could not parse {:?}: {e}", meta_path);
-                    continue;
-                }
-            };
-
-            let folder_name = path
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_default();
-
-            let id = meta.id.unwrap_or_else(|| folder_name.clone());
-
-            let fields = meta
-                .fields
-                .into_iter()
-                .filter(|field| validate_field(field, &meta_path))
-                .map(normalize_file_field)
-                .collect();
-
-            templates.push(TemplateInfo {
-                id,
-                name: meta.name,
-                path: format!("{folder_name}/index.html"),
-                fields,
-            });
+impl TemplateSource for FsTemplateSource {
+    fn discover(&self, overlay_dir: &Path) -> DomainResult<Manifest> {
+        let mut out = Walk {
+            templates: Vec::new(),
+            folders: Vec::new(),
+            seen_ids: HashSet::new(),
+        };
+        if overlay_dir.is_dir() {
+            walk(overlay_dir, "", 0, &mut out)?;
         }
 
-        templates.sort_by(|a, b| a.name.cmp(&b.name));
-        Ok(templates)
+        out.templates.sort_by(|a, b| a.name.cmp(&b.name));
+        out.folders.sort();
+        Ok(Manifest {
+            templates: out.templates,
+            folders: out.folders,
+        })
     }
 }
 
@@ -251,6 +306,137 @@ mod tests {
         .unwrap();
     }
 
+    fn write_tpl(dir: &Path, rel: &str, id: Option<&str>) {
+        let tpl = dir.join(rel);
+        std::fs::create_dir_all(&tpl).unwrap();
+        std::fs::write(tpl.join("index.html"), "<html></html>").unwrap();
+        let id_json = id.map(|i| format!(r#""id": "{i}","#)).unwrap_or_default();
+        std::fs::write(
+            tpl.join("overlay.json"),
+            format!(r#"{{ {id_json} "name": "T {rel}", "fields": [] }}"#),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn discovers_nested_templates_with_folder_and_path() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, "root-tpl", None);
+        write_tpl(&dir, "a/b/deep", None);
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        let root = manifest
+            .templates
+            .iter()
+            .find(|t| t.id == "root-tpl")
+            .unwrap();
+        assert_eq!(root.folder, "");
+        assert_eq!(root.path, "root-tpl/index.html");
+        let deep = manifest.templates.iter().find(|t| t.id == "deep").unwrap();
+        assert_eq!(deep.folder, "a/b");
+        assert_eq!(deep.path, "a/b/deep/index.html");
+        assert_eq!(manifest.folders, vec!["a", "a/b"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn empty_folders_are_listed() {
+        let dir = temp_dir("overlays-nested-test");
+        std::fs::create_dir_all(dir.join("empty/inner")).unwrap();
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        assert!(manifest.templates.is_empty());
+        assert_eq!(manifest.folders, vec!["empty", "empty/inner"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn hidden_directories_are_skipped() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, ".hidden/tpl", None);
+        write_tpl(&dir, "visible/.git/tpl", None);
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        assert!(manifest.templates.is_empty());
+        assert_eq!(manifest.folders, vec!["visible"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn walk_stops_at_depth_five() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, "d1/d2/d3/d4/ok", None);
+        write_tpl(&dir, "d1/d2/d3/d4/d5/too-deep", None);
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        let ids: Vec<&str> = manifest.templates.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(ids, vec!["ok"]);
+        assert!(manifest.folders.contains(&"d1/d2/d3/d4".to_string()));
+        assert!(manifest.folders.contains(&"d1/d2/d3/d4/d5".to_string()));
+        assert_eq!(manifest.folders.len(), 5);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn template_directory_is_a_leaf() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, "leaf", None);
+        write_tpl(&dir, "leaf/inner", None);
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        let ids: Vec<&str> = manifest.templates.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(ids, vec!["leaf"]);
+        assert!(manifest.folders.is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn meta_id_differs_from_directory_name() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, "grp/dirname", Some("custom-id"));
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(manifest.templates[0].id, "custom-id");
+        assert_eq!(manifest.templates[0].path, "grp/dirname/index.html");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn duplicate_id_first_in_alphabetical_walk_wins() {
+        let dir = temp_dir("overlays-nested-test");
+        write_tpl(&dir, "x", None);
+        write_tpl(&dir, "a/x", None);
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        assert_eq!(manifest.templates.len(), 1);
+        assert_eq!(manifest.templates[0].path, "a/x/index.html");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn symlinked_directories_are_skipped() {
+        let dir = temp_dir("overlays-nested-test");
+        let target = temp_dir("overlays-symlink-target");
+        write_tpl(&target, "linked", None);
+        std::os::unix::fs::symlink(target.join("linked"), dir.join("link")).unwrap();
+        std::os::unix::fs::symlink(&target, dir.join("linkdir")).unwrap();
+
+        let manifest = FsTemplateSource.discover(&dir).unwrap();
+        assert!(manifest.templates.is_empty());
+        assert!(manifest.folders.is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
+        let _ = std::fs::remove_dir_all(&target);
+    }
+
     #[test]
     fn progress_field_with_valid_min_max_is_kept() {
         let dir = temp_dir("overlays-src-test");
@@ -260,7 +446,7 @@ mod tests {
             r#"[{ "key": "p", "label": "P", "type": "progress", "min": 0, "max": 100, "default": "50" }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let field = &templates[0].fields[0];
         assert_eq!(field.field_type, "progress");
@@ -280,7 +466,7 @@ mod tests {
             r#"[{ "key": "p", "label": "P", "type": "progress", "min": 0, "max": 100, "step": 0.1 }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates[0].fields[0].step, Some(0.1));
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -299,7 +485,7 @@ mod tests {
             ]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
         assert_eq!(keys, vec!["texto"]);
 
@@ -319,7 +505,7 @@ mod tests {
             ]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
         assert_eq!(keys, vec!["texto"]);
@@ -336,7 +522,7 @@ mod tests {
             r#"[{ "key": "b", "label": "B", "type": "boolean", "default": "true" }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let field = &templates[0].fields[0];
         assert_eq!(field.field_type, "boolean");
@@ -354,7 +540,7 @@ mod tests {
             r#"[{ "key": "b", "label": "B", "type": "boolean" }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let field = &templates[0].fields[0];
         assert_eq!(field.default, None);
@@ -374,7 +560,7 @@ mod tests {
             ]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
         assert_eq!(keys, vec!["texto"]);
@@ -391,7 +577,7 @@ mod tests {
             r#"[{ "key": "logo", "label": "Logo", "type": "file", "accept": [".PNG", "jpg", " svg "] }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let field = &templates[0].fields[0];
         assert_eq!(field.field_type, "file");
@@ -410,7 +596,7 @@ mod tests {
             r#"[{ "key": "logo", "label": "Logo", "type": "file" }]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let field = &templates[0].fields[0];
         assert_eq!(field.field_type, "file");
@@ -432,7 +618,7 @@ mod tests {
             ]"#,
         );
 
-        let templates = FsTemplateSource.discover(&dir).unwrap();
+        let templates = FsTemplateSource.discover(&dir).unwrap().templates;
         assert_eq!(templates.len(), 1);
         let keys: Vec<&str> = templates[0].fields.iter().map(|f| f.key.as_str()).collect();
         assert_eq!(keys, vec!["texto"]);

@@ -27,12 +27,12 @@ Chain strategy: pending
 
 ## WU1: Domain and recursive discovery
 
-- [ ] 1.1 RED: in `src-tauri/src/infrastructure/fs_template_source.rs` tests, add temp-dir cases: nested discovery with `folder`/`path`, empty folders listed, hidden dirs skipped, depth 5 cutoff, leaf with nested `overlay.json` not walked, `meta.id != dir`.
-- [ ] 1.2 RED: add duplicate-id test (root `x` vs `a/x`: `a/x` wins) and `#[cfg(unix)]` symlink-skip test.
-- [ ] 1.3 Add `TemplateInfo.folder: String` and `Manifest.folders: Vec<String>` in `src-tauri/src/domain/template.rs`.
-- [ ] 1.4 Change `discover` to return `DomainResult<Manifest>` in `application/ports.rs`; pass through in `application/template_catalog.rs`; update `FakeSource`.
-- [ ] 1.5 GREEN: implement the sorted recursive walk (`MAX_DEPTH=5`, `file_type()` symlink skip, `eprintln` on duplicate/subdir error) in `fs_template_source.rs`.
-- [ ] 1.6 Run `cargo test`, `cargo fmt --check --all`, `cargo clippy -- -D warnings`; commit.
+- [x] 1.1 RED: in `src-tauri/src/infrastructure/fs_template_source.rs` tests, add temp-dir cases: nested discovery with `folder`/`path`, empty folders listed, hidden dirs skipped, depth 5 cutoff, leaf with nested `overlay.json` not walked, `meta.id != dir`.
+- [x] 1.2 RED: add duplicate-id test (root `x` vs `a/x`: `a/x` wins) and `#[cfg(unix)]` symlink-skip test.
+- [x] 1.3 Add `TemplateInfo.folder: String` and `Manifest.folders: Vec<String>` in `src-tauri/src/domain/template.rs`.
+- [x] 1.4 Change `discover` to return `DomainResult<Manifest>` in `application/ports.rs`; pass through in `application/template_catalog.rs`; update `FakeSource`.
+- [x] 1.5 GREEN: implement the sorted recursive walk (`MAX_DEPTH=5`, `file_type()` symlink skip, `eprintln` on duplicate/subdir error) in `fs_template_source.rs`.
+- [x] 1.6 Run `cargo test`, `cargo fmt --check --all`, `cargo clippy -- -D warnings`; commit.
 
 ## WU2: Nested asset resolution
 

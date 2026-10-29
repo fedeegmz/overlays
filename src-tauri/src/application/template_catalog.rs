@@ -36,9 +36,7 @@ impl TemplateCatalog {
     }
 
     pub fn manifest(&self) -> DomainResult<Manifest> {
-        Ok(Manifest {
-            templates: self.source.discover(&self.overlays_dir.get())?,
-        })
+        self.source.discover(&self.overlays_dir.get())
     }
 }
 
@@ -51,25 +49,32 @@ mod tests {
     struct FakeSource;
 
     impl TemplateSource for FakeSource {
-        fn discover(&self, overlay_dir: &Path) -> DomainResult<Vec<TemplateInfo>> {
+        fn discover(&self, overlay_dir: &Path) -> DomainResult<Manifest> {
             if overlay_dir.as_os_str().is_empty() {
-                return Ok(Vec::new());
+                return Ok(Manifest {
+                    templates: Vec::new(),
+                    folders: Vec::new(),
+                });
             }
-            Ok(vec![TemplateInfo {
-                id: "fake".into(),
-                name: "Fake".into(),
-                path: "fake/index.html".into(),
-                fields: vec![OverlayField {
-                    key: "titulo".into(),
-                    label: "Título".into(),
-                    field_type: "text".into(),
-                    default: None,
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
+            Ok(Manifest {
+                folders: vec!["grp".into()],
+                templates: vec![TemplateInfo {
+                    id: "fake".into(),
+                    name: "Fake".into(),
+                    path: "fake/index.html".into(),
+                    folder: String::new(),
+                    fields: vec![OverlayField {
+                        key: "titulo".into(),
+                        label: "Título".into(),
+                        field_type: "text".into(),
+                        default: None,
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
+                    }],
                 }],
-            }])
+            })
         }
     }
 
