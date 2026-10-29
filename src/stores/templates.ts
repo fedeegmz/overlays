@@ -7,6 +7,7 @@ import type { TemplateInfo } from "../types";
 
 export const useTemplateStore = defineStore("templates", () => {
   const templates = ref<TemplateInfo[] | null>(null);
+  const folders = ref<string[]>([]);
   const templatesError = ref<string | null>(null);
 
   async function refreshTemplates(): Promise<void> {
@@ -14,6 +15,7 @@ export const useTemplateStore = defineStore("templates", () => {
     try {
       const manifest = await listTemplates();
       templates.value = manifest.templates;
+      folders.value = manifest.folders ?? [];
     } catch (err) {
       templatesError.value = commandErrorMessage(err);
     }
@@ -44,6 +46,7 @@ export const useTemplateStore = defineStore("templates", () => {
 
   return {
     templates,
+    folders,
     templatesError,
     refreshTemplates,
     getById,

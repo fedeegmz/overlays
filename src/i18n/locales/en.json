@@ -12,7 +12,11 @@
     "subtitle": "Pick a template to create an instance and show it in OBS",
     "loading": "Loading templates...",
     "empty": "No templates available.",
-    "reload": "Reload"
+    "reload": "Reload",
+    "rootFolder": "Overlays",
+    "emptyFolder": "This folder is empty.",
+    "folderCount": "no overlays | {count} overlay | {count} overlays",
+    "breadcrumbLabel": "Folder path"
   },
   "groups": {
     "title": "Groups",

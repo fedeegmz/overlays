@@ -12,7 +12,11 @@
     "subtitle": "Elegí una plantilla para crear una instancia y mostrarla en OBS",
     "loading": "Cargando plantillas...",
     "empty": "No hay plantillas disponibles.",
-    "reload": "Recargar"
+    "reload": "Recargar",
+    "rootFolder": "Overlays",
+    "emptyFolder": "Esta carpeta está vacía.",
+    "folderCount": "sin overlays | {count} overlay | {count} overlays",
+    "breadcrumbLabel": "Ruta de carpetas"
   },
   "groups": {
     "title": "Grupos",

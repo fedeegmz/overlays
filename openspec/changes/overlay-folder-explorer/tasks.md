@@ -44,19 +44,19 @@ Chain strategy: pending
 
 ## WU3: Frontend test runner and folderTree
 
-- [ ] 3.1 Add `vitest` devDependency and `"test": "vitest run"` to `package.json`; add minimal config if needed; confirm `pnpm check` and `vue-tsc --noEmit` still pass.
-- [ ] 3.2 Update `src/types/template.ts` with `folder: string` and `folders: string[]`.
-- [ ] 3.3 RED: write `src/lib/folderTree.test.ts` (contents per level, folders-first data, direct counts, empty folders, breadcrumb segments, root).
-- [ ] 3.4 GREEN: implement `src/lib/folderTree.ts` (`folderContents`, `breadcrumbSegments`, `FolderEntry`).
-- [ ] 3.5 Run `pnpm test`, `pnpm check`; commit.
-- [ ] 3.6 OPTIONAL (user decision, not default): add a `pnpm test` command to `lefthook.yml` `pre-push`, then `pnpm exec lefthook install`.
+- [x] 3.1 Add `vitest` devDependency and `"test": "vitest run"` to `package.json`; add minimal config if needed; confirm `pnpm check` and `vue-tsc --noEmit` still pass.
+- [x] 3.2 Update `src/types/template.ts` with `folder: string` and `folders: string[]`.
+- [x] 3.3 RED: write `src/lib/folderTree.test.ts` (contents per level, folders-first data, direct counts, empty folders, breadcrumb segments, root).
+- [x] 3.4 GREEN: implement `src/lib/folderTree.ts` (`folderContents`, `breadcrumbSegments`, `FolderEntry`).
+- [x] 3.5 Run `pnpm test`, `pnpm check`; commit. (1c36e36)
+- [ ] 3.6 (PENDING USER DECISION, not implemented) OPTIONAL (user decision, not default): add a `pnpm test` command to `lefthook.yml` `pre-push`, then `pnpm exec lefthook install`.
 
 ## WU4: Explorer UI
 
-- [ ] 4.1 Store `folders` in `src/stores/templates.ts` (minimal edit).
-- [ ] 4.2 Create `src/stores/overlayExplorer.ts`: `currentFolder`, `contents`, `open`, `up`, fallback to nearest existing ancestor after reload.
-- [ ] 4.3 Create `FolderCard.vue` and `FolderBreadcrumb.vue` (presentational; emit `open` / `navigate`).
-- [ ] 4.4 Update `OverlayGrid.vue` (folders first) and `OverlaysPage.vue` (breadcrumb, grid, empty-folder message).
-- [ ] 4.5 Add root label, plural overlay count, empty-folder strings to `src/i18n/locales/{es,en}.json`.
-- [ ] 4.6 Run `pnpm build`; manual check in `pnpm tauri dev`: nested navigation, OBS URL of a nested overlay, file field in a nested overlay.
-- [ ] 4.7 Update `AGENTS.md` (nested discovery, `folder`/`folders` fields, vitest command); commit.
+- [x] 4.1 Store `folders` in `src/stores/templates.ts` (minimal edit).
+- [x] 4.2 Create `src/stores/overlayExplorer.ts`: `currentFolder`, `contents`, `open`, `up`, fallback to nearest existing ancestor after reload.
+- [x] 4.3 Create `FolderCard.vue` and `FolderBreadcrumb.vue` (presentational; emit `open` / `navigate`).
+- [x] 4.4 Update `OverlayGrid.vue` (folders first) and `OverlaysPage.vue` (breadcrumb, grid, empty-folder message).
+- [x] 4.5 Add root label, plural overlay count, empty-folder strings to `src/i18n/locales/{es,en}.json`.
+- [ ] 4.6 (`pnpm build` green; manual `pnpm tauri dev` check pending, needs the user) Run `pnpm build`; manual check in `pnpm tauri dev`: nested navigation, OBS URL of a nested overlay, file field in a nested overlay.
+- [x] 4.7 Update `AGENTS.md` (nested discovery, `folder`/`folders` fields, vitest command); commit.

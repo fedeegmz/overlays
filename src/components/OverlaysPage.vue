@@ -3,7 +3,9 @@ import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useInstanceStore } from "../stores/instances";
+import { useOverlayExplorerStore } from "../stores/overlayExplorer";
 import { useTemplateStore } from "../stores/templates";
+import FolderBreadcrumb from "./FolderBreadcrumb.vue";
 import GroupPresetsSection from "./GroupPresetsSection.vue";
 import OverlayGrid from "./OverlayGrid.vue";
 
@@ -12,6 +14,8 @@ const templateStore = useTemplateStore();
 const instanceStore = useInstanceStore();
 const { templates, templatesError } = storeToRefs(templateStore);
 const { createInstance } = instanceStore;
+const explorer = useOverlayExplorerStore();
+const { currentFolder, contents } = storeToRefs(explorer);
 
 const reloading = ref(false);
 
@@ -74,7 +78,22 @@ async function handleReload() {
     <p v-else-if="templates.length === 0" class="muted">
       {{ t("overlaysPage.empty") }}
     </p>
-    <OverlayGrid v-else :templates="templates" @select="handleSelect" />
+    <template v-else>
+      <FolderBreadcrumb :current="currentFolder" @navigate="explorer.open" />
+      <p
+        v-if="contents.folders.length === 0 && contents.templates.length === 0"
+        class="muted"
+      >
+        {{ t("overlaysPage.emptyFolder") }}
+      </p>
+      <OverlayGrid
+        v-else
+        :folders="contents.folders"
+        :templates="contents.templates"
+        @select="handleSelect"
+        @open-folder="explorer.open"
+      />
+    </template>
 
     <GroupPresetsSection />
   </div>
