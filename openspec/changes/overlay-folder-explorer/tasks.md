@@ -36,11 +36,11 @@ Chain strategy: pending
 
 ## WU2: Nested asset resolution
 
-- [ ] 2.1 RED: tests for `TemplateCatalog::template_dir(id)` (FakeSource; strips `/index.html`; unknown -> None) in `template_catalog.rs`.
-- [ ] 2.2 RED: tests for `resolve_asset_path(overlays_dir, template_rel_dir, abs)` covering flat, nested, `meta.id != dir`, outside-dir rejection.
-- [ ] 2.3 GREEN: implement `template_dir` and the new `resolve_asset_path` signature.
-- [ ] 2.4 Update `resolve_overlay_asset_path` in `infrastructure/tauri/commands.rs` to look up the id via `http.catalog`; unknown id -> `AssetResolveFailed`.
-- [ ] 2.5 Run Rust gates; commit.
+- [x] 2.1 RED: tests for `TemplateCatalog::template_dir(id)` (FakeSource; strips `/index.html`; unknown -> None) in `template_catalog.rs`.
+- [x] 2.2 RED: tests for `resolve_asset_path(overlays_dir, template_rel_dir, abs)` covering flat, nested, `meta.id != dir`, outside-dir rejection.
+- [x] 2.3 GREEN: implement `template_dir` and the new `resolve_asset_path` signature.
+- [x] 2.4 Update `resolve_overlay_asset_path` in `infrastructure/tauri/commands.rs` to look up the id via `http.catalog`; unknown id -> `AssetResolveFailed`.
+- [x] 2.5 Run Rust gates; commit.
 
 ## WU3: Frontend test runner and folderTree
 

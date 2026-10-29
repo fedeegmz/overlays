@@ -12,6 +12,7 @@ use crate::application::preset_service::PresetService;
 use crate::application::template_catalog::TemplateCatalog;
 use crate::domain::checklist::{Checklist, ChecklistItem};
 use crate::domain::config::AppConfig;
+use crate::domain::error::DomainError;
 use crate::domain::group_preset::{GroupPreset, GroupPresetEntry};
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::preset::Preset;
@@ -71,7 +72,16 @@ pub fn resolve_overlay_asset_path(
     absolute_path: String,
 ) -> Result<String, CommandError> {
     let overlays_dir = http.overlays_dir.get();
-    fs_template_source::resolve_asset_path(&overlays_dir, &template_id, &absolute_path)
+    let template_dir = http
+        .catalog
+        .template_dir(&template_id)
+        .map_err(CommandError::from)?
+        .ok_or_else(|| {
+            CommandError::from(DomainError::AssetResolveFailed {
+                path: absolute_path.clone(),
+            })
+        })?;
+    fs_template_source::resolve_asset_path(&overlays_dir, &template_dir, &absolute_path)
         .map_err(CommandError::from)
 }
 

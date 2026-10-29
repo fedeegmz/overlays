@@ -38,6 +38,21 @@ impl TemplateCatalog {
     pub fn manifest(&self) -> DomainResult<Manifest> {
         self.source.discover(&self.overlays_dir.get())
     }
+
+    /// Directory of the template with this id, relative to the overlays dir.
+    pub fn template_dir(&self, id: &str) -> DomainResult<Option<String>> {
+        Ok(self
+            .manifest()?
+            .templates
+            .into_iter()
+            .find(|t| t.id == id)
+            .map(|t| {
+                t.path
+                    .strip_suffix("/index.html")
+                    .unwrap_or(&t.path)
+                    .to_string()
+            }))
+    }
 }
 
 #[cfg(test)]
@@ -87,5 +102,24 @@ mod tests {
 
         dir.set(PathBuf::from("/some/overlays"));
         assert_eq!(catalog.manifest().unwrap().templates.len(), 1);
+    }
+
+    #[test]
+    fn template_dir_strips_index_html() {
+        let dir = OverlaysDirHandle::new(PathBuf::from("/some/overlays"));
+        let catalog = TemplateCatalog::new(Arc::new(FakeSource), dir);
+
+        assert_eq!(
+            catalog.template_dir("fake").unwrap().as_deref(),
+            Some("fake")
+        );
+    }
+
+    #[test]
+    fn template_dir_of_unknown_id_is_none() {
+        let dir = OverlaysDirHandle::new(PathBuf::from("/some/overlays"));
+        let catalog = TemplateCatalog::new(Arc::new(FakeSource), dir);
+
+        assert_eq!(catalog.template_dir("nope").unwrap(), None);
     }
 }

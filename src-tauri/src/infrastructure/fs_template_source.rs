@@ -73,14 +73,14 @@ fn normalize_file_field(mut field: OverlayField) -> OverlayField {
 }
 
 /// Resolves an absolute file path into a path relative to the template
-/// folder, guaranteed to live inside the overlays directory.
+/// folder (`template_rel_dir`, `/`-separated, relative to the overlays dir), guaranteed to live inside the overlays directory.
 ///
 /// The returned value is what the overlay receives as a field value: a
 /// relative path (e.g. `logo.png` or `../assets/logo.png`) that the local
 /// HTTP server can serve under `/overlay/*`.
 pub fn resolve_asset_path(
     overlays_dir: &Path,
-    template_id: &str,
+    template_rel_dir: &str,
     absolute_path: &str,
 ) -> Result<String, DomainError> {
     let canonical_dir =
@@ -98,7 +98,7 @@ pub fn resolve_asset_path(
         });
     }
 
-    let template_dir = dunce::canonicalize(canonical_dir.join(template_id)).map_err(|_| {
+    let template_dir = dunce::canonicalize(canonical_dir.join(template_rel_dir)).map_err(|_| {
         DomainError::AssetResolveFailed {
             path: absolute_path.to_string(),
         }
@@ -651,6 +651,38 @@ mod tests {
 
         let resolved = resolve_asset_path(&dir, "tpl-a", asset.to_str().unwrap()).unwrap();
         assert_eq!(resolved, "../assets/logo.png");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn resolve_asset_path_handles_nested_template_dir() {
+        let dir = temp_dir("overlays-resolve-test");
+        let tpl = dir.join("grp").join("sub").join("tpl-a");
+        std::fs::create_dir_all(&tpl).unwrap();
+        let asset = tpl.join("logo.png");
+        std::fs::write(&asset, b"png").unwrap();
+        std::fs::create_dir_all(dir.join("assets")).unwrap();
+        let shared = dir.join("assets").join("bg.png");
+        std::fs::write(&shared, b"png").unwrap();
+
+        let resolved = resolve_asset_path(&dir, "grp/sub/tpl-a", asset.to_str().unwrap()).unwrap();
+        assert_eq!(resolved, "logo.png");
+        let resolved = resolve_asset_path(&dir, "grp/sub/tpl-a", shared.to_str().unwrap()).unwrap();
+        assert_eq!(resolved, "../../../assets/bg.png");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn resolve_asset_path_uses_directory_not_meta_id() {
+        let dir = temp_dir("overlays-resolve-test");
+        write_tpl(&dir, "grp/dirname", Some("custom-id"));
+        let asset = dir.join("grp/dirname/logo.png");
+        std::fs::write(&asset, b"png").unwrap();
+
+        let resolved = resolve_asset_path(&dir, "grp/dirname", asset.to_str().unwrap()).unwrap();
+        assert_eq!(resolved, "logo.png");
 
         let _ = std::fs::remove_dir_all(&dir);
     }
