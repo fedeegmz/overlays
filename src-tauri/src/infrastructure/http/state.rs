@@ -2,9 +2,11 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 
 use crate::application::instance_service::InstanceService;
+use crate::application::remote_access_service::RemoteAccessService;
 use crate::application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use crate::application::upload_service::UploadService;
 use crate::infrastructure::overlay_bus::BroadcastOverlayBus;
+use crate::infrastructure::session_revoker::WatchSessionRevoker;
 
 /// Per-file upload limit: 2 GiB.
 pub const MAX_UPLOAD_FILE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
@@ -15,6 +17,11 @@ pub struct HttpState {
     pub overlays_dir: OverlaysDirHandle,
     pub upload: Arc<UploadService>,
     pub instances: Arc<InstanceService>,
+    #[allow(dead_code)] // read by the /remote routes in the next slice
+    pub remote: Arc<RemoteAccessService>,
+    /// Revocation epoch the remote WebSocket sessions listen to.
+    #[allow(dead_code)]
+    pub sessions: Arc<WatchSessionRevoker>,
     /// Per-file upload limit in bytes; a field so tests can use a tiny value.
     pub max_upload_bytes: u64,
     pub connected: AtomicUsize,
@@ -28,6 +35,8 @@ impl HttpState {
         overlays_dir: OverlaysDirHandle,
         upload: Arc<UploadService>,
         instances: Arc<InstanceService>,
+        remote: Arc<RemoteAccessService>,
+        sessions: Arc<WatchSessionRevoker>,
     ) -> Self {
         Self {
             bus,
@@ -35,6 +44,8 @@ impl HttpState {
             overlays_dir,
             upload,
             instances,
+            remote,
+            sessions,
             max_upload_bytes: MAX_UPLOAD_FILE_BYTES,
             connected: AtomicUsize::new(0),
             port: Mutex::new(None),
@@ -53,6 +64,7 @@ impl HttpState {
         use crate::application::template_catalog::OverlaysDirHandle;
         use crate::application::upload_service::Clock;
         use crate::domain::path_template::DateParts;
+        use crate::infrastructure::clock::InstantClock;
         use crate::infrastructure::fs_template_source::FsTemplateSource;
         use crate::infrastructure::instance_events::BroadcastInstanceEvents;
         use crate::infrastructure::json_store::{JsonGroupPresetRepository, JsonPresetRepository};
@@ -93,6 +105,12 @@ impl HttpState {
                 JsonGroupPresetRepository::new(missing.join("groups.json")),
             ))),
         ));
+        let sessions = Arc::new(WatchSessionRevoker::new());
+        let remote = Arc::new(RemoteAccessService::new(
+            Arc::new(crate::infrastructure::test_util::MemConfigRepo::default()),
+            Arc::new(InstantClock::new()),
+            sessions.clone(),
+        ));
         Self::new(
             bus,
             catalog,
@@ -103,6 +121,8 @@ impl HttpState {
                 None,
             )),
             instances,
+            remote,
+            sessions,
         )
     }
 }

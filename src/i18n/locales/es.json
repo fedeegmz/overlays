@@ -128,6 +128,11 @@
     "upload_dir": {
       "invalid": "\"{path}\" no es una carpeta de subidas válida. Debe ser una ruta absoluta sin \"..\"."
     },
+    "remote": {
+      "disabled": "El control remoto está desactivado.",
+      "unauthorized": "Acceso remoto no autorizado. Vuelve a emparejar el dispositivo.",
+      "pairing_rate_limited": "Demasiados intentos de emparejamiento. Espera un minuto e inténtalo de nuevo."
+    },
     "file": {
       "asset_outside_overlays_dir": "El archivo \"{path}\" está fuera de la carpeta de overlays.",
       "resolve_failed": "No se pudo resolver el archivo \"{path}\"."

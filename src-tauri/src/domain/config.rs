@@ -19,6 +19,13 @@ pub struct AppConfig {
     /// Destination template for LAN uploads; kept as a string so `%` variables survive.
     #[serde(default)]
     pub upload_dir: Option<String>,
+    /// Master switch of the LAN remote control surface (`/remote*`).
+    #[serde(default)]
+    pub remote_enabled: bool,
+    /// SHA-256 hex digest of every issued remote token, one per pairing.
+    /// Plaintext tokens are never stored.
+    #[serde(default)]
+    pub remote_token_hashes: Vec<String>,
 }
 
 impl Default for AppConfig {
@@ -28,6 +35,8 @@ impl Default for AppConfig {
             language: None,
             uploads_enabled: default_uploads_enabled(),
             upload_dir: None,
+            remote_enabled: false,
+            remote_token_hashes: Vec::new(),
         }
     }
 }
@@ -105,6 +114,26 @@ mod tests {
         let json = serde_json::to_value(&config).unwrap();
         assert_eq!(json["upload_dir"], "/data/%CCYY/%MM");
         assert_eq!(json["uploads_enabled"], true);
+    }
+
+    #[test]
+    fn legacy_config_loads_with_defaults() {
+        let config: AppConfig =
+            serde_json::from_str(r#"{ "overlays_dir": "/home/user/overlays", "language": "es" }"#)
+                .unwrap();
+        assert!(!config.remote_enabled);
+        assert!(config.remote_token_hashes.is_empty());
+        assert!(!AppConfig::default().remote_enabled);
+    }
+
+    #[test]
+    fn remote_settings_round_trip() {
+        let config: AppConfig =
+            serde_json::from_str(r#"{ "remote_enabled": true, "remote_token_hashes": ["ab"] }"#)
+                .unwrap();
+        assert!(config.remote_enabled);
+        let json = serde_json::to_value(&config).unwrap();
+        assert_eq!(json["remote_token_hashes"][0], "ab");
     }
 
     #[test]

@@ -1,4 +1,7 @@
 pub mod guard;
+// Wired by the /remote routes in the next slice.
+#[allow(dead_code)]
+pub mod remote_auth;
 pub mod routes;
 pub mod state;
 pub mod upload;

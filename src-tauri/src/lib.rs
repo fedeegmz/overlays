@@ -11,9 +11,10 @@ use application::group_preset_service::GroupPresetService;
 use application::instance_service::InstanceService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
+use application::remote_access_service::RemoteAccessService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use application::upload_service::{UploadService, UploadSettings, UploadSettingsHandle};
-use infrastructure::clock::ChronoClock;
+use infrastructure::clock::{ChronoClock, InstantClock};
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
 use infrastructure::instance_events::{FanOut, TauriInstanceEvents};
@@ -21,6 +22,7 @@ use infrastructure::json_store::{
     JsonChecklistRepository, JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
 };
 use infrastructure::overlay_bus::BroadcastOverlayBus;
+use infrastructure::session_revoker::WatchSessionRevoker;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -75,7 +77,7 @@ pub fn run() {
                 dir_template: app_config.upload_dir.clone(),
             });
             let config_service = Arc::new(ConfigService::new(
-                config_repo,
+                config_repo.clone(),
                 overlays_dir.clone(),
                 upload_settings.clone(),
             ));
@@ -93,12 +95,20 @@ pub fn run() {
                 presets.clone(),
                 group_presets.clone(),
             ));
+            let sessions = Arc::new(WatchSessionRevoker::new());
+            let remote = Arc::new(RemoteAccessService::new(
+                config_repo.clone(),
+                Arc::new(InstantClock::new()),
+                sessions.clone(),
+            ));
             let http_state = Arc::new(HttpState::new(
                 bus,
                 catalog.clone(),
                 overlays_dir.clone(),
                 upload_service,
                 instances,
+                remote.clone(),
+                sessions,
             ));
 
             app.manage(http_state.clone());
@@ -107,6 +117,7 @@ pub fn run() {
             app.manage(group_presets);
             app.manage(checklists);
             app.manage(config_service);
+            app.manage(remote);
 
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = start_server(http_state).await {

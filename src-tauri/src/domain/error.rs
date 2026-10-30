@@ -3,40 +3,94 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub enum DomainError {
     PresetEmptyName,
-    PresetSaveFailed { detail: String },
+    PresetSaveFailed {
+        detail: String,
+    },
     GroupPresetEmptyName,
     GroupPresetNoEntries,
-    GroupPresetInvalidEntry { index: usize },
-    GroupPresetDuplicateInstanceId { index: usize },
-    GroupPresetNotFound { name: String },
-    GroupPresetLoadFailed { detail: String },
-    GroupPresetSaveFailed { detail: String },
+    GroupPresetInvalidEntry {
+        index: usize,
+    },
+    GroupPresetDuplicateInstanceId {
+        index: usize,
+    },
+    GroupPresetNotFound {
+        name: String,
+    },
+    GroupPresetLoadFailed {
+        detail: String,
+    },
+    GroupPresetSaveFailed {
+        detail: String,
+    },
     ChecklistInvalidId,
     ChecklistEmptyName,
     ChecklistNoItems,
-    ChecklistEmptyItem { index: usize },
-    ChecklistDuplicateName { name: String },
-    ChecklistNotFound { id: String },
-    ChecklistLoadFailed { detail: String },
-    ChecklistSaveFailed { detail: String },
-    TemplateDiscoveryFailed { detail: String },
-    TemplateNotFound { template: String },
-    InstanceNotFound { id: String },
-    InstanceIdTaken { id: String },
-    PresetNotFound { name: String },
-    LanguageUnsupported { lang: String },
-    OverlaysDirInvalid { path: String },
-    ConfigSaveFailed { detail: String },
-    AssetOutsideOverlaysDir { path: String },
-    AssetResolveFailed { path: String },
+    ChecklistEmptyItem {
+        index: usize,
+    },
+    ChecklistDuplicateName {
+        name: String,
+    },
+    ChecklistNotFound {
+        id: String,
+    },
+    ChecklistLoadFailed {
+        detail: String,
+    },
+    ChecklistSaveFailed {
+        detail: String,
+    },
+    TemplateDiscoveryFailed {
+        detail: String,
+    },
+    TemplateNotFound {
+        template: String,
+    },
+    InstanceNotFound {
+        id: String,
+    },
+    InstanceIdTaken {
+        id: String,
+    },
+    PresetNotFound {
+        name: String,
+    },
+    LanguageUnsupported {
+        lang: String,
+    },
+    OverlaysDirInvalid {
+        path: String,
+    },
+    ConfigSaveFailed {
+        detail: String,
+    },
+    AssetOutsideOverlaysDir {
+        path: String,
+    },
+    AssetResolveFailed {
+        path: String,
+    },
     UploadDisabled,
     UploadTooLarge,
     UploadMissingFile,
-    UploadBadRequest { detail: String },
+    UploadBadRequest {
+        detail: String,
+    },
     UploadNameExhausted,
     UploadDestinationUnavailable,
-    UploadWriteFailed { detail: String },
-    UploadDirInvalid { path: String },
+    UploadWriteFailed {
+        detail: String,
+    },
+    UploadDirInvalid {
+        path: String,
+    },
+    #[allow(dead_code)]
+    RemoteDisabled,
+    #[allow(dead_code)]
+    RemoteUnauthorized,
+    #[allow(dead_code)]
+    RemotePairingRateLimited,
 }
 
 impl fmt::Display for DomainError {
@@ -97,6 +151,9 @@ impl fmt::Display for DomainError {
             Self::UploadDestinationUnavailable => write!(f, "upload destination unavailable"),
             Self::UploadWriteFailed { detail } => write!(f, "upload write failed: {detail}"),
             Self::UploadDirInvalid { path } => write!(f, "invalid upload dir: {path}"),
+            Self::RemoteDisabled => write!(f, "remote access is disabled"),
+            Self::RemoteUnauthorized => write!(f, "remote access is not authorized"),
+            Self::RemotePairingRateLimited => write!(f, "too many pairing attempts"),
         }
     }
 }

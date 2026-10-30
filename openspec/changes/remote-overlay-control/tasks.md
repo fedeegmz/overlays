@@ -86,12 +86,12 @@ Depends on S1b.
 
 Depends on S1b.
 
-- [ ] 5.1 RED: `src-tauri/src/infrastructure/http/remote_auth.rs` tests (oneshot + `MockConnectInfo`): `disabled_returns_403_even_for_loopback`, `loopback_enabled_no_token_allowed`, `lan_enabled_no_token_401`, `lan_bad_token_401`, `lan_good_token_ok`, `two_concurrent_tokens_both_valid`, `revoke_all_invalidates_old_tokens_401`, `revoke_all_closes_ws_with_4001`, `disable_closes_ws_keeps_hashes_and_tokens_work_on_reenable`, `ws_query_token_accepted`, `pair_route_skips_token_check`, `overlay_ws_templates_stay_loopback_only_even_with_valid_token`.
-- [ ] 5.2 RED: `application/remote_access_service.rs` tests with fake `MonotonicClock`: `pin_is_6_digits`, `pin_expires_after_120s`, `pin_single_use`, `five_failures_burn_pin`, `rate_limit_10_per_min_per_ip_returns_429_code`, `pairing_mints_distinct_tokens_and_stores_sha256_only`, `plaintext_never_persisted`, `revoke_clears_all_hashes_and_bumps_epoch`.
-- [ ] 5.3 Extend config with `remote_enabled` (default false) and `remote_token_hashes: Vec<String>` (serde defaults, no migration); add test `legacy_config_loads_with_defaults`.
-- [ ] 5.4 Create `domain/remote.rs`, ports `MonotonicClock`, `SessionRevoker` (tokio `watch<u64>` epoch); add `CommandError` codes `remote.disabled`, `remote.unauthorized`, `remote.pairing_rate_limited`.
-- [ ] 5.5 GREEN: `RemoteAccessService` (toggle, PIN pairing, SHA-256 hashes, `subtle` ct_eq against every hash, revoke) and `remote_auth` middleware.
-- [ ] 5.6 Add `subtle`, `sha2`, `base64`/`rand` deps as needed in `src-tauri/Cargo.toml`; verify (backend commands).
+- [x] 5.1 RED: `src-tauri/src/infrastructure/http/remote_auth.rs` tests (oneshot + `MockConnectInfo`): `disabled_returns_403_even_for_loopback`, `loopback_enabled_no_token_allowed`, `lan_enabled_no_token_401`, `lan_bad_token_401`, `lan_good_token_ok`, `two_concurrent_tokens_both_valid`, `revoke_all_invalidates_old_tokens_401`, `revoke_all_closes_ws_with_4001`, `disable_closes_ws_keeps_hashes_and_tokens_work_on_reenable`, `ws_query_token_accepted`, `pair_route_skips_token_check`, `overlay_ws_templates_stay_loopback_only_even_with_valid_token`.
+- [x] 5.2 RED: `application/remote_access_service.rs` tests with fake `MonotonicClock`: `pin_is_6_digits`, `pin_expires_after_120s`, `pin_single_use`, `five_failures_burn_pin`, `rate_limit_10_per_min_per_ip_returns_429_code`, `pairing_mints_distinct_tokens_and_stores_sha256_only`, `plaintext_never_persisted`, `revoke_clears_all_hashes_and_bumps_epoch`.
+- [x] 5.3 Extend config with `remote_enabled` (default false) and `remote_token_hashes: Vec<String>` (serde defaults, no migration); add test `legacy_config_loads_with_defaults`.
+- [x] 5.4 Create `domain/remote.rs`, ports `MonotonicClock`, `SessionRevoker` (tokio `watch<u64>` epoch); add `CommandError` codes `remote.disabled`, `remote.unauthorized`, `remote.pairing_rate_limited`.
+- [x] 5.5 GREEN: `RemoteAccessService` (toggle, PIN pairing, SHA-256 hashes, `subtle` ct_eq against every hash, revoke) and `remote_auth` middleware.
+- [x] 5.6 Add `subtle`, `sha2`, `base64`/`rand` deps as needed in `src-tauri/Cargo.toml`; verify (backend commands). Verified: cargo test 296 passed, fmt, clippy; pnpm check and pnpm test pass.
 
 ## S2b: /remote REST + WS routes (~400 lines)
 

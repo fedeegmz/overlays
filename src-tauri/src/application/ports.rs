@@ -53,3 +53,16 @@ pub trait InstanceEvents: Send + Sync {
 pub trait TemplateLookup: Send + Sync {
     fn manifest(&self) -> DomainResult<Manifest>;
 }
+
+/// Monotonic milliseconds since an arbitrary origin, for TTLs and rate
+/// windows. Unlike wall time it never jumps backwards.
+#[allow(dead_code)]
+pub trait MonotonicClock: Send + Sync {
+    fn now_ms(&self) -> u64;
+}
+
+/// Closes every open remote session (WebSocket) at once.
+#[allow(dead_code)]
+pub trait SessionRevoker: Send + Sync {
+    fn revoke_all(&self);
+}

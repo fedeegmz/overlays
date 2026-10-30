@@ -128,6 +128,11 @@
     "upload_dir": {
       "invalid": "\"{path}\" is not a valid upload folder. Use an absolute path without \"..\"."
     },
+    "remote": {
+      "disabled": "Remote control is turned off.",
+      "unauthorized": "Remote access is not authorized. Pair the device again.",
+      "pairing_rate_limited": "Too many pairing attempts. Wait a minute and try again."
+    },
     "file": {
       "asset_outside_overlays_dir": "The file \"{path}\" is outside the overlays directory.",
       "resolve_failed": "Could not resolve the file \"{path}\"."

@@ -45,3 +45,21 @@ impl Drop for TempDir {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+
+/// In-memory `ConfigRepository` for tests that must not touch the disk.
+#[derive(Default)]
+pub struct MemConfigRepo(std::sync::Mutex<crate::domain::config::AppConfig>);
+
+impl crate::application::ports::ConfigRepository for MemConfigRepo {
+    fn load(&self) -> crate::domain::config::AppConfig {
+        self.0.lock().unwrap().clone()
+    }
+
+    fn save(
+        &self,
+        config: &crate::domain::config::AppConfig,
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = config.clone();
+        Ok(())
+    }
+}

@@ -51,6 +51,9 @@ impl CommandError {
     pub const UPLOAD_DESTINATION_UNAVAILABLE: &str = "upload.destination_unavailable";
     pub const UPLOAD_WRITE_FAILED: &str = "upload.write_failed";
     pub const UPLOAD_DIR_INVALID: &str = "upload_dir.invalid";
+    pub const REMOTE_DISABLED: &str = "remote.disabled";
+    pub const REMOTE_UNAUTHORIZED: &str = "remote.unauthorized";
+    pub const REMOTE_PAIRING_RATE_LIMITED: &str = "remote.pairing_rate_limited";
 
     pub fn new(code: &str) -> Self {
         Self {
@@ -154,6 +157,9 @@ impl From<DomainError> for CommandError {
             DomainError::UploadDirInvalid { path } => {
                 Self::new(Self::UPLOAD_DIR_INVALID).param("path", path)
             }
+            DomainError::RemoteDisabled => Self::new(Self::REMOTE_DISABLED),
+            DomainError::RemoteUnauthorized => Self::new(Self::REMOTE_UNAUTHORIZED),
+            DomainError::RemotePairingRateLimited => Self::new(Self::REMOTE_PAIRING_RATE_LIMITED),
         }
     }
 }
@@ -309,6 +315,23 @@ mod tests {
                 template: "t".into()
             }),
             serde_json::json!({ "code": "template.not_found", "params": { "template": "t" } })
+        );
+    }
+
+    #[test]
+    fn maps_remote_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::RemoteDisabled),
+            serde_json::json!({ "code": "remote.disabled" })
+        );
+        assert_eq!(
+            code(DomainError::RemoteUnauthorized),
+            serde_json::json!({ "code": "remote.unauthorized" })
+        );
+        assert_eq!(
+            code(DomainError::RemotePairingRateLimited),
+            serde_json::json!({ "code": "remote.pairing_rate_limited" })
         );
     }
 
