@@ -131,7 +131,9 @@
     "remote": {
       "disabled": "Remote control is turned off.",
       "unauthorized": "Remote access is not authorized. Pair the device again.",
-      "pairing_rate_limited": "Too many pairing attempts. Wait a minute and try again."
+      "pairing_rate_limited": "Too many pairing attempts. Wait a minute and try again.",
+      "unreachable": "Could not reach the desktop app. Check that you are on the same network.",
+      "invalid_pin": "Enter the 6-digit PIN shown on the desktop."
     },
     "file": {
       "asset_outside_overlays_dir": "The file \"{path}\" is outside the overlays directory.",
@@ -237,6 +239,39 @@
         "confirm": "Click again to confirm",
         "warning": "All paired devices will be disconnected and will need to pair again."
       }
+    }
+  },
+  "remote": {
+    "title": "Overlays remote",
+    "pair": {
+      "title": "Pair this device",
+      "description": "Enter the PIN shown in the desktop app, or scan its QR code.",
+      "pinLabel": "PIN",
+      "submit": "Pair",
+      "pairing": "Pairing..."
+    },
+    "repair": "This device is no longer paired. Pair it again to keep controlling your overlays.",
+    "connection": {
+      "online": "Connected",
+      "offline": "Reconnecting..."
+    },
+    "empty": "No instances are open on the desktop",
+    "instance": {
+      "show": "Show",
+      "hide": "Hide",
+      "live": "Live",
+      "hidden": "Hidden",
+      "preset": "Preset",
+      "presetPlaceholder": "Apply a preset...",
+      "fileReadonly": "File fields can only be changed on the desktop"
+    },
+    "groups": {
+      "title": "Groups",
+      "start": "Start",
+      "none": "No groups saved on the desktop",
+      "started": "Group \"{name}\" started.",
+      "conflicts": "{count} instance ID(s) were already in use, so new ones were created.",
+      "missing": "{count} template(s) were not found and were skipped."
     }
   }
 }

@@ -71,6 +71,7 @@ WS payload shape: `{ instance_id, template, action: "show"|"update"|"hide", fiel
 ## Gotchas
 
 - Vite is multipage (`index.html` desktop, `remote.html` phone page) with `base: "./"`. `FieldEditor.vue` is shared by both and must stay free of Tauri imports; the desktop supplies `FileField` through its `#file` slot.
+- `src/remote/` is the phone app (`remote.html`): it runs in a phone browser, so nothing under `src/remote/` or `src/services/transport.ts` may import Tauri (no `crypto.randomUUID` either: plain-http LAN pages are not a secure context). State and revision guard live in `session.ts`, HTTP/WS in `services/transport.ts` (both unit-tested). Under `pnpm tauri dev` open `http://<lan-ip>:1420/remote.html` (needs `TAURI_DEV_HOST`); the API base is `http://<host>:4848` (override with `VITE_REMOTE_API_PORT`). Remote strings live under the `remote.` i18n namespace.
 - First `pnpm tauri dev` compiles Rust from scratch — slow initial build.
 - `overlay.json` has no `id` field; the **directory name** is the template identifier.
 - Overlay discovery is filesystem-based (no central manifest) — add a template by creating a folder in the overlays dir.
