@@ -18,6 +18,7 @@ pub struct CommandError {
 impl CommandError {
     pub const PRESET_EMPTY_NAME: &str = "preset.empty_name";
     pub const PRESET_SAVE_FAILED: &str = "preset.save_failed";
+    pub const PRESET_NOT_FOUND: &str = "preset.not_found";
     pub const GROUP_PRESET_EMPTY_NAME: &str = "group_preset.empty_name";
     pub const GROUP_PRESET_NO_ENTRIES: &str = "group_preset.no_entries";
     pub const GROUP_PRESET_INVALID_ENTRY: &str = "group_preset.invalid_entry";
@@ -70,6 +71,9 @@ impl From<DomainError> for CommandError {
             DomainError::PresetEmptyName => Self::new(Self::PRESET_EMPTY_NAME),
             DomainError::PresetSaveFailed { detail } => {
                 Self::new(Self::PRESET_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::PresetNotFound { name } => {
+                Self::new(Self::PRESET_NOT_FOUND).param("name", name)
             }
             DomainError::GroupPresetEmptyName => Self::new(Self::GROUP_PRESET_EMPTY_NAME),
             DomainError::GroupPresetNoEntries => Self::new(Self::GROUP_PRESET_NO_ENTRIES),
@@ -295,6 +299,10 @@ mod tests {
         assert_eq!(
             code(DomainError::InstanceIdTaken { id: "a".into() }),
             serde_json::json!({ "code": "instance.id_taken", "params": { "id": "a" } })
+        );
+        assert_eq!(
+            code(DomainError::PresetNotFound { name: "p".into() }),
+            serde_json::json!({ "code": "preset.not_found", "params": { "name": "p" } })
         );
         assert_eq!(
             code(DomainError::TemplateNotFound {

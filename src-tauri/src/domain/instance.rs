@@ -67,6 +67,53 @@ pub struct InstancesSnapshot {
     pub instances: Vec<InstanceDto>,
 }
 
+/// Why a group entry could not be started. There is no send failure:
+/// publishing to the overlays cannot fail in process.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GroupStartFailure {
+    TemplateMissing,
+}
+
+/// Outcome of one group entry. Mirrors the shape the desktop already
+/// consumes: `ok` entries carry `instanceId` and `idConflict`, failed ones
+/// carry `reason`.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupStartResult {
+    pub template: String,
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance_id: Option<String>,
+    /// The saved id was held by another template, so a fresh id was used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id_conflict: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<GroupStartFailure>,
+}
+
+impl GroupStartResult {
+    pub fn started(template: &str, instance_id: &str, id_conflict: bool) -> Self {
+        Self {
+            template: template.to_string(),
+            ok: true,
+            instance_id: Some(instance_id.to_string()),
+            id_conflict: Some(id_conflict),
+            reason: None,
+        }
+    }
+
+    pub fn failed(template: &str, reason: GroupStartFailure) -> Self {
+        Self {
+            template: template.to_string(),
+            ok: false,
+            instance_id: None,
+            id_conflict: None,
+            reason: Some(reason),
+        }
+    }
+}
+
 /// Initial field values of a template: progress falls back to its `min`
 /// (or 0), booleans to `"false"`, other fields only when a default exists.
 pub fn defaults_for(template: &TemplateInfo) -> HashMap<String, String> {
