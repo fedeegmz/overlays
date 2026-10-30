@@ -63,3 +63,41 @@ impl crate::application::ports::ConfigRepository for MemConfigRepo {
         Ok(())
     }
 }
+
+/// In-memory `PresetRepository` for tests.
+#[derive(Default)]
+pub struct MemPresetRepo(std::sync::Mutex<Vec<crate::domain::preset::Preset>>);
+
+impl crate::application::ports::PresetRepository for MemPresetRepo {
+    fn load(&self) -> Vec<crate::domain::preset::Preset> {
+        self.0.lock().unwrap().clone()
+    }
+
+    fn save(
+        &self,
+        presets: &[crate::domain::preset::Preset],
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = presets.to_vec();
+        Ok(())
+    }
+}
+
+/// In-memory `GroupPresetRepository` for tests.
+#[derive(Default)]
+pub struct MemGroupPresetRepo(std::sync::Mutex<Vec<crate::domain::group_preset::GroupPreset>>);
+
+impl crate::application::ports::GroupPresetRepository for MemGroupPresetRepo {
+    fn load(
+        &self,
+    ) -> crate::domain::error::DomainResult<Vec<crate::domain::group_preset::GroupPreset>> {
+        Ok(self.0.lock().unwrap().clone())
+    }
+
+    fn save(
+        &self,
+        groups: &[crate::domain::group_preset::GroupPreset],
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = groups.to_vec();
+        Ok(())
+    }
+}

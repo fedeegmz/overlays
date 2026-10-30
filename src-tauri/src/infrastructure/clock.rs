@@ -22,7 +22,6 @@ impl Clock for ChronoClock {
 }
 
 /// Milliseconds elapsed since construction; immune to wall-clock changes.
-#[allow(dead_code)]
 pub struct InstantClock(std::time::Instant);
 
 impl InstantClock {

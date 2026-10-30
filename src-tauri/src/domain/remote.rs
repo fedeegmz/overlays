@@ -1,5 +1,8 @@
 //! Token and PIN primitives for remote access. Pure functions, no I/O.
 
+// The PIN constants are read by the desktop pairing commands (S2c).
+#![allow(dead_code)]
+
 use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 

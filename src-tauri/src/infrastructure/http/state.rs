@@ -1,15 +1,29 @@
 use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 
+use crate::application::group_preset_service::GroupPresetService;
 use crate::application::instance_service::InstanceService;
+use crate::application::preset_service::PresetService;
 use crate::application::remote_access_service::RemoteAccessService;
 use crate::application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use crate::application::upload_service::UploadService;
+use crate::infrastructure::instance_events::BroadcastInstanceEvents;
 use crate::infrastructure::overlay_bus::BroadcastOverlayBus;
 use crate::infrastructure::session_revoker::WatchSessionRevoker;
 
 /// Per-file upload limit: 2 GiB.
 pub const MAX_UPLOAD_FILE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+
+/// Everything the `/remote` surface needs beyond the shared services.
+pub struct RemoteDeps {
+    pub access: Arc<RemoteAccessService>,
+    /// Revocation epoch the remote WebSocket sessions listen to.
+    pub sessions: Arc<WatchSessionRevoker>,
+    pub presets: Arc<PresetService>,
+    pub group_presets: Arc<GroupPresetService>,
+    /// Registry change feed for the remote WebSocket.
+    pub events: Arc<BroadcastInstanceEvents>,
+}
 
 pub struct HttpState {
     pub bus: Arc<BroadcastOverlayBus>,
@@ -17,11 +31,11 @@ pub struct HttpState {
     pub overlays_dir: OverlaysDirHandle,
     pub upload: Arc<UploadService>,
     pub instances: Arc<InstanceService>,
-    #[allow(dead_code)] // read by the /remote routes in the next slice
     pub remote: Arc<RemoteAccessService>,
-    /// Revocation epoch the remote WebSocket sessions listen to.
-    #[allow(dead_code)]
     pub sessions: Arc<WatchSessionRevoker>,
+    pub presets: Arc<PresetService>,
+    pub group_presets: Arc<GroupPresetService>,
+    pub events: Arc<BroadcastInstanceEvents>,
     /// Per-file upload limit in bytes; a field so tests can use a tiny value.
     pub max_upload_bytes: u64,
     pub connected: AtomicUsize,
@@ -35,8 +49,7 @@ impl HttpState {
         overlays_dir: OverlaysDirHandle,
         upload: Arc<UploadService>,
         instances: Arc<InstanceService>,
-        remote: Arc<RemoteAccessService>,
-        sessions: Arc<WatchSessionRevoker>,
+        remote: RemoteDeps,
     ) -> Self {
         Self {
             bus,
@@ -44,8 +57,11 @@ impl HttpState {
             overlays_dir,
             upload,
             instances,
-            remote,
-            sessions,
+            remote: remote.access,
+            sessions: remote.sessions,
+            presets: remote.presets,
+            group_presets: remote.group_presets,
+            events: remote.events,
             max_upload_bytes: MAX_UPLOAD_FILE_BYTES,
             connected: AtomicUsize::new(0),
             port: Mutex::new(None),
@@ -55,19 +71,16 @@ impl HttpState {
 
 #[cfg(test)]
 impl HttpState {
-    /// State for HTTP tests: example templates, fixed clock (2026-03-07 09:05:01), no Downloads dir.
+    /// State for HTTP tests: example templates, in-memory stores, fixed clock
+    /// (2026-03-07 09:05:01), no Downloads dir, remote access off.
     pub fn for_test(
         upload_settings: crate::application::upload_service::UploadSettingsHandle,
     ) -> Self {
-        use crate::application::group_preset_service::GroupPresetService;
-        use crate::application::preset_service::PresetService;
-        use crate::application::template_catalog::OverlaysDirHandle;
         use crate::application::upload_service::Clock;
         use crate::domain::path_template::DateParts;
         use crate::infrastructure::clock::InstantClock;
         use crate::infrastructure::fs_template_source::FsTemplateSource;
-        use crate::infrastructure::instance_events::BroadcastInstanceEvents;
-        use crate::infrastructure::json_store::{JsonGroupPresetRepository, JsonPresetRepository};
+        use crate::infrastructure::test_util::{MemConfigRepo, MemGroupPresetRepo, MemPresetRepo};
 
         struct FixedClock;
         impl Clock for FixedClock {
@@ -92,22 +105,21 @@ impl HttpState {
             Arc::new(FsTemplateSource),
             OverlaysDirHandle::new(examples.clone()),
         ));
-        // Stores point at files that never exist: nothing in HTTP tests saves.
-        let missing = std::env::temp_dir().join("overlays-test-missing");
+        let presets = Arc::new(PresetService::new(Arc::new(MemPresetRepo::default())));
+        let group_presets = Arc::new(GroupPresetService::new(Arc::new(
+            MemGroupPresetRepo::default(),
+        )));
+        let events = Arc::new(BroadcastInstanceEvents::new());
         let instances = Arc::new(InstanceService::new(
             catalog.clone(),
             bus.clone(),
-            Arc::new(BroadcastInstanceEvents::new()),
-            Arc::new(PresetService::new(Arc::new(JsonPresetRepository::new(
-                missing.join("presets.json"),
-            )))),
-            Arc::new(GroupPresetService::new(Arc::new(
-                JsonGroupPresetRepository::new(missing.join("groups.json")),
-            ))),
+            events.clone(),
+            presets.clone(),
+            group_presets.clone(),
         ));
         let sessions = Arc::new(WatchSessionRevoker::new());
-        let remote = Arc::new(RemoteAccessService::new(
-            Arc::new(crate::infrastructure::test_util::MemConfigRepo::default()),
+        let access = Arc::new(RemoteAccessService::new(
+            Arc::new(MemConfigRepo::default()),
             Arc::new(InstantClock::new()),
             sessions.clone(),
         ));
@@ -121,8 +133,13 @@ impl HttpState {
                 None,
             )),
             instances,
-            remote,
-            sessions,
+            RemoteDeps {
+                access,
+                sessions,
+                presets,
+                group_presets,
+                events,
+            },
         )
     }
 }

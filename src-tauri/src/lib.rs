@@ -16,8 +16,9 @@ use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use application::upload_service::{UploadService, UploadSettings, UploadSettingsHandle};
 use infrastructure::clock::{ChronoClock, InstantClock};
 use infrastructure::fs_template_source::FsTemplateSource;
-use infrastructure::http::{start_server, state::HttpState};
-use infrastructure::instance_events::{FanOut, TauriInstanceEvents};
+use infrastructure::http::start_server;
+use infrastructure::http::state::{HttpState, RemoteDeps};
+use infrastructure::instance_events::{BroadcastInstanceEvents, FanOut, TauriInstanceEvents};
 use infrastructure::json_store::{
     JsonChecklistRepository, JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
 };
@@ -86,12 +87,14 @@ pub fn run() {
                 upload_settings,
                 downloads_dir,
             ));
+            let broadcast_events = Arc::new(BroadcastInstanceEvents::new());
             let instances = Arc::new(InstanceService::new(
                 catalog.clone(),
                 bus.clone(),
-                Arc::new(FanOut::new(vec![Arc::new(TauriInstanceEvents::new(
-                    app.handle().clone(),
-                ))])),
+                Arc::new(FanOut::new(vec![
+                    Arc::new(TauriInstanceEvents::new(app.handle().clone())),
+                    broadcast_events.clone(),
+                ])),
                 presets.clone(),
                 group_presets.clone(),
             ));
@@ -107,8 +110,13 @@ pub fn run() {
                 overlays_dir.clone(),
                 upload_service,
                 instances,
-                remote.clone(),
-                sessions,
+                RemoteDeps {
+                    access: remote.clone(),
+                    sessions,
+                    presets: presets.clone(),
+                    group_presets: group_presets.clone(),
+                    events: broadcast_events,
+                },
             ));
 
             app.manage(http_state.clone());

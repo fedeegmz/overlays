@@ -2,7 +2,15 @@
 
 ## What is this
 
-Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays to OBS via a local HTTP+WebSocket server (`127.0.0.1:4848`, fallback `4849–4851`).
+Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays to OBS via a local HTTP+WebSocket server (port `4848`, fallback `4849–4851`). The server binds all interfaces (`0.0.0.0`); see the network-exposure note below.
+
+## Network exposure
+
+The server listens on every interface (`src-tauri/src/infrastructure/http/mod.rs`), so route access is enforced per route:
+
+- `/overlay/*`, `/ws` and `/api/*` are loopback-only (`http/guard.rs`). A non-loopback peer gets `403` even with a valid remote token.
+- `/upload*` is reachable from the LAN (subject to its own toggle).
+- `/remote/api/*` is reachable from the LAN only while remote access is enabled, and non-loopback peers also need a token (`http/remote_auth.rs`). While disabled, every `/remote*` request gets `403`, loopback included. Pair with a 6-digit PIN at `POST /remote/api/pair`; each pairing mints its own token, stored only as a SHA-256 hash in `config.json`.
 
 ## Key commands
 
@@ -34,8 +42,8 @@ After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks
   - `src/i18n/` — Spanish and English locales (`locales/es.json`, `locales/en.json`)
 - `src-tauri/src/` — Rust backend in layered architecture:
   - `domain/` — core models (template, preset, overlay message, config) and `CommandError`
-  - `application/` — services (config, presets, template catalog) and ports
-  - `infrastructure/` — Axum HTTP+WS server (`http/`), Tauri commands (`tauri/commands.rs`), JSON persistence (`json_store.rs`), filesystem template source (`fs_template_source.rs`)
+  - `application/` — services (config, presets, template catalog, instance registry, remote access) and ports
+  - `infrastructure/` — Axum HTTP+WS server (`http/`: `routes.rs`, `guard.rs` loopback guard, `remote.rs` + `remote_auth.rs` remote control API and auth), Tauri commands (`tauri/commands.rs`), JSON persistence (`json_store.rs`), filesystem template source (`fs_template_source.rs`)
 - `examples/` — Overlay templates (lower-third-basico, titulo-centrado). The real runtime dir defaults to `src-tauri/overlays/` but is configurable via Settings.
 - Overlays dir may contain nested folders (max depth 5; hidden dirs and symlinks skipped). `list_templates` returns flat `templates` (each with `folder`, `""` = root, `/`-separated) plus `folders` (includes empty ones); the UI builds the explorer from these via `src/lib/folderTree.ts` and `stores/overlayExplorer.ts`.
 - `examples/*/overlay.json` — Template manifest (no top-level `id` field — the directory name IS the template id)

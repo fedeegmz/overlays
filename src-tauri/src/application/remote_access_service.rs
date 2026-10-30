@@ -1,3 +1,7 @@
+// Pairing and revocation are driven by the desktop Tauri commands, added in the
+// desktop-settings slice (S2c); until then only the tests reach them.
+#![allow(dead_code)]
+
 use std::collections::{HashMap, VecDeque};
 use std::net::IpAddr;
 use std::sync::{Arc, Mutex, MutexGuard};

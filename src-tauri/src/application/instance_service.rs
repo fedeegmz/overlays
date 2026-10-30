@@ -8,7 +8,7 @@ use crate::domain::error::{DomainError, DomainResult};
 use crate::domain::group_preset::{GroupPreset, GroupPresetEntry};
 use crate::domain::instance::{
     defaults_for, fields_for, EventSource, GroupStartFailure, GroupStartResult, Instance,
-    InstancesSnapshot, Registry,
+    InstancesSnapshot, Registry, SourceKind,
 };
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::template::{Manifest, TemplateInfo};
@@ -221,11 +221,33 @@ impl InstanceService {
     }
 
     pub fn show(&self, id: &str, source: EventSource) -> DomainResult<InstancesSnapshot> {
-        self.send_fields(id, OverlayAction::Show, source)
+        self.send_fields(id, OverlayAction::Show, HashMap::new(), source)
     }
 
     pub fn update(&self, id: &str, source: EventSource) -> DomainResult<InstancesSnapshot> {
-        self.send_fields(id, OverlayAction::Update, source)
+        self.send_fields(id, OverlayAction::Update, HashMap::new(), source)
+    }
+
+    /// `show` after merging `patch` over the stored fields, in one revision.
+    /// A remote source may only touch fields the template declares and that
+    /// are not of type `file`; other keys are dropped.
+    pub fn show_with(
+        &self,
+        id: &str,
+        patch: HashMap<String, String>,
+        source: EventSource,
+    ) -> DomainResult<InstancesSnapshot> {
+        self.send_fields(id, OverlayAction::Show, patch, source)
+    }
+
+    /// `update` after merging `patch`; see `show_with` for the filtering.
+    pub fn update_with(
+        &self,
+        id: &str,
+        patch: HashMap<String, String>,
+        source: EventSource,
+    ) -> DomainResult<InstancesSnapshot> {
+        self.send_fields(id, OverlayAction::Update, patch, source)
     }
 
     pub fn hide(&self, id: &str, source: EventSource) -> DomainResult<InstancesSnapshot> {
@@ -246,6 +268,7 @@ impl InstanceService {
         &self,
         id: &str,
         action: OverlayAction,
+        patch: HashMap<String, String>,
         source: EventSource,
     ) -> DomainResult<InstancesSnapshot> {
         let manifest = self.lookup.manifest()?;
@@ -259,6 +282,14 @@ impl InstanceService {
                 template: instance.template_id.clone(),
             }
         })?;
+        let remote = source.kind == SourceKind::Remote;
+        instance.fields.extend(patch.into_iter().filter(|(key, _)| {
+            !remote
+                || template
+                    .fields
+                    .iter()
+                    .any(|f| f.key == *key && f.field_type != "file")
+        }));
         let message = payload(instance, action, fields_for(instance, template));
         if action == OverlayAction::Show {
             instance.visible = true;
@@ -585,6 +616,96 @@ mod tests {
 
     fn ids(snap: &InstancesSnapshot) -> Vec<&str> {
         snap.instances.iter().map(|i| i.id.as_str()).collect()
+    }
+
+    fn patch(pairs: &[(&str, &str)]) -> HashMap<String, String> {
+        pairs
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn update_with_fields_merges_patch_publishes_once_and_bumps_once() {
+        let f = fixture();
+        let id = create(&f, "title");
+
+        let snap = f
+            .svc
+            .update_with(&id, patch(&[("text", "Live")]), EventSource::remote("ph"))
+            .unwrap();
+
+        assert_eq!(snap.revision, 2);
+        assert_eq!(snap.source, EventSource::remote("ph"));
+        assert_eq!(snap.instances[0].fields["text"], "Live");
+        assert_eq!(
+            snap.instances[0].fields["pct"], "5",
+            "untouched fields stay"
+        );
+        let published = f.bus.0.lock().unwrap();
+        assert_eq!(published.len(), 1);
+        assert_eq!(published[0].action, OverlayAction::Update);
+        assert_eq!(published[0].fields["text"], "Live");
+    }
+
+    #[test]
+    fn show_with_fields_marks_visible_and_publishes_show() {
+        let f = fixture();
+        let id = create(&f, "title");
+
+        let snap = f
+            .svc
+            .show_with(&id, patch(&[("note", "n")]), EventSource::remote("ph"))
+            .unwrap();
+
+        assert!(snap.instances[0].visible);
+        let published = f.bus.0.lock().unwrap();
+        assert_eq!(published[0].action, OverlayAction::Show);
+        assert_eq!(published[0].fields["note"], "n");
+    }
+
+    #[test]
+    fn remote_patch_drops_file_type_and_unknown_keys() {
+        let f = fixture();
+        f.lookup.manifest.lock().unwrap().templates.push(template(
+            "media",
+            "Media",
+            vec![
+                field("caption", "text", None, None),
+                field("photo", "file", None, None),
+            ],
+        ));
+        let id = create(&f, "media");
+        f.svc
+            .set_fields(&id, patch(&[("photo", "/a.png")]), desktop())
+            .unwrap();
+
+        let snap = f
+            .svc
+            .update_with(
+                &id,
+                patch(&[("caption", "c"), ("photo", "/evil.png"), ("ghost", "x")]),
+                EventSource::remote("ph"),
+            )
+            .unwrap();
+
+        let fields = &snap.instances[0].fields;
+        assert_eq!(fields["caption"], "c");
+        assert_eq!(fields["photo"], "/a.png");
+        assert!(!fields.contains_key("ghost"));
+        let published = f.bus.0.lock().unwrap();
+        assert_eq!(published[0].fields["photo"], "/a.png");
+        assert!(!published[0].fields.contains_key("ghost"));
+    }
+
+    #[test]
+    fn patch_for_unknown_instance_returns_instance_not_found() {
+        let f = fixture();
+        let err = f
+            .svc
+            .update_with("nope", HashMap::new(), EventSource::remote("ph"))
+            .unwrap_err();
+        assert!(matches!(err, DomainError::InstanceNotFound { .. }));
     }
 
     #[test]

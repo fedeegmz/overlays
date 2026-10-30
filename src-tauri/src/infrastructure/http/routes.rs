@@ -8,6 +8,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 
 use super::guard::loopback_only;
+use super::remote;
 use super::state::HttpState;
 use super::upload;
 use super::ws;
@@ -65,8 +66,10 @@ pub fn build_router(state: Arc<HttpState>) -> Router {
         .route("/ws", get(ws::ws_handler))
         .route_layer(from_fn(loopback_only));
 
-    // Upload routes are the only ones open to the LAN.
+    // The only routes open to the LAN: uploads, and the remote surface, which
+    // is closed while the toggle is off and needs a token from non-loopback peers.
     guarded
         .merge(upload::routes(state.max_upload_bytes))
+        .merge(remote::routes(state.clone()))
         .with_state(state)
 }

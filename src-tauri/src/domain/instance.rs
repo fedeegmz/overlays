@@ -16,8 +16,6 @@ pub struct Instance {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
-// `Remote` is produced by the remote API in a later slice.
-#[allow(dead_code)]
 pub enum SourceKind {
     Desktop,
     Remote,
@@ -39,8 +37,6 @@ impl EventSource {
         }
     }
 
-    // Used by the remote API in a later slice.
-    #[allow(dead_code)]
     pub fn remote(client_id: impl Into<String>) -> Self {
         Self {
             kind: SourceKind::Remote,

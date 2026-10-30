@@ -33,7 +33,7 @@ impl InstanceEvents for TauriInstanceEvents {
     }
 }
 
-/// Feeds in-process subscribers (the remote WebSocket in a later slice).
+/// Feeds in-process subscribers (the remote WebSocket).
 /// Keeps the latest snapshot so a lagged subscriber can resync.
 pub struct BroadcastInstanceEvents {
     tx: broadcast::Sender<InstancesSnapshot>,
@@ -53,14 +53,11 @@ impl BroadcastInstanceEvents {
         }
     }
 
-    // Consumed by the remote WebSocket in a later slice.
-    #[allow(dead_code)]
     pub fn subscribe(&self) -> broadcast::Receiver<InstancesSnapshot> {
         self.tx.subscribe()
     }
 
     /// The most recent snapshot, for a subscriber that lagged or just joined.
-    #[allow(dead_code)]
     pub fn latest(&self) -> Option<InstancesSnapshot> {
         self.latest
             .lock()
