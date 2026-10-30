@@ -12,6 +12,7 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 | Lint + format      | `pnpm check` / auto-fix with `pnpm check:fix` (Biome)  |
 | Frontend typecheck | `vue-tsc --noEmit`                                     |
 | Frontend build     | `pnpm build` (runs Biome check, typecheck, vite build) |
+| Frontend tests     | `pnpm test` (vitest, pure logic in `src/lib/`)         |
 | Rust tests         | `cd src-tauri && cargo test`                           |
 
 ## Git hooks (lefthook)
@@ -19,7 +20,7 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 Hooks managed with [lefthook](https://lefthook.dev) (`lefthook.yml`, installed via pnpm postinstall):
 
 - `pre-commit` (parallel): `pnpm check` (front), `cargo fmt --check --all` + `cargo clippy -- -D warnings` (back, only when `.rs` files are staged).
-- `pre-push`: `cargo test` (back).
+- `pre-push`: `pnpm test` (front) + `cargo test` (back).
 
 After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks.
 
@@ -36,6 +37,7 @@ After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks
   - `application/` — services (config, presets, template catalog) and ports
   - `infrastructure/` — Axum HTTP+WS server (`http/`), Tauri commands (`tauri/commands.rs`), JSON persistence (`json_store.rs`), filesystem template source (`fs_template_source.rs`)
 - `examples/` — Overlay templates (lower-third-basico, titulo-centrado). The real runtime dir defaults to `src-tauri/overlays/` but is configurable via Settings.
+- Overlays dir may contain nested folders (max depth 5; hidden dirs and symlinks skipped). `list_templates` returns flat `templates` (each with `folder`, `""` = root, `/`-separated) plus `folders` (includes empty ones); the UI builds the explorer from these via `src/lib/folderTree.ts` and `stores/overlayExplorer.ts`.
 - `examples/*/overlay.json` — Template manifest (no top-level `id` field — the directory name IS the template id)
 
 ## IPC error contract

@@ -12,6 +12,8 @@ pre-commit:
 
 pre-push:
   commands:
+    vitest:
+      run: pnpm test
     cargo-test:
       root: src-tauri/
       run: cargo test

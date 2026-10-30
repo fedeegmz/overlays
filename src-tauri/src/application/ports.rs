@@ -6,7 +6,7 @@ use crate::domain::error::DomainResult;
 use crate::domain::group_preset::GroupPreset;
 use crate::domain::overlay::OverlayPayload;
 use crate::domain::preset::Preset;
-use crate::domain::template::TemplateInfo;
+use crate::domain::template::Manifest;
 
 pub trait PresetRepository: Send + Sync {
     fn load(&self) -> Vec<Preset>;
@@ -33,7 +33,7 @@ pub trait ConfigRepository: Send + Sync {
 }
 
 pub trait TemplateSource: Send + Sync {
-    fn discover(&self, overlay_dir: &Path) -> DomainResult<Vec<TemplateInfo>>;
+    fn discover(&self, overlay_dir: &Path) -> DomainResult<Manifest>;
 }
 
 pub trait OverlayBus: Send + Sync {

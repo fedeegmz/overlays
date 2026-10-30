@@ -13,9 +13,11 @@ export interface TemplateInfo {
   id: string;
   name: string;
   path: string;
+  folder: string;
   fields: TemplateField[];
 }
 
 export interface Manifest {
   templates: TemplateInfo[];
+  folders: string[];
 }

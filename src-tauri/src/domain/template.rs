@@ -23,10 +23,14 @@ pub struct TemplateInfo {
     pub id: String,
     pub name: String,
     pub path: String,
+    /// Folder relative to the overlays dir, `/`-separated; empty for the root.
+    pub folder: String,
     pub fields: Vec<OverlayField>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Manifest {
     pub templates: Vec<TemplateInfo>,
+    /// Every folder (including empty ones) relative to the overlays dir.
+    pub folders: Vec<String>,
 }
