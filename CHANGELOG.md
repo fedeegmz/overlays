@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Folder explorer on the Home page: overlays are now browsed like a file explorer that mirrors the overlays directory on disk. Folders (including empty ones) and loose overlays can live at any level; opening a folder shows its contents and a breadcrumb navigates back up. Folders are listed first and then overlays, both alphabetically, and each folder card shows how many overlays it contains directly. A directory with `overlay.json` is an overlay (its subdirectories are not scanned); any other directory is a folder. Scanning goes up to 5 levels deep and skips hidden directories. The current folder is kept in memory; if it no longer exists after a reload, the explorer falls back to the nearest existing parent. Template ids are unchanged (`meta.id` or the directory name), so existing overlay scripts, OBS URLs, presets and group presets keep working, and a flat overlays directory looks the same as before. If two overlays in different folders share an id, the first one found (alphabetical, depth-first) is kept and the other is skipped with a log warning. The template manifest gains additive `folder` (per template) and `folders` fields.
-- Frontend unit tests with Vitest (`pnpm test`), also run by the lefthook `pre-push` hook alongside `cargo test`.
+- Frontend unit tests with Vitest (`pnpm test`), also run by the lefthook `pre-push` hook alongside `cargo test` and by the CI frontend job.
 
 ### Changed
 
+- The release workflow now runs the full CI workflow (frontend lint, typecheck and tests; Rust fmt, clippy and tests) first, and only builds and publishes installers if it passes.
 - Symlinked directories inside the overlays directory are no longer followed during discovery, so overlays reached through a symlink are not listed.
 
 ### Fixed
