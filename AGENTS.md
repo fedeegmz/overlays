@@ -20,7 +20,7 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 Hooks managed with [lefthook](https://lefthook.dev) (`lefthook.yml`, installed via pnpm postinstall):
 
 - `pre-commit` (parallel): `pnpm check` (front), `cargo fmt --check --all` + `cargo clippy -- -D warnings` (back, only when `.rs` files are staged).
-- `pre-push`: `cargo test` (back).
+- `pre-push`: `pnpm test` (front) + `cargo test` (back).
 
 After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks.
 

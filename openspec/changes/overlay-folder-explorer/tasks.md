@@ -49,7 +49,7 @@ Chain strategy: pending
 - [x] 3.3 RED: write `src/lib/folderTree.test.ts` (contents per level, folders-first data, direct counts, empty folders, breadcrumb segments, root).
 - [x] 3.4 GREEN: implement `src/lib/folderTree.ts` (`folderContents`, `breadcrumbSegments`, `FolderEntry`).
 - [x] 3.5 Run `pnpm test`, `pnpm check`; commit. (1c36e36)
-- [ ] 3.6 (PENDING USER DECISION, not implemented) OPTIONAL (user decision, not default): add a `pnpm test` command to `lefthook.yml` `pre-push`, then `pnpm exec lefthook install`.
+- [x] 3.6 (user approved) add a `pnpm test` command to `lefthook.yml` `pre-push`, then `pnpm exec lefthook install`.
 
 ## WU4: Explorer UI
 
