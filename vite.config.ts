@@ -9,6 +9,20 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   plugins: [vue()],
 
+  // Relative asset URLs: the desktop webview loads from the Tauri asset
+  // protocol, while the phone app is served by the backend under `/remote/`.
+  base: "./",
+
+  // Two HTML entries: the desktop app and the phone remote page.
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        remote: "remote.html",
+      },
+    },
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

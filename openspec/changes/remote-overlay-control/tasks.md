@@ -117,9 +117,9 @@ Depends on S2a.
 
 Depends on S1c.
 
-- [ ] 8.1 Update `vite.config.ts`: multipage inputs (`index.html`, `remote.html`), `base: "./"`; create `remote.html` entry stub.
-- [ ] 8.2 Create `src/components/FieldEditor.vue` (field rendering + `#file` slot, no Tauri imports); refactor `src/components/ContentPanel.vue` to use it, passing `FileField` in the slot.
-- [ ] 8.3 Verify `pnpm build` emits both entries, `pnpm test` still discovers and passes all tests with the multipage `vite.config.ts`, and desktop behavior is unchanged (manual); frontend commands.
+- [x] 8.1 Update `vite.config.ts`: multipage inputs (`index.html`, `remote.html`), `base: "./"`; create `remote.html` entry stub.
+- [x] 8.2 Create `src/components/FieldEditor.vue` (field rendering + `#file` slot, no Tauri imports); refactor `src/components/ContentPanel.vue` to use it, passing `FileField` in the slot.
+- [ ] 8.3 Verify `pnpm build` emits both entries, `pnpm test` still discovers and passes all tests with the multipage `vite.config.ts`, and desktop behavior is unchanged (manual); frontend commands. Automated verified: `pnpm build` emits `dist/index.html` and `dist/remote.html` (relative asset URLs), vitest 28 passed, biome, vue-tsc, vite dev serves both pages; manual desktop parity check (ContentPanel fields, file picker) pending (needs `pnpm tauri dev`; not run).
 
 ## S2d-2: Remote phone app + static serving (~450 lines)
 

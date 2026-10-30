@@ -69,6 +69,7 @@ WS payload shape: `{ instance_id, template, action: "show"|"update"|"hide", fiel
 
 ## Gotchas
 
+- Vite is multipage (`index.html` desktop, `remote.html` phone page) with `base: "./"`. `FieldEditor.vue` is shared by both and must stay free of Tauri imports; the desktop supplies `FileField` through its `#file` slot.
 - First `pnpm tauri dev` compiles Rust from scratch — slow initial build.
 - `overlay.json` has no `id` field; the **directory name** is the template identifier.
 - Overlay discovery is filesystem-based (no central manifest) — add a template by creating a folder in the overlays dir.
