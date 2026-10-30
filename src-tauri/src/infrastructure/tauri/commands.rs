@@ -14,6 +14,7 @@ use crate::domain::checklist::{Checklist, ChecklistItem};
 use crate::domain::config::AppConfig;
 use crate::domain::error::DomainError;
 use crate::domain::group_preset::{GroupPreset, GroupPresetEntry};
+use crate::domain::instance::{EventSource, GroupStartResult, InstancesSnapshot};
 use crate::domain::overlay::{OverlayAction, OverlayPayload};
 use crate::domain::preset::Preset;
 use crate::domain::template::Manifest;
@@ -45,6 +46,159 @@ pub fn send_overlay_update(
         fields,
     });
     Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateInstanceResult {
+    pub id: String,
+    pub snapshot: InstancesSnapshot,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartGroupResult {
+    pub results: Vec<GroupStartResult>,
+    pub snapshot: InstancesSnapshot,
+}
+
+#[tauri::command]
+pub fn list_instances(http: State<'_, Arc<HttpState>>, client_id: String) -> InstancesSnapshot {
+    http.instances.list(EventSource::desktop(client_id))
+}
+
+#[tauri::command]
+pub fn create_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    template_id: String,
+    id: Option<String>,
+    custom_name: Option<String>,
+) -> Result<CreateInstanceResult, CommandError> {
+    let (id, snapshot) = http
+        .instances
+        .create(
+            &template_id,
+            id,
+            custom_name,
+            EventSource::desktop(client_id),
+        )
+        .map_err(CommandError::from)?;
+    Ok(CreateInstanceResult { id, snapshot })
+}
+
+#[tauri::command]
+pub fn remove_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .remove(&id, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn rename_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+    name: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .rename(&id, &name, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn move_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    from: usize,
+    to: usize,
+) -> InstancesSnapshot {
+    http.instances
+        .move_instance(from, to, EventSource::desktop(client_id))
+}
+
+#[tauri::command]
+pub fn set_instance_fields(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+    fields: HashMap<String, String>,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .set_fields(&id, fields, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn show_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .show(&id, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn update_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .update(&id, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn hide_instance(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .hide(&id, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn apply_preset(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    id: String,
+    name: String,
+) -> Result<InstancesSnapshot, CommandError> {
+    http.instances
+        .apply_preset(&id, &name, EventSource::desktop(client_id))
+        .map_err(CommandError::from)
+}
+
+#[tauri::command]
+pub fn start_group_preset(
+    http: State<'_, Arc<HttpState>>,
+    client_id: String,
+    name: String,
+) -> Result<StartGroupResult, CommandError> {
+    let (results, snapshot) = http
+        .instances
+        .start_group(&name, EventSource::desktop(client_id))
+        .map_err(CommandError::from)?;
+    Ok(StartGroupResult { results, snapshot })
+}
+
+#[tauri::command]
+pub fn save_group_from_instances(
+    http: State<'_, Arc<HttpState>>,
+    name: String,
+) -> Result<Vec<GroupPreset>, CommandError> {
+    http.instances
+        .save_group_from_instances(&name)
+        .map_err(CommandError::from)
 }
 
 #[tauri::command]
@@ -196,4 +350,41 @@ pub fn set_upload_dir(
     template: Option<String>,
 ) -> Result<AppConfig, CommandError> {
     config.set_upload_dir(template).map_err(CommandError::from)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn snapshot() -> InstancesSnapshot {
+        InstancesSnapshot {
+            revision: 2,
+            source: EventSource::desktop("w1"),
+            instances: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn create_result_serializes_id_and_snapshot_in_camel_case() {
+        let value = serde_json::to_value(CreateInstanceResult {
+            id: "a".into(),
+            snapshot: snapshot(),
+        })
+        .unwrap();
+        assert_eq!(value["id"], "a");
+        assert_eq!(value["snapshot"]["revision"], 2);
+        assert_eq!(value["snapshot"]["source"]["clientId"], "w1");
+    }
+
+    #[test]
+    fn start_group_result_serializes_results_and_snapshot() {
+        let value = serde_json::to_value(StartGroupResult {
+            results: vec![GroupStartResult::started("t", "a", false)],
+            snapshot: snapshot(),
+        })
+        .unwrap();
+        assert_eq!(value["results"][0]["instanceId"], "a");
+        assert_eq!(value["results"][0]["idConflict"], false);
+        assert_eq!(value["snapshot"]["revision"], 2);
+    }
 }

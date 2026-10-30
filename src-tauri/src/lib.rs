@@ -8,6 +8,7 @@ use std::sync::Arc;
 use application::checklist_service::ChecklistService;
 use application::config_service::ConfigService;
 use application::group_preset_service::GroupPresetService;
+use application::instance_service::InstanceService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
@@ -15,6 +16,7 @@ use application::upload_service::{UploadService, UploadSettings, UploadSettingsH
 use infrastructure::clock::ChronoClock;
 use infrastructure::fs_template_source::FsTemplateSource;
 use infrastructure::http::{start_server, state::HttpState};
+use infrastructure::instance_events::{FanOut, TauriInstanceEvents};
 use infrastructure::json_store::{
     JsonChecklistRepository, JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
 };
@@ -82,11 +84,21 @@ pub fn run() {
                 upload_settings,
                 downloads_dir,
             ));
+            let instances = Arc::new(InstanceService::new(
+                catalog.clone(),
+                bus.clone(),
+                Arc::new(FanOut::new(vec![Arc::new(TauriInstanceEvents::new(
+                    app.handle().clone(),
+                ))])),
+                presets.clone(),
+                group_presets.clone(),
+            ));
             let http_state = Arc::new(HttpState::new(
                 bus,
                 catalog.clone(),
                 overlays_dir.clone(),
                 upload_service,
+                instances,
             ));
 
             app.manage(http_state.clone());
@@ -106,6 +118,18 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             infrastructure::tauri::commands::send_overlay_update,
+            infrastructure::tauri::commands::list_instances,
+            infrastructure::tauri::commands::create_instance,
+            infrastructure::tauri::commands::remove_instance,
+            infrastructure::tauri::commands::rename_instance,
+            infrastructure::tauri::commands::move_instance,
+            infrastructure::tauri::commands::set_instance_fields,
+            infrastructure::tauri::commands::show_instance,
+            infrastructure::tauri::commands::update_instance,
+            infrastructure::tauri::commands::hide_instance,
+            infrastructure::tauri::commands::apply_preset,
+            infrastructure::tauri::commands::start_group_preset,
+            infrastructure::tauri::commands::save_group_from_instances,
             infrastructure::tauri::commands::list_templates,
             infrastructure::tauri::commands::get_server_status,
             infrastructure::tauri::commands::resolve_overlay_asset_path,

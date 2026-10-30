@@ -62,12 +62,12 @@ Depends on S1a-1.
 
 Depends on S1a-2.
 
-- [ ] 3.1 RED: `src-tauri/src/infrastructure/instance_events.rs` unit tests: `fanout_calls_tauri_and_broadcast`, `broadcast_lagged_subscriber_can_resubscribe_and_get_latest`, `fanout_without_subscribers_does_not_error`.
-- [ ] 3.2 GREEN: `TauriInstanceEvents` (AppHandle.emit `instances-changed`), `BroadcastInstanceEvents` (tokio broadcast), `FanOut`.
-- [ ] 3.3 Add commands in `infrastructure/tauri/commands.rs` (`client_id` arg; return snapshot): `list_instances`, `create_instance` -> `{id, snapshot}`, `remove_instance`, `rename_instance`, `move_instance`, `set_instance_fields`, `show_instance`, `update_instance`, `hide_instance`, `apply_preset`, `start_group_preset` -> `{results, snapshot}`; keep `send_overlay_update` for preview.
-- [ ] 3.6 Add Tauri command `save_group_from_instances(name) -> GroupPreset[]` in `infrastructure/tauri/commands.rs` calling the 2.6 service method; register in `lib.rs`; keep the existing `save_group_preset(name, entries)` (`commands.rs:121`). Rust test for the command-to-service mapping where feasible.
-- [ ] 3.4 Wire `InstanceService` into `lib.rs` and `infrastructure/http/state.rs` (share bus/broadcast; pass the same `Arc<TemplateCatalog>` already held by `HttpState.catalog` as its `TemplateLookup`).
-- [ ] 3.5 Manual check via `pnpm tauri dev` (command invocable, event emitted); verify (backend commands).
+- [x] 3.1 RED: `src-tauri/src/infrastructure/instance_events.rs` unit tests: `fanout_calls_tauri_and_broadcast`, `broadcast_lagged_subscriber_can_resubscribe_and_get_latest`, `fanout_without_subscribers_does_not_error`.
+- [x] 3.2 GREEN: `TauriInstanceEvents` (AppHandle.emit `instances-changed`), `BroadcastInstanceEvents` (tokio broadcast), `FanOut`.
+- [x] 3.3 Add commands in `infrastructure/tauri/commands.rs` (`client_id` arg; return snapshot): `list_instances`, `create_instance` -> `{id, snapshot}`, `remove_instance`, `rename_instance`, `move_instance`, `set_instance_fields`, `show_instance`, `update_instance`, `hide_instance`, `apply_preset`, `start_group_preset` -> `{results, snapshot}`; keep `send_overlay_update` for preview.
+- [x] 3.6 Add Tauri command `save_group_from_instances(name) -> GroupPreset[]` in `infrastructure/tauri/commands.rs` calling the 2.6 service method; register in `lib.rs`; keep the existing `save_group_preset(name, entries)` (`commands.rs:121`). Rust test for the command-to-service mapping where feasible (feasible part: result DTO serialization tests; `State`-based commands are thin delegations and are covered by the manual check).
+- [x] 3.4 Wire `InstanceService` into `lib.rs` and `infrastructure/http/state.rs` (share bus/broadcast; pass the same `Arc<TemplateCatalog>` already held by `HttpState.catalog` as its `TemplateLookup`).
+- [ ] 3.5 Manual check via `pnpm tauri dev` (command invocable, event emitted); verify (backend commands). Backend commands verified (cargo test 261 passed, fmt, clippy); manual `pnpm tauri dev` check pending (needs a GUI).
 
 ## S1c: Frontend thin client + vitest (~400 lines)
 
