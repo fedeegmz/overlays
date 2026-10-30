@@ -7,6 +7,7 @@ import { getAppVersion } from "../services/appApi";
 import { copyText } from "../services/clipboardApi";
 import { useConfigStore } from "../stores/config";
 import BooleanField from "./BooleanField.vue";
+import RemoteSettingsSection from "./RemoteSettingsSection.vue";
 
 const configStore = useConfigStore();
 const { appConfig, configError, lanUrls } = storeToRefs(configStore);
@@ -189,6 +190,8 @@ const { t, locale } = useI18n();
       </div>
       <p v-if="configError" class="config-error">{{ configError }}</p>
     </div>
+
+    <RemoteSettingsSection />
 
     <div class="settings-section">
       <div class="settings-row">

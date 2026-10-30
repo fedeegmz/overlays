@@ -48,6 +48,10 @@ After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks
 - Overlays dir may contain nested folders (max depth 5; hidden dirs and symlinks skipped). `list_templates` returns flat `templates` (each with `folder`, `""` = root, `/`-separated) plus `folders` (includes empty ones); the UI builds the explorer from these via `src/lib/folderTree.ts` and `stores/overlayExplorer.ts`.
 - `examples/*/overlay.json` — Template manifest (no top-level `id` field — the directory name IS the template id)
 
+## Config exposure
+
+`get_config` and the `set_*` config commands return `AppConfigDto`, never `AppConfig`: `remote_token_hashes` must not reach the webview. Remote state goes through `get_remote_status` / `start_pairing` (Settings > Remote control, `stores/remote.ts`).
+
 ## IPC error contract
 
 Tauri commands return structured errors (`CommandError`, mirrored by `src/types/commandError.ts`). The UI maps error codes to i18n messages — don't return raw strings from new commands.

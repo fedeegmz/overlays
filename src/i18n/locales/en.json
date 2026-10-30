@@ -207,6 +207,36 @@
     "about": {
       "label": "Version",
       "description": "Application version"
+    },
+    "remote": {
+      "label": "Remote control",
+      "description": "Control your overlays from a phone on the same network",
+      "enabled": {
+        "label": "Allow remote control",
+        "description": "Paired devices on your network can show, hide and edit your instances"
+      },
+      "pairing": {
+        "title": "Pair a device",
+        "scan": "Scan the QR code with the phone camera, or open the address and enter the PIN",
+        "pin": "PIN",
+        "expiresIn": "Expires in {seconds} s",
+        "expired": "The PIN expired",
+        "newPin": "New PIN",
+        "cancel": "Cancel pairing"
+      },
+      "url": {
+        "label": "Network address",
+        "unavailable": "No network address available"
+      },
+      "devices": {
+        "label": "Paired devices",
+        "count": "{count} paired"
+      },
+      "revoke": {
+        "action": "Disconnect all devices",
+        "confirm": "Click again to confirm",
+        "warning": "All paired devices will be disconnected and will need to pair again."
+      }
     }
   }
 }

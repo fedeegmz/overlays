@@ -166,6 +166,11 @@ pub fn run() {
             infrastructure::tauri::commands::set_language,
             infrastructure::tauri::commands::set_uploads_enabled,
             infrastructure::tauri::commands::set_upload_dir,
+            infrastructure::tauri::commands::get_remote_status,
+            infrastructure::tauri::commands::set_remote_enabled,
+            infrastructure::tauri::commands::start_pairing,
+            infrastructure::tauri::commands::cancel_pairing,
+            infrastructure::tauri::commands::revoke_remote_access,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

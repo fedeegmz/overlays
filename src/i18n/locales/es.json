@@ -207,6 +207,36 @@
     "about": {
       "label": "Versión",
       "description": "Versión de la aplicación"
+    },
+    "remote": {
+      "label": "Control remoto",
+      "description": "Controla tus overlays desde un móvil en la misma red",
+      "enabled": {
+        "label": "Permitir control remoto",
+        "description": "Los dispositivos emparejados de tu red pueden mostrar, ocultar y editar tus instancias"
+      },
+      "pairing": {
+        "title": "Emparejar un dispositivo",
+        "scan": "Escanea el código QR con la cámara del móvil, o abre la dirección e introduce el PIN",
+        "pin": "PIN",
+        "expiresIn": "Caduca en {seconds} s",
+        "expired": "El PIN ha caducado",
+        "newPin": "Nuevo PIN",
+        "cancel": "Cancelar emparejamiento"
+      },
+      "url": {
+        "label": "Dirección de red",
+        "unavailable": "No hay ninguna dirección de red disponible"
+      },
+      "devices": {
+        "label": "Dispositivos emparejados",
+        "count": "{count} emparejados"
+      },
+      "revoke": {
+        "action": "Desconectar todos los dispositivos",
+        "confirm": "Pulsa de nuevo para confirmar",
+        "warning": "Todos los dispositivos emparejados se desconectarán y tendrán que emparejarse de nuevo."
+      }
     }
   }
 }

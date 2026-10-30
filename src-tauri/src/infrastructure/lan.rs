@@ -5,13 +5,23 @@ use std::net::{IpAddr, Ipv4Addr};
 /// Keeps only routable IPv4 addresses (no loopback, link-local, unspecified or IPv6),
 /// preserves the order of first appearance and drops duplicates.
 pub fn upload_urls(candidates: &[IpAddr], port: u16) -> Vec<String> {
+    lan_urls(candidates, port, "upload")
+}
+
+/// Builds the remote control page URLs (`/remote/`) with the same address
+/// filtering as [`upload_urls`]. The pairing fragment is added by the caller.
+pub fn remote_urls(candidates: &[IpAddr], port: u16) -> Vec<String> {
+    lan_urls(candidates, port, "remote/")
+}
+
+fn lan_urls(candidates: &[IpAddr], port: u16, path: &str) -> Vec<String> {
     let mut urls: Vec<String> = Vec::new();
     for candidate in candidates {
         let IpAddr::V4(ip) = candidate else { continue };
         if !is_lan_ipv4(ip) {
             continue;
         }
-        let url = format!("http://{ip}:{port}/upload");
+        let url = format!("http://{ip}:{port}/{path}");
         if !urls.contains(&url) {
             urls.push(url);
         }
@@ -35,6 +45,11 @@ pub fn detect_lan_ips() -> Vec<IpAddr> {
 /// Upload URLs for this machine on the port the server actually bound.
 pub fn lan_upload_urls(port: u16) -> Vec<String> {
     upload_urls(&detect_lan_ips(), port)
+}
+
+/// Remote control page URLs for this machine on the port the server bound.
+pub fn lan_remote_urls(port: u16) -> Vec<String> {
+    remote_urls(&detect_lan_ips(), port)
 }
 
 fn is_lan_ipv4(ip: &Ipv4Addr) -> bool {
@@ -87,6 +102,15 @@ mod tests {
                 "http://192.168.1.20:4848/upload",
                 "http://10.0.0.7:4848/upload"
             ]
+        );
+    }
+
+    #[test]
+    fn remote_urls_point_at_the_remote_page_with_lan_filtering() {
+        let all = [ip("127.0.0.1"), ip("192.168.1.20"), ip("fe80::1")];
+        assert_eq!(
+            remote_urls(&all, 4849),
+            vec!["http://192.168.1.20:4849/remote/"]
         );
     }
 

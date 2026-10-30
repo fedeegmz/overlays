@@ -107,11 +107,11 @@ Depends on S2a.
 
 Depends on S2a.
 
-- [ ] 7.1 Add commands in `commands.rs`: `get_remote_status` -> `{enabled, pairedDevices, lanUrls}`, `set_remote_enabled`, `start_pairing` -> `{pin, expiresAtMs, urls}`, `cancel_pairing`, `revoke_remote_access`; register in `lib.rs`. RED tests for command-level service calls where covered by S2a fakes (`start_pairing_returns_urls_and_expiry`).
-- [ ] 7.2 Create `src/services/remoteApi.ts` and `src/stores/remote.ts` (no direct `invoke` in components); add colocated `src/stores/remote.test.ts` for store state.
-- [ ] 7.3 Create `src/components/RemoteSettingsSection.vue` (toggle, QR of `http://<lan>:<port>/remote/#pin=NNNNNN`, PIN display, URL selector, revoke with confirmation); mount in Settings; add QR dependency only if none present.
-- [ ] 7.4 i18n: add all new strings to `src/i18n/locales/es.json` and `en.json` (error codes `remote.*` included).
-- [ ] 7.5 Verify (frontend + backend commands); manual: toggle, pair, revoke.
+- [x] 7.1 Add commands in `commands.rs`: `get_remote_status` -> `{enabled, pairedDevices, lanUrls}`, `set_remote_enabled`, `start_pairing` -> `{pin, expiresAtMs, urls}`, `cancel_pairing`, `revoke_remote_access`; register in `lib.rs`. RED tests for command-level service calls where covered by S2a fakes (`start_pairing_returns_urls_and_expiry`). Also `get_config`/`set_*` now return `AppConfigDto` without `remote_token_hashes` (test `config_dto_never_serializes_remote_token_hashes`); dead_code allowances removed.
+- [x] 7.2 Create `src/services/remoteApi.ts` and `src/stores/remote.ts` (no direct `invoke` in components); add colocated `src/stores/remote.test.ts` for store state.
+- [x] 7.3 Create `src/components/RemoteSettingsSection.vue` (toggle, QR of `http://<lan>:<port>/remote/#pin=NNNNNN`, PIN display, URL selector, revoke with confirmation); mount in Settings; add QR dependency only if none present (added `qrcode-generator`).
+- [x] 7.4 i18n: add all new strings to `src/i18n/locales/es.json` and `en.json` (error codes `remote.*` included).
+- [ ] 7.5 Verify (frontend + backend commands); manual: toggle, pair, revoke. Automated verified (cargo test 328 passed, fmt, clippy, biome, vue-tsc, vitest 25 passed, pnpm build); manual toggle/pair/revoke check pending (needs `pnpm tauri dev` and a phone; not run).
 
 ## S2d-1: Vite multipage + shared FieldEditor (~250 lines)
 
