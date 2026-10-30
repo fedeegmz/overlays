@@ -4,6 +4,7 @@ use crate::domain::checklist::Checklist;
 use crate::domain::config::AppConfig;
 use crate::domain::error::DomainResult;
 use crate::domain::group_preset::GroupPreset;
+use crate::domain::instance::InstancesSnapshot;
 use crate::domain::overlay::OverlayPayload;
 use crate::domain::preset::Preset;
 use crate::domain::template::Manifest;
@@ -39,4 +40,16 @@ pub trait TemplateSource: Send + Sync {
 pub trait OverlayBus: Send + Sync {
     fn publish(&self, payload: &OverlayPayload);
     fn snapshot(&self) -> Vec<OverlayPayload>;
+}
+
+/// Consumer of registry change events (Tauri emitter, remote broadcast).
+pub trait InstanceEvents: Send + Sync {
+    fn changed(&self, snapshot: &InstancesSnapshot);
+}
+
+/// Read access to the template catalog. Implementations may be expensive
+/// (the real one walks the overlays tree), so callers read it once per
+/// operation.
+pub trait TemplateLookup: Send + Sync {
+    fn manifest(&self) -> DomainResult<Manifest>;
 }

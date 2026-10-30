@@ -26,6 +26,7 @@ anyhow = "1"
 dunce = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 local-ip-address = "0.6.13"
+uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

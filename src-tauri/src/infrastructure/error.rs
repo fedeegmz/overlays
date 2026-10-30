@@ -34,6 +34,9 @@ impl CommandError {
     pub const CHECKLIST_LOAD_FAILED: &str = "checklist.load_failed";
     pub const CHECKLIST_SAVE_FAILED: &str = "checklist.save_failed";
     pub const TEMPLATE_DISCOVERY_FAILED: &str = "template.discovery_failed";
+    pub const TEMPLATE_NOT_FOUND: &str = "template.not_found";
+    pub const INSTANCE_NOT_FOUND: &str = "instance.not_found";
+    pub const INSTANCE_ID_TAKEN: &str = "instance.id_taken";
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
     pub const CONFIG_SAVE_FAILED: &str = "config.save_failed";
@@ -106,6 +109,15 @@ impl From<DomainError> for CommandError {
             }
             DomainError::TemplateDiscoveryFailed { detail } => {
                 Self::new(Self::TEMPLATE_DISCOVERY_FAILED).param("detail", detail)
+            }
+            DomainError::TemplateNotFound { template } => {
+                Self::new(Self::TEMPLATE_NOT_FOUND).param("template", template)
+            }
+            DomainError::InstanceNotFound { id } => {
+                Self::new(Self::INSTANCE_NOT_FOUND).param("id", id)
+            }
+            DomainError::InstanceIdTaken { id } => {
+                Self::new(Self::INSTANCE_ID_TAKEN).param("id", id)
             }
             DomainError::LanguageUnsupported { lang } => {
                 Self::new(Self::LANGUAGE_UNSUPPORTED).param("lang", lang)
@@ -270,6 +282,25 @@ mod tests {
                 detail: "io".into()
             }),
             serde_json::json!({ "code": "checklist.save_failed", "params": { "detail": "io" } })
+        );
+    }
+
+    #[test]
+    fn maps_instance_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::InstanceNotFound { id: "a".into() }),
+            serde_json::json!({ "code": "instance.not_found", "params": { "id": "a" } })
+        );
+        assert_eq!(
+            code(DomainError::InstanceIdTaken { id: "a".into() }),
+            serde_json::json!({ "code": "instance.id_taken", "params": { "id": "a" } })
+        );
+        assert_eq!(
+            code(DomainError::TemplateNotFound {
+                template: "t".into()
+            }),
+            serde_json::json!({ "code": "template.not_found", "params": { "template": "t" } })
         );
     }
 

@@ -20,6 +20,9 @@ pub enum DomainError {
     ChecklistLoadFailed { detail: String },
     ChecklistSaveFailed { detail: String },
     TemplateDiscoveryFailed { detail: String },
+    TemplateNotFound { template: String },
+    InstanceNotFound { id: String },
+    InstanceIdTaken { id: String },
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
     ConfigSaveFailed { detail: String },
@@ -74,6 +77,9 @@ impl fmt::Display for DomainError {
             Self::TemplateDiscoveryFailed { detail } => {
                 write!(f, "template discovery failed: {detail}")
             }
+            Self::TemplateNotFound { template } => write!(f, "template not found: {template}"),
+            Self::InstanceNotFound { id } => write!(f, "instance not found: {id}"),
+            Self::InstanceIdTaken { id } => write!(f, "instance id already in use: {id}"),
             Self::LanguageUnsupported { lang } => write!(f, "unsupported language: {lang}"),
             Self::OverlaysDirInvalid { path } => write!(f, "invalid overlays dir: {path}"),
             Self::ConfigSaveFailed { detail } => write!(f, "config save failed: {detail}"),

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use super::ports::TemplateSource;
+use super::ports::{TemplateLookup, TemplateSource};
 use crate::domain::error::DomainResult;
 use crate::domain::template::Manifest;
 
@@ -55,6 +55,12 @@ impl TemplateCatalog {
     }
 }
 
+impl TemplateLookup for TemplateCatalog {
+    fn manifest(&self) -> DomainResult<Manifest> {
+        TemplateCatalog::manifest(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,6 +108,17 @@ mod tests {
 
         dir.set(PathBuf::from("/some/overlays"));
         assert_eq!(catalog.manifest().unwrap().templates.len(), 1);
+    }
+
+    #[test]
+    fn template_lookup_delegates_to_manifest() {
+        let dir = OverlaysDirHandle::new(PathBuf::from("/some/overlays"));
+        let catalog = TemplateCatalog::new(Arc::new(FakeSource), dir);
+        let lookup: &dyn TemplateLookup = &catalog;
+
+        let manifest = lookup.manifest().unwrap();
+        assert_eq!(manifest.templates[0].id, "fake");
+        assert_eq!(manifest.folders, ["grp"]);
     }
 
     #[test]
