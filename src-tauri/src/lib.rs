@@ -24,6 +24,7 @@ use infrastructure::json_store::{
 };
 use infrastructure::overlay_bus::BroadcastOverlayBus;
 use infrastructure::session_revoker::WatchSessionRevoker;
+use infrastructure::tauri_assets::TauriStaticAssets;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -116,6 +117,7 @@ pub fn run() {
                     presets: presets.clone(),
                     group_presets: group_presets.clone(),
                     events: broadcast_events,
+                    assets: Arc::new(TauriStaticAssets::new(app.asset_resolver())),
                 },
             ));
 

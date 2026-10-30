@@ -64,3 +64,10 @@ pub trait MonotonicClock: Send + Sync {
 pub trait SessionRevoker: Send + Sync {
     fn revoke_all(&self);
 }
+
+/// Read access to the bundled frontend files the phone app is served from.
+/// `path` is relative to the build output root (`remote.html`, `assets/x.js`);
+/// the result is the file bytes and their MIME type.
+pub trait StaticAssets: Send + Sync {
+    fn get(&self, path: &str) -> Option<(Vec<u8>, String)>;
+}

@@ -67,7 +67,20 @@ pub fn routes(state: Arc<HttpState>) -> Router<Arc<HttpState>> {
         .route("/remote/api/instances/{id}/preset", post(apply_preset))
         .route("/remote/api/groups/{name}/start", post(start_group))
         .route("/remote/api/ws", get(ws_handler));
-    secure(state, open, protected).layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
+    with_dev_cors(secure(state, open, protected).layer(DefaultBodyLimit::max(MAX_BODY_BYTES)))
+}
+
+/// Debug builds only: Vite serves the page from another origin (:1420), so
+/// the API answers its preflights. Release builds are same-origin and leave
+/// the router untouched.
+#[cfg(debug_assertions)]
+fn with_dev_cors(router: Router<Arc<HttpState>>) -> Router<Arc<HttpState>> {
+    router.layer(axum::middleware::from_fn(super::dev_cors::dev_cors))
+}
+
+#[cfg(not(debug_assertions))]
+fn with_dev_cors(router: Router<Arc<HttpState>>) -> Router<Arc<HttpState>> {
+    router
 }
 
 fn status_for(error: &DomainError) -> StatusCode {

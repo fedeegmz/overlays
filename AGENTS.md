@@ -11,6 +11,7 @@ The server listens on every interface (`src-tauri/src/infrastructure/http/mod.rs
 - `/overlay/*`, `/ws` and `/api/*` are loopback-only (`http/guard.rs`). A non-loopback peer gets `403` even with a valid remote token.
 - `/upload*` is reachable from the LAN (subject to its own toggle).
 - `/remote/api/*` is reachable from the LAN only while remote access is enabled, and non-loopback peers also need a token (`http/remote_auth.rs`). While disabled, every `/remote*` request gets `403`, loopback included. Pair with a 6-digit PIN at `POST /remote/api/pair`; each pairing mints its own token, stored only as a SHA-256 hash in `config.json`.
+- The phone page (`/remote/`) and its files (`/remote/assets/*`) need only the toggle, not a token (`http/static_assets.rs`). They are read through the `StaticAssets` port, backed in the app by Tauri's `asset_resolver` (`infrastructure/tauri_assets.rs`), so they exist only in a built app (`pnpm tauri build`). In `pnpm tauri dev` Vite serves the phone page on `:1420`; `http/dev_cors.rs` (debug builds only) lets that origin call `/remote/api`.
 
 ## Key commands
 
@@ -43,7 +44,7 @@ After changing `lefthook.yml`, run `pnpm exec lefthook install` to re-sync hooks
 - `src-tauri/src/` — Rust backend in layered architecture:
   - `domain/` — core models (template, preset, overlay message, config) and `CommandError`
   - `application/` — services (config, presets, template catalog, instance registry, remote access) and ports
-  - `infrastructure/` — Axum HTTP+WS server (`http/`: `routes.rs`, `guard.rs` loopback guard, `remote.rs` + `remote_auth.rs` remote control API and auth), Tauri commands (`tauri/commands.rs`), JSON persistence (`json_store.rs`), filesystem template source (`fs_template_source.rs`)
+  - `infrastructure/` — Axum HTTP+WS server (`http/`: `routes.rs`, `guard.rs` loopback guard, `remote.rs` + `remote_auth.rs` remote control API and auth, `static_assets.rs` phone page), Tauri commands (`tauri/commands.rs`), JSON persistence (`json_store.rs`), filesystem template source (`fs_template_source.rs`)
 - `examples/` — Overlay templates (lower-third-basico, titulo-centrado). The real runtime dir defaults to `src-tauri/overlays/` but is configurable via Settings.
 - Overlays dir may contain nested folders (max depth 5; hidden dirs and symlinks skipped). `list_templates` returns flat `templates` (each with `folder`, `""` = root, `/`-separated) plus `folders` (includes empty ones); the UI builds the explorer from these via `src/lib/folderTree.ts` and `stores/overlayExplorer.ts`.
 - `examples/*/overlay.json` — Template manifest (no top-level `id` field — the directory name IS the template id)

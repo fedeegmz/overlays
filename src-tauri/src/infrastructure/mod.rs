@@ -8,6 +8,7 @@ pub mod lan;
 pub mod overlay_bus;
 pub mod session_revoker;
 pub mod tauri;
+pub mod tauri_assets;
 #[cfg(test)]
 pub mod test_util;
 pub mod upload_sink;

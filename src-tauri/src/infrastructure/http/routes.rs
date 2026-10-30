@@ -10,6 +10,7 @@ use axum::{Json, Router};
 use super::guard::loopback_only;
 use super::remote;
 use super::state::HttpState;
+use super::static_assets;
 use super::upload;
 use super::ws;
 use crate::infrastructure::error::CommandError;
@@ -71,5 +72,6 @@ pub fn build_router(state: Arc<HttpState>) -> Router {
     guarded
         .merge(upload::routes(state.max_upload_bytes))
         .merge(remote::routes(state.clone()))
+        .merge(static_assets::routes(state.clone()))
         .with_state(state)
 }

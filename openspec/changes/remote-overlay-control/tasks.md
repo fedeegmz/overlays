@@ -125,8 +125,8 @@ Depends on S1c.
 
 Depends on S2b, S2d-1. Forecast may exceed budget; split static serving into its own PR if so.
 
-- [ ] 9.1 RED: `infrastructure/http/static_assets.rs` tests with fake `StaticAssets`: `remote_root_serves_remote_html`, `assets_path_maps_to_assets`, `missing_asset_404`, `page_requires_only_toggle_not_token`, `page_403_when_disabled`.
-- [ ] 9.2 GREEN: `StaticAssets` port + Tauri `asset_resolver` adapter; add `/remote/` and `/remote/assets/*` routes; debug-only CORS middleware on `/remote/api` (allow `http://*:1420`).
+- [x] 9.1 RED: `infrastructure/http/static_assets.rs` tests with fake `StaticAssets`: `remote_root_serves_remote_html`, `assets_path_maps_to_assets`, `missing_asset_404`, `page_requires_only_toggle_not_token`, `page_403_when_disabled` (plus redirect and path-traversal tests).
+- [x] 9.2 GREEN: `StaticAssets` port + Tauri `asset_resolver` adapter (treats Tauri's `index.html` fallback as a miss); add `/remote/` and `/remote/assets/*` routes; debug-only CORS middleware on `/remote/api` (allow `http://*:1420`, compiled out of release; `cargo clippy --release` passes).
 - [ ] 9.3 Create `src/services/transport.ts` (absolute API base in dev, Bearer from localStorage, WS `?token=`, reconnect + resnapshot, `encodeURIComponent` on path segments such as group names).
 - [ ] 9.4 Create `src/remote/` (main.ts, App.vue, PairView, ControlView): fragment `#pin` pairing, re-pair on 401, per-instance show/update/hide, preset apply, group start, read-only file fields, empty-state message, echo does not overwrite typing; colocated vitest (`*.test.ts`) for revision guard/transport, including group-name encoding.
 - [ ] 9.5 i18n es/en strings for the remote app; verify (all commands); manual on phone: pair, control, revoke -> returns to pairing.

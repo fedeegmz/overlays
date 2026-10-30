@@ -101,3 +101,23 @@ impl crate::application::ports::GroupPresetRepository for MemGroupPresetRepo {
         Ok(())
     }
 }
+
+/// In-memory `StaticAssets`: file path -> (bytes, MIME type).
+#[derive(Default)]
+pub struct MemAssets(pub std::collections::HashMap<String, (Vec<u8>, String)>);
+
+impl MemAssets {
+    pub fn with(mut self, path: &str, body: &str, mime: &str) -> Self {
+        self.0.insert(
+            path.to_string(),
+            (body.as_bytes().to_vec(), mime.to_string()),
+        );
+        self
+    }
+}
+
+impl crate::application::ports::StaticAssets for MemAssets {
+    fn get(&self, path: &str) -> Option<(Vec<u8>, String)> {
+        self.0.get(path).cloned()
+    }
+}

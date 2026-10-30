@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::application::group_preset_service::GroupPresetService;
 use crate::application::instance_service::InstanceService;
+use crate::application::ports::StaticAssets;
 use crate::application::preset_service::PresetService;
 use crate::application::remote_access_service::RemoteAccessService;
 use crate::application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
@@ -23,6 +24,8 @@ pub struct RemoteDeps {
     pub group_presets: Arc<GroupPresetService>,
     /// Registry change feed for the remote WebSocket.
     pub events: Arc<BroadcastInstanceEvents>,
+    /// Bundled files of the phone app.
+    pub assets: Arc<dyn StaticAssets>,
 }
 
 pub struct HttpState {
@@ -36,6 +39,7 @@ pub struct HttpState {
     pub presets: Arc<PresetService>,
     pub group_presets: Arc<GroupPresetService>,
     pub events: Arc<BroadcastInstanceEvents>,
+    pub assets: Arc<dyn StaticAssets>,
     /// Per-file upload limit in bytes; a field so tests can use a tiny value.
     pub max_upload_bytes: u64,
     pub connected: AtomicUsize,
@@ -62,6 +66,7 @@ impl HttpState {
             presets: remote.presets,
             group_presets: remote.group_presets,
             events: remote.events,
+            assets: remote.assets,
             max_upload_bytes: MAX_UPLOAD_FILE_BYTES,
             connected: AtomicUsize::new(0),
             port: Mutex::new(None),
@@ -139,6 +144,7 @@ impl HttpState {
                 presets,
                 group_presets,
                 events,
+                assets: Arc::new(crate::infrastructure::test_util::MemAssets::default()),
             },
         )
     }
