@@ -1,8 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { translate } from "../i18n";
 import { commandErrorMessage } from "../lib/errors";
-import { sendOverlayUpdate } from "../services/overlayApi";
 import {
   deletePreset as deletePresetCommand,
   listPresets,
@@ -10,11 +8,9 @@ import {
 } from "../services/presetsApi";
 import type { Preset } from "../types";
 import { useInstanceStore } from "./instances";
-import { useTemplateStore } from "./templates";
 
 export const usePresetStore = defineStore("presets", () => {
   const instanceStore = useInstanceStore();
-  const templateStore = useTemplateStore();
 
   const presets = ref<Preset[]>([]);
   const presetsError = ref<string | null>(null);
@@ -47,23 +43,11 @@ export const usePresetStore = defineStore("presets", () => {
     }
   }
 
+  /** Applies the preset to the active instance and shows it (backend-side). */
   async function applyPreset(preset: Preset): Promise<void> {
     const instance = instanceStore.activeInstance;
     if (!instance) return;
-    if (!templateStore.getById(preset.template)) {
-      presetsError.value = translate("errors.templateMissing", {
-        template: preset.template,
-      });
-      return;
-    }
-    instance.fields = { ...preset.fields };
-    await sendOverlayUpdate({
-      instanceId: instance.id,
-      template: instance.templateId,
-      action: "show",
-      fields: { ...preset.fields },
-    });
-    instance.visible = true;
+    await instanceStore.applyPreset(instance.id, preset.name);
   }
 
   async function deletePreset(name: string): Promise<void> {

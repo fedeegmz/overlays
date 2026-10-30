@@ -2,16 +2,36 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
+import { commandErrorMessage } from "../lib/errors";
 import {
-  getServerStatus,
-  type OverlayAction,
-  sendOverlayUpdate,
-} from "../services/overlayApi";
-import type { OverlayInstance } from "../types";
+  applyPreset as applyPresetCommand,
+  clientId,
+  createInstance as createInstanceCommand,
+  hideInstance as hideInstanceCommand,
+  listInstances,
+  moveInstance as moveInstanceCommand,
+  onInstancesChanged,
+  removeInstance as removeInstanceCommand,
+  renameInstance as renameInstanceCommand,
+  setInstanceFields,
+  showInstance as showInstanceCommand,
+  updateInstance as updateInstanceCommand,
+} from "../services/instancesApi";
+import { getServerStatus, sendOverlayUpdate } from "../services/overlayApi";
+import type { InstancesSnapshot, OverlayInstance } from "../types";
 import { useTemplateStore } from "./templates";
 
-function generateId(): string {
-  return crypto.randomUUID();
+/** Idle time after the last keystroke before fields are committed. */
+const DRAFT_DEBOUNCE_MS = 250;
+
+function sameFields(
+  a: Record<string, string>,
+  b: Record<string, string>,
+): boolean {
+  const keys = Object.keys(a);
+  return (
+    keys.length === Object.keys(b).length && keys.every((k) => a[k] === b[k])
+  );
 }
 
 export const useInstanceStore = defineStore("instances", () => {
@@ -20,6 +40,14 @@ export const useInstanceStore = defineStore("instances", () => {
   const instances = ref<OverlayInstance[]>([]);
   const activeInstanceId = ref<string | null>(null);
   const serverPort = ref(0);
+  const revision = ref(-1);
+  const lastChangeWasOwn = ref(false);
+  const instancesError = ref<string | null>(null);
+
+  // Uncommitted local field edits per instance id, and their commit timers.
+  const drafts: Record<string, Record<string, string>> = {};
+  const draftTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  let unlisten: (() => void) | undefined;
 
   const activeInstance = computed<OverlayInstance | null>(() => {
     if (!activeInstanceId.value) return null;
@@ -106,48 +134,117 @@ export const useInstanceStore = defineStore("instances", () => {
     return `${baseName} #${instance.number}`;
   }
 
-  function nextInstanceNumber(templateId: string): number {
-    const used = new Set(
-      instances.value
-        .filter((i) => i.templateId === templateId)
-        .map((i) => i.number),
-    );
-    let candidate = 1;
-    while (used.has(candidate)) candidate++;
-    return candidate;
-  }
-
   function instanceDisplayName(instance: OverlayInstance): string {
-    return instance.customName ?? instanceDefaultName(instance);
+    return instance.displayName;
   }
 
-  function renameInstance(id: string, name: string): void {
+  // --- Snapshot handling -------------------------------------------------
+
+  function clearDraft(id: string): void {
+    delete drafts[id];
+    const timer = draftTimers.get(id);
+    if (timer) clearTimeout(timer);
+    draftTimers.delete(id);
+  }
+
+  /**
+   * Applies a registry snapshot unless it is not newer than the last one
+   * (an invoke result and its event both arrive; the second is dropped).
+   * Fields with an uncommitted local draft are kept over the snapshot's.
+   */
+  function applySnapshot(snapshot: InstancesSnapshot): void {
+    if (snapshot.revision <= revision.value) return;
+    revision.value = snapshot.revision;
+    lastChangeWasOwn.value = snapshot.source.clientId === clientId;
+
+    const live = new Set(snapshot.instances.map((i) => i.id));
+    for (const id of Object.keys(drafts)) {
+      if (!live.has(id)) clearDraft(id);
+    }
+    instances.value = snapshot.instances.map((i) =>
+      drafts[i.id] ? { ...i, fields: { ...drafts[i.id] } } : i,
+    );
+
+    if (activeInstanceId.value && !live.has(activeInstanceId.value)) {
+      activeInstanceId.value =
+        instances.value.length > 0 ? instances.value[0].id : null;
+    }
+  }
+
+  async function init(): Promise<void> {
+    unlisten?.();
+    unlisten = await onInstancesChanged(applySnapshot);
+    applySnapshot(await listInstances());
+  }
+
+  // --- Drafts ------------------------------------------------------------
+
+  function setField(id: string, key: string, value: string): void {
     const instance = instances.value.find((i) => i.id === id);
     if (!instance) return;
-    const trimmed = name.trim();
-    instance.customName = trimmed === "" ? undefined : trimmed;
+    const next = { ...(drafts[id] ?? instance.fields), [key]: value };
+    drafts[id] = next;
+    instance.fields = { ...next };
+    const pending = draftTimers.get(id);
+    if (pending) clearTimeout(pending);
+    draftTimers.set(
+      id,
+      setTimeout(() => {
+        void flushDraft(id).catch((err) => {
+          instancesError.value = commandErrorMessage(err);
+        });
+      }, DRAFT_DEBOUNCE_MS),
+    );
   }
 
-  function createInstance(
+  /** Commits a pending draft now (before show/update, or on save). */
+  async function flushDraft(id: string): Promise<void> {
+    const draft = drafts[id];
+    if (!draft) return;
+    const pending = draftTimers.get(id);
+    if (pending) clearTimeout(pending);
+    draftTimers.delete(id);
+    const sent = { ...draft };
+    const snapshot = await setInstanceFields(id, sent);
+    // Still the same text: the server now holds it, so stop shielding it.
+    const unchanged = drafts[id] !== undefined && sameFields(drafts[id], sent);
+    if (unchanged) delete drafts[id];
+    applySnapshot(snapshot);
+  }
+
+  async function flushAllDrafts(): Promise<void> {
+    for (const id of Object.keys(drafts)) await flushDraft(id);
+  }
+
+  // --- Commands ----------------------------------------------------------
+
+  async function createInstance(
     templateId: string,
     opts?: { id?: string; customName?: string },
-  ): string {
-    if (opts?.id && instances.value.some((i) => i.id === opts.id)) {
-      throw new Error(`Instance id already in use: ${opts.id}`);
-    }
+  ): Promise<string> {
     sendPreviewHide();
-    const id = opts?.id ?? generateId();
-    const instance: OverlayInstance = {
-      id,
-      templateId,
-      customName: opts?.customName,
-      number: nextInstanceNumber(templateId),
-      fields: templateStore.getDefaults(templateId),
-      visible: false,
-    };
-    instances.value.push(instance);
-    activeInstanceId.value = id;
-    return id;
+    const result = await createInstanceCommand(templateId, opts);
+    applySnapshot(result.snapshot);
+    activeInstanceId.value = result.id;
+    return result.id;
+  }
+
+  async function renameInstance(id: string, name: string): Promise<void> {
+    applySnapshot(await renameInstanceCommand(id, name));
+  }
+
+  async function removeInstance(id: string): Promise<void> {
+    clearDraft(id);
+    applySnapshot(await removeInstanceCommand(id));
+  }
+
+  async function moveInstance(from: number, to: number): Promise<void> {
+    applySnapshot(await moveInstanceCommand(from, to));
+  }
+
+  async function applyPreset(id: string, name: string): Promise<void> {
+    clearDraft(id);
+    applySnapshot(await applyPresetCommand(id, name));
   }
 
   function selectInstance(id: string): void {
@@ -170,46 +267,24 @@ export const useInstanceStore = defineStore("instances", () => {
     return fieldsFor(activeInstance.value);
   }
 
-  async function sendToInstance(
-    instanceId: string,
-    action: OverlayAction,
-    fields: Record<string, string>,
-  ): Promise<void> {
-    const instance = instances.value.find((i) => i.id === instanceId);
-    if (!instance) return;
-    await sendOverlayUpdate({
-      instanceId,
-      template: instance.templateId,
-      action,
-      fields,
-    });
-  }
-
-  async function showInstance(
-    id: string,
-    fields: Record<string, string>,
-  ): Promise<void> {
-    const instance = instances.value.find((i) => i.id === id);
-    if (!instance) return;
-    await sendToInstance(id, "show", fields);
-    instance.visible = true;
-  }
-
   async function show(): Promise<void> {
-    if (!activeInstance.value) return;
-    await sendToInstance(activeInstance.value.id, "show", buildFields());
-    activeInstance.value.visible = true;
+    const id = activeInstanceId.value;
+    if (!id) return;
+    await flushDraft(id);
+    applySnapshot(await showInstanceCommand(id));
   }
 
   async function update(): Promise<void> {
-    if (!activeInstance.value) return;
-    await sendToInstance(activeInstance.value.id, "update", buildFields());
+    const id = activeInstanceId.value;
+    if (!id) return;
+    await flushDraft(id);
+    applySnapshot(await updateInstanceCommand(id));
   }
 
   async function hide(): Promise<void> {
-    if (!activeInstance.value) return;
-    await sendToInstance(activeInstance.value.id, "hide", {});
-    activeInstance.value.visible = false;
+    const id = activeInstanceId.value;
+    if (!id) return;
+    applySnapshot(await hideInstanceCommand(id));
   }
 
   async function toggleVisibility(): Promise<void> {
@@ -221,29 +296,6 @@ export const useInstanceStore = defineStore("instances", () => {
     }
   }
 
-  function removeInstance(id: string): void {
-    const instance = instances.value.find((i) => i.id === id);
-    if (instance?.visible) {
-      void sendToInstance(id, "hide", {});
-      instance.visible = false;
-    }
-    instances.value = instances.value.filter((i) => i.id !== id);
-    if (activeInstanceId.value === id) {
-      activeInstanceId.value =
-        instances.value.length > 0 ? instances.value[0].id : null;
-    }
-  }
-
-  function moveInstance(fromIndex: number, toIndex: number): void {
-    const list = instances.value;
-    const isValid = (index: number) =>
-      Number.isInteger(index) && index >= 0 && index < list.length;
-    if (!isValid(fromIndex) || !isValid(toIndex) || fromIndex === toIndex)
-      return;
-    const [moved] = list.splice(fromIndex, 1);
-    list.splice(toIndex, 0, moved);
-  }
-
   async function fetchServerPort(): Promise<void> {
     const status = await getServerStatus();
     if (status) serverPort.value = status.port;
@@ -253,6 +305,9 @@ export const useInstanceStore = defineStore("instances", () => {
     instances,
     activeInstanceId,
     serverPort,
+    revision,
+    lastChangeWasOwn,
+    instancesError,
     activeInstance,
     activeTemplate,
     overlayUrl,
@@ -261,13 +316,18 @@ export const useInstanceStore = defineStore("instances", () => {
     instanceDefaultName,
     instanceDisplayName,
     renameInstance,
+    applySnapshot,
+    init,
+    setField,
+    flushDraft,
+    flushAllDrafts,
+    applyPreset,
     createInstance,
     removeInstance,
     moveInstance,
     selectInstance,
     fieldsFor,
     buildFields,
-    showInstance,
     sendPreviewShow,
     openPreviewWindow,
     show,

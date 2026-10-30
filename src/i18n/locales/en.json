@@ -32,7 +32,6 @@
     "startDone": "Started {count} instances.",
     "startPartial": "Started {ok} of {total} instances.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "Could not send the overlay.",
     "idConflict": "{template}: its saved ID is used by another overlay. Started with a new ID; update the OBS source URL."
   },
   "checklists": {
@@ -113,10 +112,12 @@
     },
     "preset": {
       "empty_name": "Preset name cannot be empty.",
-      "save_failed": "Could not save the presets file."
+      "save_failed": "Could not save the presets file.",
+      "not_found": "Preset \"{name}\" was not found."
     },
     "template": {
-      "discovery_failed": "Could not read templates from the overlays directory."
+      "discovery_failed": "Could not read templates from the overlays directory.",
+      "not_found": "Template \"{template}\" was not found."
     },
     "language": {
       "unsupported": "Unsupported language: {lang}."
@@ -152,6 +153,10 @@
       "not_found": "The list was not found.",
       "load_failed": "Could not read the lists file.",
       "save_failed": "Could not save the lists file."
+    },
+    "instance": {
+      "not_found": "Instance \"{id}\" was not found.",
+      "id_taken": "Instance ID \"{id}\" is already in use."
     }
   },
   "settings": {

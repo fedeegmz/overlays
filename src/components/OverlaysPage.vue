@@ -2,6 +2,7 @@
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { useOverlayExplorerStore } from "../stores/overlayExplorer";
 import { useTemplateStore } from "../stores/templates";
@@ -18,13 +19,20 @@ const explorer = useOverlayExplorerStore();
 const { currentFolder, contents } = storeToRefs(explorer);
 
 const reloading = ref(false);
+const createError = ref<string | null>(null);
 
 const emit = defineEmits<{
   openDetail: [];
 }>();
 
-function handleSelect(id: string) {
-  createInstance(id);
+async function handleSelect(id: string) {
+  try {
+    await createInstance(id);
+  } catch (err) {
+    createError.value = commandErrorMessage(err);
+    return;
+  }
+  createError.value = null;
   emit("openDetail");
 }
 
@@ -72,6 +80,7 @@ async function handleReload() {
     </div>
 
     <p v-if="templatesError" class="error">{{ templatesError }}</p>
+    <p v-if="createError" class="error">{{ createError }}</p>
     <p v-else-if="templates === null" class="muted">
       {{ t("overlaysPage.loading") }}
     </p>

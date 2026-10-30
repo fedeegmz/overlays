@@ -73,14 +73,14 @@ Depends on S1a-2.
 
 Depends on S1b.
 
-- [ ] 4.1 Confirm the existing vitest setup (`package.json` `"test": "vitest run"`, config from `vite.config.ts`, colocated `*.test.ts`, CI `.github/workflows/ci.yml:46-47`, lefthook pre-push) picks up new `src/stores/<name>.test.ts` files; no new config or dependency.
-- [ ] 4.2 RED: `src/stores/instances.test.ts` with `vi.mock('@/services/instancesApi')` and fake timers: `drops_snapshot_with_revision_le_last`, `applies_newer_snapshot`, `invoke_result_snapshot_then_duplicate_event_dropped`, `dirty_draft_not_overwritten_by_snapshot`, `set_fields_debounced_250ms`, `own_client_id_echo_recognized`, `activeInstanceId_and_previews_stay_local`.
-- [ ] 4.3 Create `src/services/instancesApi.ts` (invoke wrappers + `instances-changed` listener + per-window `clientId`).
-- [ ] 4.4 Refactor `src/stores/instances.ts` to event-fed client with revision guard and local drafts (`createInstance` routed via `create_instance`; delete `nextInstanceNumber`); refactor `src/stores/groupPresets.ts` to call `start_group_preset`; delete TS `startGroup`. In `src/stores/templates.ts` remove only `getDefaults` and preserve `templates`, `folders`, `refreshTemplates` and `getById`, which `src/stores/overlayExplorer.ts:13` and other consumers depend on.
-- [ ] 4.5 Adjust consumers of removed or changed APIs minimally, including `src/stores/overlayExplorer.ts` (must keep working unchanged) and `src/components/OverlaysPage.vue` (`createInstance(id)`, lines 16 and 26-29), plus other `src/components/*`; map `GroupStartResult` conflicts to existing i18n strings (update `es.json`/`en.json` only if a string is removed or added).
-- [ ] 4.6 GREEN + verify (frontend commands incl. `pnpm test`); manual desktop parity check against OBS overlay and the overlay folder explorer.
-- [ ] 4.7 RED + GREEN: switch `saveFromInstances` in `src/stores/groupPresets.ts` to the `save_group_from_instances` command (entries no longer assembled in TS); test in colocated `src/stores/groupPresets.test.ts` (`save_calls_backend_with_name_only`).
-- [ ] 4.8 Docs: update the AGENTS.md "Frontend tests" row (currently "pure logic in `src/lib/`") to mention colocated store tests.
+- [x] 4.1 Confirm the existing vitest setup (`package.json` `"test": "vitest run"`, config from `vite.config.ts`, colocated `*.test.ts`, CI `.github/workflows/ci.yml:46-47`, lefthook pre-push) picks up new `src/stores/<name>.test.ts` files; no new config or dependency.
+- [x] 4.2 RED: `src/stores/instances.test.ts` with `vi.mock('@/services/instancesApi')` and fake timers: `drops_snapshot_with_revision_le_last`, `applies_newer_snapshot`, `invoke_result_snapshot_then_duplicate_event_dropped`, `dirty_draft_not_overwritten_by_snapshot`, `set_fields_debounced_250ms`, `own_client_id_echo_recognized`, `activeInstanceId_and_previews_stay_local`.
+- [x] 4.3 Create `src/services/instancesApi.ts` (invoke wrappers + `instances-changed` listener + per-window `clientId`).
+- [x] 4.4 Refactor `src/stores/instances.ts` to event-fed client with revision guard and local drafts (`createInstance` routed via `create_instance`; delete `nextInstanceNumber`); refactor `src/stores/groupPresets.ts` to call `start_group_preset`; delete TS `startGroup`. In `src/stores/templates.ts` remove only `getDefaults` and preserve `templates`, `folders`, `refreshTemplates` and `getById`, which `src/stores/overlayExplorer.ts:13` and other consumers depend on.
+- [x] 4.5 Adjust consumers of removed or changed APIs minimally, including `src/stores/overlayExplorer.ts` (must keep working unchanged) and `src/components/OverlaysPage.vue` (`createInstance(id)`, lines 16 and 26-29), plus other `src/components/*`; map `GroupStartResult` conflicts to existing i18n strings (update `es.json`/`en.json` only if a string is removed or added).
+- [ ] 4.6 GREEN + verify (frontend commands incl. `pnpm test`); Automated: biome, vue-tsc and vitest (17 tests) pass. Manual desktop parity check against OBS overlay and the overlay folder explorer: pending (needs `pnpm tauri dev` and OBS; not run).
+- [x] 4.7 RED + GREEN: switch `saveFromInstances` in `src/stores/groupPresets.ts` to the `save_group_from_instances` command (entries no longer assembled in TS); test in colocated `src/stores/groupPresets.test.ts` (`save_calls_backend_with_name_only`).
+- [x] 4.8 Docs: update the AGENTS.md "Frontend tests" row (currently "pure logic in `src/lib/`") to mention colocated store tests.
 
 ## S2a: Remote access core + auth middleware (~400 lines)
 

@@ -12,7 +12,7 @@ Tauri v2 desktop app (Rust backend + Vue 3 frontend) that serves HTML overlays t
 | Lint + format      | `pnpm check` / auto-fix with `pnpm check:fix` (Biome)  |
 | Frontend typecheck | `vue-tsc --noEmit`                                     |
 | Frontend build     | `pnpm build` (runs Biome check, typecheck, vite build) |
-| Frontend tests     | `pnpm test` (vitest, pure logic in `src/lib/`)         |
+| Frontend tests     | `pnpm test` (vitest, pure logic in `src/lib/` and colocated store tests `src/stores/*.test.ts` with mocked `src/services/*`)         |
 | Rust tests         | `cd src-tauri && cargo test`                           |
 
 ## Git hooks (lefthook)

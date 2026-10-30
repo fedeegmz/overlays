@@ -38,7 +38,7 @@ const saveDisabled = computed(
 
 function updateField(key: string, value: string) {
   if (!activeInstance.value) return;
-  activeInstance.value.fields[key] = value;
+  instanceStore.setField(activeInstance.value.id, key, value);
 }
 
 async function handleSavePreset() {

@@ -13,4 +13,5 @@ export function bootstrapStores(): void {
   void templates.refreshTemplates();
   void presets.refreshPresets();
   void instances.fetchServerPort();
+  void instances.init();
 }

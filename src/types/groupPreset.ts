@@ -12,4 +12,4 @@ export interface GroupPreset {
 
 export type GroupStartResult =
   | { template: string; ok: true; instanceId: string; idConflict: boolean }
-  | { template: string; ok: false; reason: "templateMissing" | "sendFailed" };
+  | { template: string; ok: false; reason: "templateMissing" };

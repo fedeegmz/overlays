@@ -32,7 +32,6 @@
     "startDone": "Se iniciaron {count} instancias.",
     "startPartial": "Se iniciaron {ok} de {total} instancias.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "No se pudo enviar el overlay.",
     "idConflict": "{template}: su ID guardado lo usa otro overlay. Se inició con un ID nuevo; actualiza la URL de la fuente en OBS."
   },
   "checklists": {
@@ -113,10 +112,12 @@
     },
     "preset": {
       "empty_name": "El nombre del preset no puede estar vacío.",
-      "save_failed": "No se pudo guardar el archivo de presets."
+      "save_failed": "No se pudo guardar el archivo de presets.",
+      "not_found": "No se encontró el preset \"{name}\"."
     },
     "template": {
-      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays."
+      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays.",
+      "not_found": "No se encontró la plantilla \"{template}\"."
     },
     "language": {
       "unsupported": "Idioma no soportado: {lang}."
@@ -152,6 +153,10 @@
       "not_found": "No se encontró la lista.",
       "load_failed": "No se pudo leer el archivo de listas.",
       "save_failed": "No se pudo guardar el archivo de listas."
+    },
+    "instance": {
+      "not_found": "No se encontró la instancia \"{id}\".",
+      "id_taken": "El ID de instancia \"{id}\" ya está en uso."
     }
   },
   "settings": {
