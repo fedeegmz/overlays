@@ -58,5 +58,5 @@ Chain strategy: pending
 - [x] 4.3 Create `FolderCard.vue` and `FolderBreadcrumb.vue` (presentational; emit `open` / `navigate`).
 - [x] 4.4 Update `OverlayGrid.vue` (folders first) and `OverlaysPage.vue` (breadcrumb, grid, empty-folder message).
 - [x] 4.5 Add root label, plural overlay count, empty-folder strings to `src/i18n/locales/{es,en}.json`.
-- [ ] 4.6 (`pnpm build` green; manual `pnpm tauri dev` check pending, needs the user) Run `pnpm build`; manual check in `pnpm tauri dev`: nested navigation, OBS URL of a nested overlay, file field in a nested overlay.
+- [x] 4.6 (`pnpm build` green; manual `pnpm tauri dev` check passed, confirmed by the user) Run `pnpm build`; manual check in `pnpm tauri dev`: nested navigation, OBS URL of a nested overlay, file field in a nested overlay.
 - [x] 4.7 Update `AGENTS.md` (nested discovery, `folder`/`folders` fields, vitest command); commit.
