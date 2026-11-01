@@ -5,11 +5,11 @@ Operators can only drive overlays from the desktop window. Live instance state e
 
 ## Scope
 ### In Scope
-- Rust `InstanceService` as the in-memory source of truth (registry, order, defaults/number, show/update/hide, apply_preset, start_group port), with a change-event port feeding Tauri emit and a remote broadcast
-- Pinia becomes an event-fed thin client; TS startGroup and defaults logic deleted; minimal vitest for stores
+- Rust `InstanceService` as the in-memory source of truth (registry, order, defaults/number, show/update/hide, apply_preset, start_group port, group-save entries built from the registry), reading templates through a catalog-backed `TemplateLookup` port, with a change-event port feeding Tauri emit and a remote broadcast
+- Pinia becomes an event-fed thin client; TS startGroup, save-entry assembly and defaults logic deleted; colocated vitest store tests (vitest is already set up); the overlay explorer keeps working unchanged
 - Global remote toggle (default off), QR/PIN pairing, token rotation, hashed token in config
 - `remote_auth` middleware (loopback OR valid token, enabled per request); authenticated `/remote` REST plus state WS
-- `remote.html` second Vite entry, shared `FieldEditor`, mobile UI
+- `remote.html` second Vite entry, shared `FieldEditor`, mobile UI with collapsible instance sections and edits applied on demand
 
 ### Out of Scope
 - Remote create/remove/rename/reorder of instances; preset/group CRUD remotely
@@ -26,7 +26,8 @@ Operators can only drive overlays from the desktop window. Live instance state e
 - `remote-control-ui`: mobile page served at `/remote`
 
 ### Modified Capabilities
-- `group-preset-instance-identity`: load rules run in the backend and are callable remotely; observable behavior unchanged
+- `group-preset-instance-identity`: load and save rules run in the backend and group start is callable remotely; "Out-of-scope behavior unchanged" now admits the `/remote` surface while the overlay WS protocol stays unchanged
+- `lan-file-upload`: "Network exposure and loopback guard" now allows `/remote*` from the LAN while remote access is enabled (API and state WS also require a valid token)
 
 ## Approach
 Approach C in two chained phases.
@@ -57,15 +58,16 @@ Assumptions:
 | `src-tauri/src/{domain,application}/` | New/Modified | instance model, service, ports, config fields |
 | `src-tauri/src/infrastructure/{http,tauri}/` | Modified | auth, /remote routes, commands, emit |
 | `src-tauri/src/lib.rs` | Modified | wiring |
-| `src/stores/*`, `src/services/` | Modified | thin client, transport |
-| `src/components/` | Modified/New | FieldEditor, Settings, mobile UI |
-| `vite.config.ts`, `remote.html`, `package.json` | Modified/New | multi-page, vitest |
+| `src/stores/*`, `src/services/` | Modified | thin client, transport; `templates.ts` keeps `templates`/`folders`/`refreshTemplates` for `overlayExplorer.ts` |
+| `src/components/` | Modified/New | FieldEditor, Settings, mobile UI; `OverlaysPage.vue` create path |
+| `vite.config.ts`, `remote.html` | Modified/New | multi-page (vitest keeps using `vite.config.ts`) |
+| `AGENTS.md` | Modified | network exposure note, server bind address, frontend test note |
 
 ## Risks
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
 | startGroup parity regression | Med | port with tests first (S1a-2) |
-| Typing lag or echo overwrite | Med | local draft, debounce, revision ids |
+| Typing lag or echo overwrite | Med | local draft, debounce on desktop, explicit Update on the phone, revision ids |
 | Token sniffed on plain-HTTP LAN | Med | default off, rotation, hashed storage, PIN rate limit |
 | Prod asset serving or dev origin mismatch | Med | asset_resolver; dev API base |
 | Multi-NIC or firewall confusion | Low | URL selector, docs |
@@ -74,7 +76,7 @@ Assumptions:
 Each slice is its own PR, revertible in reverse order. S2 is gated by a default-off toggle, so turning it off disables remote access. Reverting S1c and S1b restores Pinia ownership. No data migration: instances aren't persisted, and the added config fields have serde defaults.
 
 ## Dependencies
-- Crates: rand, sha2, subtle. Frontend: QR library, vitest.
+- Crates: rand, sha2, subtle. Frontend: QR library (vitest is already a devDependency).
 
 ## Success Criteria
 - [ ] Desktop and OBS behavior unchanged after S1 (cargo test, vitest, manual)

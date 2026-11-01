@@ -18,7 +18,7 @@ All `/remote` REST routes and the remote state WebSocket MUST pass `remote_auth`
 - THEN the connection is refused
 
 ### Requirement: Read endpoints
-The API MUST expose: the list of live instances (id, template, display name, shown state, fields, order, revision), template metadata needed to render field editors, per-template presets, and group presets. Responses MUST reflect the registry at request time.
+The API MUST expose: the list of live instances (id, template, display name, shown state, fields, order, revision), template metadata needed to render field editors, per-template presets, and group presets. Template metadata MUST be the catalog `Manifest` unchanged, including `folders` and each template's `folder`; grouping templates by folder in the remote UI is out of scope for v1. Responses MUST reflect the registry at request time.
 
 #### Scenario: List instances
 - GIVEN two live instances
@@ -30,7 +30,7 @@ The API MUST expose: the list of live instances (id, template, display name, sho
 - THEN the saved presets of that template are returned
 
 ### Requirement: Control endpoints
-The API MUST expose show, update (fields), and hide for an existing instance; apply a per-template preset to an existing instance; and start a group preset. Each MUST delegate to the instance service and be attributed with a remote source id. Targeting an unknown instance, preset, or group MUST return a `CommandError` with a not-found style code and HTTP 404.
+The API MUST expose show, update (fields), and hide for an existing instance; apply a per-template preset to an existing instance; and start a group preset. Each MUST delegate to the instance service and be attributed with a remote source id. Targeting an unknown instance, preset, or group MUST return HTTP 404 with a `CommandError` whose code is `instance.not_found`, `preset.not_found`, or `group_preset.not_found` respectively. The group name is a path segment: clients MUST percent-encode it (`encodeURIComponent`), and the server MUST decode it so names containing spaces or `/` resolve to the saved group.
 
 #### Scenario: Show remotely
 - GIVEN live instance "abc"
@@ -52,7 +52,20 @@ The API MUST expose show, update (fields), and hide for an existing instance; ap
 
 #### Scenario: Unknown instance
 - WHEN a client calls hide for a nonexistent id
-- THEN a 404 `CommandError` is returned
+- THEN a 404 `CommandError` with code `instance.not_found` is returned
+
+#### Scenario: Unknown preset or group
+- WHEN a client applies a preset name that does not exist for the instance's template, or starts a group name that is not saved
+- THEN a 404 `CommandError` with code `preset.not_found` or `group_preset.not_found` is returned
+
+#### Scenario: Group name with reserved characters
+- GIVEN a saved group named "Intro / Day 1"
+- WHEN an authenticated client starts it via `POST /remote/api/groups/Intro%20%2F%20Day%201/start`
+- THEN that group is started and its result is returned
+
+#### Scenario: Templates include folders
+- WHEN a client requests template metadata
+- THEN the response is the catalog `Manifest` with `templates` (each carrying `folder`) and `folders`
 
 ### Requirement: Restricted capabilities
 The remote API MUST NOT expose creating, removing, renaming, or reordering instances, nor creating, editing, or deleting presets or group presets. Such requests MUST be unroutable or rejected.

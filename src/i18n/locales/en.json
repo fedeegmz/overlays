@@ -32,7 +32,6 @@
     "startDone": "Started {count} instances.",
     "startPartial": "Started {ok} of {total} instances.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "Could not send the overlay.",
     "idConflict": "{template}: its saved ID is used by another overlay. Started with a new ID; update the OBS source URL."
   },
   "checklists": {
@@ -113,10 +112,12 @@
     },
     "preset": {
       "empty_name": "Preset name cannot be empty.",
-      "save_failed": "Could not save the presets file."
+      "save_failed": "Could not save the presets file.",
+      "not_found": "Preset \"{name}\" was not found."
     },
     "template": {
-      "discovery_failed": "Could not read templates from the overlays directory."
+      "discovery_failed": "Could not read templates from the overlays directory.",
+      "not_found": "Template \"{template}\" was not found."
     },
     "language": {
       "unsupported": "Unsupported language: {lang}."
@@ -126,6 +127,13 @@
     },
     "upload_dir": {
       "invalid": "\"{path}\" is not a valid upload folder. Use an absolute path without \"..\"."
+    },
+    "remote": {
+      "disabled": "Remote control is turned off.",
+      "unauthorized": "Remote access is not authorized. Pair the device again.",
+      "pairing_rate_limited": "Too many pairing attempts. Wait a minute and try again.",
+      "unreachable": "Could not reach the desktop app. Check that you are on the same network.",
+      "invalid_pin": "Enter the 6-digit PIN shown on the desktop."
     },
     "file": {
       "asset_outside_overlays_dir": "The file \"{path}\" is outside the overlays directory.",
@@ -152,6 +160,10 @@
       "not_found": "The list was not found.",
       "load_failed": "Could not read the lists file.",
       "save_failed": "Could not save the lists file."
+    },
+    "instance": {
+      "not_found": "Instance \"{id}\" was not found.",
+      "id_taken": "Instance ID \"{id}\" is already in use."
     }
   },
   "settings": {
@@ -197,6 +209,71 @@
     "about": {
       "label": "Version",
       "description": "Application version"
+    },
+    "remote": {
+      "label": "Remote control",
+      "description": "Control your overlays from a phone on the same network",
+      "enabled": {
+        "label": "Allow remote control",
+        "description": "Paired devices on your network can show, hide and edit your instances"
+      },
+      "pairing": {
+        "title": "Pair a device",
+        "scan": "Scan the QR code with the phone camera, or open the address and enter the PIN",
+        "pin": "PIN",
+        "expiresIn": "Expires in {seconds} s",
+        "expired": "The PIN expired",
+        "newPin": "New PIN",
+        "cancel": "Cancel pairing"
+      },
+      "url": {
+        "label": "Network address",
+        "unavailable": "No network address available"
+      },
+      "devices": {
+        "label": "Paired devices",
+        "count": "{count} paired"
+      },
+      "revoke": {
+        "action": "Disconnect all devices",
+        "confirm": "Click again to confirm",
+        "warning": "All paired devices will be disconnected and will need to pair again."
+      }
+    }
+  },
+  "remote": {
+    "title": "Overlays remote",
+    "pair": {
+      "title": "Pair this device",
+      "description": "Enter the PIN shown in the desktop app, or scan its QR code.",
+      "pinLabel": "PIN",
+      "submit": "Pair",
+      "pairing": "Pairing..."
+    },
+    "repair": "This device is no longer paired. Pair it again to keep controlling your overlays.",
+    "connection": {
+      "online": "Connected",
+      "offline": "Reconnecting..."
+    },
+    "empty": "No instances are open on the desktop",
+    "instance": {
+      "show": "Show",
+      "update": "Update",
+      "hide": "Hide",
+      "live": "Live",
+      "hidden": "Hidden",
+      "pending": "Unapplied changes",
+      "preset": "Preset",
+      "presetPlaceholder": "Apply a preset...",
+      "fileReadonly": "File fields can only be changed on the desktop"
+    },
+    "groups": {
+      "title": "Groups",
+      "start": "Start",
+      "none": "No groups saved on the desktop",
+      "started": "Group \"{name}\" started.",
+      "conflicts": "{count} instance ID(s) were already in use, so new ones were created.",
+      "missing": "{count} template(s) were not found and were skipped."
     }
   }
 }

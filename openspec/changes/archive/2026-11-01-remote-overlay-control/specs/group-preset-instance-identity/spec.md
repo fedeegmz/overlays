@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Observable behavior of group identity is unchanged. The load and save rules now execute in the backend `InstanceService` instead of the frontend, and group start is callable by remote clients. All other requirements of the existing spec (entry identity fields, legacy compatibility, duplicate id validation, conflict reporting, out-of-scope behavior) remain in force unchanged.
+Observable behavior of group identity is unchanged. The load and save rules now execute in the backend `InstanceService` instead of the frontend, and group start is callable by remote clients. "Out-of-scope behavior unchanged" is modified so the new authenticated `/remote` surface is permitted while the overlay WebSocket protocol stays unchanged. All other requirements of the existing spec (entry identity fields, legacy compatibility, duplicate id validation) remain in force unchanged.
 
 ## MODIFIED Requirements
 
 ### Requirement: Save rules
-When saving a group from live instances, the backend MUST read the live instances from the registry and each entry MUST record the live instance's id as `instance_id`. `custom_name` MUST be recorded only when the user explicitly set a custom name on the instance; auto-generated default labels MUST NOT be persisted.
-(Previously: the frontend assembled entries from its own instance state.)
+When saving a group from live instances, the backend MUST read the live instances from the registry, in registry order and including hidden instances, and build the entries itself; the client MUST supply only the group name. Each entry MUST record the live instance's template, current fields, and id as `instance_id`. `custom_name` MUST be recorded only when the user explicitly set a custom name on the instance; auto-generated default labels MUST NOT be persisted.
+(Previously: the frontend assembled entries from its own instance state and passed them to the save command.)
 
 #### Scenario: User-set name persisted
 - GIVEN a live instance in the registry with a user-set custom name "Main title"
@@ -20,6 +20,11 @@ When saving a group from live instances, the backend MUST read the live instance
 - WHEN the group is saved
 - THEN the entry has the `instance_id` and no `custom_name`
 
+#### Scenario: Entries built from the registry
+- GIVEN live instances A (shown) and B (hidden) in that registry order
+- WHEN the desktop saves a group supplying only its name
+- THEN the stored group has entries for A then B with their templates, current fields, and ids
+
 ### Requirement: Load rules per entry
 When a group is started, the backend instance service MUST process each entry by the first matching rule, and the operation MUST be invocable from both the desktop and remote clients with identical results:
 1. Saved id is live and belongs to the same template: the existing instance MUST be updated in place (fields and show), and no new instance MUST be created. Its custom name MUST be replaced only when the entry has a saved custom name; when the entry has none, the live instance's current name MUST be preserved.
@@ -27,7 +32,7 @@ When a group is started, the backend instance service MUST process each entry by
 3. Saved id is live and belongs to a different template: the existing instance MUST remain untouched, a new instance MUST be created with a freshly generated id, and the conflict MUST be reported (see Conflict reporting).
 4. No saved id (legacy): a new instance MUST be created with a freshly generated id (pre-change behavior).
 
-Instance creation MUST accept an optional explicit id and optional custom name. Each resulting registry change MUST publish change events (see `instance-registry`). No group-start logic MUST remain in the frontend.
+Instance creation MUST accept an optional explicit id and optional custom name. A group start MUST publish exactly one snapshot change event covering all affected instances with a single revision bump (see `instance-registry`). No group-start logic MUST remain in the frontend.
 (Previously: the rules ran in the frontend `startGroup`.)
 
 #### Scenario: Free id restored
@@ -73,7 +78,7 @@ Instance creation MUST accept an optional explicit id and optional custom name. 
 
 #### Scenario: Events emitted
 - WHEN a group start creates or updates instances
-- THEN change events are published for each affected instance so desktop and remote views update
+- THEN exactly one snapshot change event containing all affected instances is published, with a single revision bump, so desktop and remote views update
 
 ### Requirement: Conflict reporting
 The group-start result MUST report each entry that was assigned a fresh id because its saved id was held by a different template. The result MUST be returned to the caller whether it is the desktop (Tauri command) or a remote client (REST response). The desktop and remote UIs MUST present conflicts using localized strings present in both `es.json` and `en.json`. A start with no conflicts MUST NOT show a conflict message.
@@ -93,3 +98,17 @@ The group-start result MUST report each entry that was assigned a fresh id becau
 - GIVEN a group start with no collisions
 - WHEN the start completes
 - THEN no conflict notice is shown
+
+### Requirement: Out-of-scope behavior unchanged
+Instances MUST NOT be persisted across app restarts by this change. The overlay WebSocket protocol (`/ws`, payload `{ instance_id, template, action, fields }`), the loopback-only HTTP routes (`/overlay/*`, `/api/*`, `/ws`) and per-template presets MUST be unchanged. A new authenticated `/remote` HTTP and state WebSocket surface (see `remote-control-api` and `remote-control-access`) MAY be added; it MUST NOT alter the overlay WebSocket payload or protocol. Auto-numbered labels MUST NOT be frozen.
+(Previously: the whole HTTP/WebSocket server protocol had to stay unchanged, which left no room for the `/remote` surface.)
+
+#### Scenario: Restart
+- GIVEN instances were created from a group
+- WHEN the app restarts
+- THEN no instances exist until a group is started again, and saved ids/names remain in `groups.json`
+
+#### Scenario: Overlay protocol unchanged with remote surface
+- GIVEN the `/remote` surface exists and remote access is enabled
+- WHEN a group is started from the desktop or a remote client
+- THEN overlay clients on `/ws` receive `show` messages with the unchanged `{ instance_id, template, action, fields }` shape

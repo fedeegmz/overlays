@@ -3,4 +3,5 @@ export interface AppConfig {
   language: string | null;
   uploads_enabled: boolean;
   upload_dir: string | null;
+  remote_enabled: boolean;
 }

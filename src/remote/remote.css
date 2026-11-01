@@ -1,0 +1,12 @@
+/* The desktop shell pins the page to the viewport; a phone page scrolls. */
+body {
+  height: auto;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+#app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 14px 32px;
+}

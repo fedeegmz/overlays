@@ -20,6 +20,10 @@ pub enum DomainError {
     ChecklistLoadFailed { detail: String },
     ChecklistSaveFailed { detail: String },
     TemplateDiscoveryFailed { detail: String },
+    TemplateNotFound { template: String },
+    InstanceNotFound { id: String },
+    InstanceIdTaken { id: String },
+    PresetNotFound { name: String },
     LanguageUnsupported { lang: String },
     OverlaysDirInvalid { path: String },
     ConfigSaveFailed { detail: String },
@@ -33,6 +37,9 @@ pub enum DomainError {
     UploadDestinationUnavailable,
     UploadWriteFailed { detail: String },
     UploadDirInvalid { path: String },
+    RemoteDisabled,
+    RemoteUnauthorized,
+    RemotePairingRateLimited,
 }
 
 impl fmt::Display for DomainError {
@@ -74,6 +81,10 @@ impl fmt::Display for DomainError {
             Self::TemplateDiscoveryFailed { detail } => {
                 write!(f, "template discovery failed: {detail}")
             }
+            Self::TemplateNotFound { template } => write!(f, "template not found: {template}"),
+            Self::InstanceNotFound { id } => write!(f, "instance not found: {id}"),
+            Self::InstanceIdTaken { id } => write!(f, "instance id already in use: {id}"),
+            Self::PresetNotFound { name } => write!(f, "preset not found: {name}"),
             Self::LanguageUnsupported { lang } => write!(f, "unsupported language: {lang}"),
             Self::OverlaysDirInvalid { path } => write!(f, "invalid overlays dir: {path}"),
             Self::ConfigSaveFailed { detail } => write!(f, "config save failed: {detail}"),
@@ -89,6 +100,9 @@ impl fmt::Display for DomainError {
             Self::UploadDestinationUnavailable => write!(f, "upload destination unavailable"),
             Self::UploadWriteFailed { detail } => write!(f, "upload write failed: {detail}"),
             Self::UploadDirInvalid { path } => write!(f, "invalid upload dir: {path}"),
+            Self::RemoteDisabled => write!(f, "remote access is disabled"),
+            Self::RemoteUnauthorized => write!(f, "remote access is not authorized"),
+            Self::RemotePairingRateLimited => write!(f, "too many pairing attempts"),
         }
     }
 }

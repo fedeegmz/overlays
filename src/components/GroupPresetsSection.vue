@@ -86,10 +86,7 @@ function conflictText(result: GroupStartResult): string {
 }
 
 function failureText(result: GroupStartResult): string {
-  const reason =
-    !result.ok && result.reason === "templateMissing"
-      ? t("errors.templateMissing", { template: result.template })
-      : t("groups.sendFailed");
+  const reason = t("errors.templateMissing", { template: result.template });
   return t("groups.entryFailed", { template: result.template, reason });
 }
 </script>

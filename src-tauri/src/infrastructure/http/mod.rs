@@ -1,6 +1,11 @@
+#[cfg(debug_assertions)]
+pub mod dev_cors;
 pub mod guard;
+pub mod remote;
+pub mod remote_auth;
 pub mod routes;
 pub mod state;
+pub mod static_assets;
 pub mod upload;
 pub mod ws;
 

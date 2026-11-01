@@ -37,6 +37,18 @@ The registry MUST support creating an instance (optional explicit id and optiona
 - WHEN C is moved to the first position
 - THEN listing returns C, A, B
 
+### Requirement: Template resolution
+The registry MUST resolve templates by catalog id through the template catalog, as defined by `overlay-catalog-browsing`: the id is `meta.id` or the overlay directory name and never includes folder segments, and when several overlays resolve to the same id the first in the deterministic traversal order wins. Operations that need template data (create, apply preset, group start) MUST read the catalog manifest once per operation rather than once per instance or entry. Creating an instance of a template id not in the catalog MUST fail with `template.not_found`.
+
+#### Scenario: Duplicate id across folders
+- GIVEN overlays `<root>/a/intro` and `<root>/b/intro` both resolve to id `intro`
+- WHEN an instance of template `intro` is created
+- THEN its defaults come from `a/intro` and its overlay payloads carry `template` `intro`
+
+#### Scenario: Unknown template
+- WHEN an instance is created for a template id absent from the catalog
+- THEN a `template.not_found` `CommandError` is returned and the registry is unchanged
+
 ### Requirement: Defaults and auto-numbering
 When an instance is created, its fields MUST be initialized from the template defaults (the logic previously in the frontend). An instance without a user-set custom name MUST expose an auto-numbered default label per template; labels MUST NOT be frozen or persisted.
 
@@ -63,24 +75,34 @@ When an instance is created, its fields MUST be initialized from the template de
 - THEN a `CommandError` is returned and nothing is emitted
 
 ### Requirement: Apply preset
-Applying a per-template preset to a live instance MUST set the instance fields to the preset values and, if the instance is shown, deliver an `update` to overlay clients. A preset for a different template MUST be rejected with a `CommandError`.
+Applying a per-template preset to a live instance MUST match the current desktop behavior: it MUST set the instance fields to the preset values, deliver a `show` overlay message with those fields to overlay clients (whether or not the instance was shown before), and mark the instance visible. The preset MUST be looked up by name among the presets of the instance's template; a preset of a different template or an unknown name MUST be rejected with `preset.not_found`. When the instance's template is not present in the catalog, the operation MUST be rejected with `template.not_found`. A rejected operation MUST leave the instance unchanged and emit nothing.
 
 #### Scenario: Preset applied
-- GIVEN live instance of template T and a preset of T
+- GIVEN a hidden live instance of template T and a preset of T
 - WHEN the preset is applied
-- THEN the instance fields equal the preset values
+- THEN the instance fields equal the preset values, an overlay `show` message with those fields is emitted, and the instance is marked visible
 
 #### Scenario: Template mismatch
 - GIVEN a preset of template B and an instance of template A
 - WHEN the preset is applied to the instance
-- THEN a `CommandError` is returned and the instance is unchanged
+- THEN a `preset.not_found` `CommandError` is returned and the instance is unchanged
+
+#### Scenario: Template missing from catalog
+- GIVEN a live instance whose template is no longer in the catalog
+- WHEN a preset is applied to it
+- THEN a `template.not_found` `CommandError` is returned, the instance is unchanged, and nothing is emitted
 
 ### Requirement: Change events
-Every registry mutation MUST publish a change event through a port consumed by (a) the Tauri event emitter and (b) the remote state broadcast. Each event MUST carry a source identifier (desktop or remote client) and a monotonically increasing revision id. Concurrent writes MUST resolve as last-write-wins by arrival order at the registry.
+Every registry operation that mutates state MUST publish exactly one change event, a full snapshot of the registry, through a port consumed by (a) the Tauri event emitter and (b) the remote state broadcast. A compound operation that touches several instances (group start) MUST still publish a single snapshot with a single revision bump. Each event MUST carry a source identifier (desktop or remote client) and a monotonically increasing revision id. Concurrent writes MUST resolve as last-write-wins by arrival order at the registry.
 
 #### Scenario: Event on mutation
 - WHEN any instance is created, updated, shown, hidden, renamed, removed, or reordered
 - THEN one change event with source and revision is published to both consumers
+
+#### Scenario: Compound operation emits one event
+- GIVEN a group start that creates one instance and updates another
+- WHEN it completes
+- THEN exactly one snapshot event containing both instances is published and the revision increases by exactly one
 
 #### Scenario: Revision increases
 - GIVEN two consecutive mutations
@@ -105,13 +127,18 @@ Registry contents MUST NOT be persisted across app restarts.
 - WHEN the app restarts
 - THEN the registry is empty
 
-### Requirement: Group start in backend
-Starting a group preset MUST be executed by the registry service (see `group-preset-instance-identity`), callable from the desktop and from remote clients, and MUST return the conflict report.
+### Requirement: Group start and save in backend
+Starting a group preset MUST be executed by the registry service (see `group-preset-instance-identity`), callable from the desktop and from remote clients, and MUST return the conflict report. Saving a group from live instances MUST build the entries in the backend from the registry; the desktop MUST supply only the group name.
 
 #### Scenario: Group start via service
 - GIVEN a saved group
 - WHEN a group start is requested from any client
 - THEN the service creates or updates instances and returns the result with conflicts
+
+#### Scenario: Group save via service
+- GIVEN live instances in the registry
+- WHEN the desktop saves a group by name
+- THEN the stored entries are built from the registry, not from client-supplied entries
 
 ### Requirement: Desktop behavior parity
 After this change desktop and OBS behavior MUST be unchanged: the same operations produce the same overlay messages and UI outcomes as before, and the Pinia stores act as event-fed thin clients.

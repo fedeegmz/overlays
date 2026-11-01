@@ -45,3 +45,79 @@ impl Drop for TempDir {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+
+/// In-memory `ConfigRepository` for tests that must not touch the disk.
+#[derive(Default)]
+pub struct MemConfigRepo(std::sync::Mutex<crate::domain::config::AppConfig>);
+
+impl crate::application::ports::ConfigRepository for MemConfigRepo {
+    fn load(&self) -> crate::domain::config::AppConfig {
+        self.0.lock().unwrap().clone()
+    }
+
+    fn save(
+        &self,
+        config: &crate::domain::config::AppConfig,
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = config.clone();
+        Ok(())
+    }
+}
+
+/// In-memory `PresetRepository` for tests.
+#[derive(Default)]
+pub struct MemPresetRepo(std::sync::Mutex<Vec<crate::domain::preset::Preset>>);
+
+impl crate::application::ports::PresetRepository for MemPresetRepo {
+    fn load(&self) -> Vec<crate::domain::preset::Preset> {
+        self.0.lock().unwrap().clone()
+    }
+
+    fn save(
+        &self,
+        presets: &[crate::domain::preset::Preset],
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = presets.to_vec();
+        Ok(())
+    }
+}
+
+/// In-memory `GroupPresetRepository` for tests.
+#[derive(Default)]
+pub struct MemGroupPresetRepo(std::sync::Mutex<Vec<crate::domain::group_preset::GroupPreset>>);
+
+impl crate::application::ports::GroupPresetRepository for MemGroupPresetRepo {
+    fn load(
+        &self,
+    ) -> crate::domain::error::DomainResult<Vec<crate::domain::group_preset::GroupPreset>> {
+        Ok(self.0.lock().unwrap().clone())
+    }
+
+    fn save(
+        &self,
+        groups: &[crate::domain::group_preset::GroupPreset],
+    ) -> crate::domain::error::DomainResult<()> {
+        *self.0.lock().unwrap() = groups.to_vec();
+        Ok(())
+    }
+}
+
+/// In-memory `StaticAssets`: file path -> (bytes, MIME type).
+#[derive(Default)]
+pub struct MemAssets(pub std::collections::HashMap<String, (Vec<u8>, String)>);
+
+impl MemAssets {
+    pub fn with(mut self, path: &str, body: &str, mime: &str) -> Self {
+        self.0.insert(
+            path.to_string(),
+            (body.as_bytes().to_vec(), mime.to_string()),
+        );
+        self
+    }
+}
+
+impl crate::application::ports::StaticAssets for MemAssets {
+    fn get(&self, path: &str) -> Option<(Vec<u8>, String)> {
+        self.0.get(path).cloned()
+    }
+}

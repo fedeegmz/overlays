@@ -25,31 +25,11 @@ export const useTemplateStore = defineStore("templates", () => {
     return templates.value?.find((t) => t.id === templateId);
   }
 
-  function getDefaults(templateId: string): Record<string, string> {
-    const template = getById(templateId);
-    const fields: Record<string, string> = {};
-    if (!template) return fields;
-    for (const f of template.fields) {
-      if (f.type === "progress") {
-        const min = f.min ?? 0;
-        fields[f.key] = f.default ?? String(min);
-        continue;
-      }
-      if (f.type === "boolean") {
-        fields[f.key] = f.default ?? "false";
-        continue;
-      }
-      if (f.default !== undefined) fields[f.key] = f.default;
-    }
-    return fields;
-  }
-
   return {
     templates,
     folders,
     templatesError,
     refreshTemplates,
     getById,
-    getDefaults,
   };
 });

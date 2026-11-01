@@ -32,7 +32,6 @@
     "startDone": "Se iniciaron {count} instancias.",
     "startPartial": "Se iniciaron {ok} de {total} instancias.",
     "entryFailed": "{template}: {reason}",
-    "sendFailed": "No se pudo enviar el overlay.",
     "idConflict": "{template}: su ID guardado lo usa otro overlay. Se inició con un ID nuevo; actualiza la URL de la fuente en OBS."
   },
   "checklists": {
@@ -113,10 +112,12 @@
     },
     "preset": {
       "empty_name": "El nombre del preset no puede estar vacío.",
-      "save_failed": "No se pudo guardar el archivo de presets."
+      "save_failed": "No se pudo guardar el archivo de presets.",
+      "not_found": "No se encontró el preset \"{name}\"."
     },
     "template": {
-      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays."
+      "discovery_failed": "No se pudieron leer las plantillas del directorio de overlays.",
+      "not_found": "No se encontró la plantilla \"{template}\"."
     },
     "language": {
       "unsupported": "Idioma no soportado: {lang}."
@@ -126,6 +127,13 @@
     },
     "upload_dir": {
       "invalid": "\"{path}\" no es una carpeta de subidas válida. Debe ser una ruta absoluta sin \"..\"."
+    },
+    "remote": {
+      "disabled": "El control remoto está desactivado.",
+      "unauthorized": "Acceso remoto no autorizado. Vuelve a emparejar el dispositivo.",
+      "pairing_rate_limited": "Demasiados intentos de emparejamiento. Espera un minuto e inténtalo de nuevo.",
+      "unreachable": "No se pudo conectar con la aplicación de escritorio. Comprueba que estás en la misma red.",
+      "invalid_pin": "Introduce el PIN de 6 dígitos que se muestra en el escritorio."
     },
     "file": {
       "asset_outside_overlays_dir": "El archivo \"{path}\" está fuera de la carpeta de overlays.",
@@ -152,6 +160,10 @@
       "not_found": "No se encontró la lista.",
       "load_failed": "No se pudo leer el archivo de listas.",
       "save_failed": "No se pudo guardar el archivo de listas."
+    },
+    "instance": {
+      "not_found": "No se encontró la instancia \"{id}\".",
+      "id_taken": "El ID de instancia \"{id}\" ya está en uso."
     }
   },
   "settings": {
@@ -197,6 +209,71 @@
     "about": {
       "label": "Versión",
       "description": "Versión de la aplicación"
+    },
+    "remote": {
+      "label": "Control remoto",
+      "description": "Controla tus overlays desde un móvil en la misma red",
+      "enabled": {
+        "label": "Permitir control remoto",
+        "description": "Los dispositivos emparejados de tu red pueden mostrar, ocultar y editar tus instancias"
+      },
+      "pairing": {
+        "title": "Emparejar un dispositivo",
+        "scan": "Escanea el código QR con la cámara del móvil, o abre la dirección e introduce el PIN",
+        "pin": "PIN",
+        "expiresIn": "Caduca en {seconds} s",
+        "expired": "El PIN ha caducado",
+        "newPin": "Nuevo PIN",
+        "cancel": "Cancelar emparejamiento"
+      },
+      "url": {
+        "label": "Dirección de red",
+        "unavailable": "No hay ninguna dirección de red disponible"
+      },
+      "devices": {
+        "label": "Dispositivos emparejados",
+        "count": "{count} emparejados"
+      },
+      "revoke": {
+        "action": "Desconectar todos los dispositivos",
+        "confirm": "Pulsa de nuevo para confirmar",
+        "warning": "Todos los dispositivos emparejados se desconectarán y tendrán que emparejarse de nuevo."
+      }
+    }
+  },
+  "remote": {
+    "title": "Overlays remoto",
+    "pair": {
+      "title": "Emparejar este dispositivo",
+      "description": "Introduce el PIN que se muestra en la aplicación de escritorio, o escanea su código QR.",
+      "pinLabel": "PIN",
+      "submit": "Emparejar",
+      "pairing": "Emparejando..."
+    },
+    "repair": "Este dispositivo ya no está emparejado. Vuelve a emparejarlo para seguir controlando tus overlays.",
+    "connection": {
+      "online": "Conectado",
+      "offline": "Reconectando..."
+    },
+    "empty": "No hay instancias abiertas en el escritorio",
+    "instance": {
+      "show": "Mostrar",
+      "update": "Actualizar",
+      "hide": "Ocultar",
+      "live": "En vivo",
+      "hidden": "Oculto",
+      "pending": "Cambios sin aplicar",
+      "preset": "Preset",
+      "presetPlaceholder": "Aplicar un preset...",
+      "fileReadonly": "Los campos de archivo solo se pueden cambiar en el escritorio"
+    },
+    "groups": {
+      "title": "Grupos",
+      "start": "Iniciar",
+      "none": "No hay grupos guardados en el escritorio",
+      "started": "Grupo \"{name}\" iniciado.",
+      "conflicts": "{count} ID(s) de instancia ya estaban en uso, así que se crearon nuevos.",
+      "missing": "{count} plantilla(s) no se encontraron y se omitieron."
     }
   }
 }

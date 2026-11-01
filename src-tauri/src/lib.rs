@@ -8,17 +8,23 @@ use std::sync::Arc;
 use application::checklist_service::ChecklistService;
 use application::config_service::ConfigService;
 use application::group_preset_service::GroupPresetService;
+use application::instance_service::InstanceService;
 use application::ports::ConfigRepository;
 use application::preset_service::PresetService;
+use application::remote_access_service::RemoteAccessService;
 use application::template_catalog::{OverlaysDirHandle, TemplateCatalog};
 use application::upload_service::{UploadService, UploadSettings, UploadSettingsHandle};
-use infrastructure::clock::ChronoClock;
+use infrastructure::clock::{ChronoClock, InstantClock};
 use infrastructure::fs_template_source::FsTemplateSource;
-use infrastructure::http::{start_server, state::HttpState};
+use infrastructure::http::start_server;
+use infrastructure::http::state::{HttpState, RemoteDeps};
+use infrastructure::instance_events::{BroadcastInstanceEvents, FanOut, TauriInstanceEvents};
 use infrastructure::json_store::{
     JsonChecklistRepository, JsonConfigRepository, JsonGroupPresetRepository, JsonPresetRepository,
 };
 use infrastructure::overlay_bus::BroadcastOverlayBus;
+use infrastructure::session_revoker::WatchSessionRevoker;
+use infrastructure::tauri_assets::TauriStaticAssets;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -73,7 +79,7 @@ pub fn run() {
                 dir_template: app_config.upload_dir.clone(),
             });
             let config_service = Arc::new(ConfigService::new(
-                config_repo,
+                config_repo.clone(),
                 overlays_dir.clone(),
                 upload_settings.clone(),
             ));
@@ -82,11 +88,37 @@ pub fn run() {
                 upload_settings,
                 downloads_dir,
             ));
+            let broadcast_events = Arc::new(BroadcastInstanceEvents::new());
+            let instances = Arc::new(InstanceService::new(
+                catalog.clone(),
+                bus.clone(),
+                Arc::new(FanOut::new(vec![
+                    Arc::new(TauriInstanceEvents::new(app.handle().clone())),
+                    broadcast_events.clone(),
+                ])),
+                presets.clone(),
+                group_presets.clone(),
+            ));
+            let sessions = Arc::new(WatchSessionRevoker::new());
+            let remote = Arc::new(RemoteAccessService::new(
+                config_repo.clone(),
+                Arc::new(InstantClock::new()),
+                sessions.clone(),
+            ));
             let http_state = Arc::new(HttpState::new(
                 bus,
                 catalog.clone(),
                 overlays_dir.clone(),
                 upload_service,
+                instances,
+                RemoteDeps {
+                    access: remote.clone(),
+                    sessions,
+                    presets: presets.clone(),
+                    group_presets: group_presets.clone(),
+                    events: broadcast_events,
+                    assets: Arc::new(TauriStaticAssets::new(app.asset_resolver())),
+                },
             ));
 
             app.manage(http_state.clone());
@@ -95,6 +127,7 @@ pub fn run() {
             app.manage(group_presets);
             app.manage(checklists);
             app.manage(config_service);
+            app.manage(remote);
 
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = start_server(http_state).await {
@@ -106,6 +139,18 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             infrastructure::tauri::commands::send_overlay_update,
+            infrastructure::tauri::commands::list_instances,
+            infrastructure::tauri::commands::create_instance,
+            infrastructure::tauri::commands::remove_instance,
+            infrastructure::tauri::commands::rename_instance,
+            infrastructure::tauri::commands::move_instance,
+            infrastructure::tauri::commands::set_instance_fields,
+            infrastructure::tauri::commands::show_instance,
+            infrastructure::tauri::commands::update_instance,
+            infrastructure::tauri::commands::hide_instance,
+            infrastructure::tauri::commands::apply_preset,
+            infrastructure::tauri::commands::start_group_preset,
+            infrastructure::tauri::commands::save_group_from_instances,
             infrastructure::tauri::commands::list_templates,
             infrastructure::tauri::commands::get_server_status,
             infrastructure::tauri::commands::resolve_overlay_asset_path,
@@ -123,6 +168,11 @@ pub fn run() {
             infrastructure::tauri::commands::set_language,
             infrastructure::tauri::commands::set_uploads_enabled,
             infrastructure::tauri::commands::set_upload_dir,
+            infrastructure::tauri::commands::get_remote_status,
+            infrastructure::tauri::commands::set_remote_enabled,
+            infrastructure::tauri::commands::start_pairing,
+            infrastructure::tauri::commands::cancel_pairing,
+            infrastructure::tauri::commands::revoke_remote_access,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

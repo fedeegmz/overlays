@@ -5,4 +5,5 @@ export * from "./groupPreset";
 export * from "./instance";
 export * from "./navigation";
 export * from "./preset";
+export * from "./remote";
 export * from "./template";

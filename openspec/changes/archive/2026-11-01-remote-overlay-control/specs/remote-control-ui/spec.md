@@ -32,16 +32,27 @@ An unpaired device MUST be shown a PIN entry (or auto-pair from the QR payload).
 - THEN the phone shows the pairing view and a localized "re-pair" message
 
 ### Requirement: Instance control view
-The page MUST list the desktop's live instances in registry order and, for each, let the user show, hide, edit non-file field values (applied via update), apply a per-template preset, and start a group preset. It MUST NOT offer create, remove, rename, reorder, or preset/group CRUD actions.
+The page MUST list the desktop's live instances in registry order, each as a collapsible section that is collapsed by default, and, for each, let the user show, hide, update, edit non-file field values, apply a per-template preset, and start a group preset. Edits MUST stay local to the phone until the user presses Update or Show, and a section with unapplied edits MUST indicate so even while collapsed. It MUST NOT offer create, remove, rename, reorder, or preset/group CRUD actions.
 
 #### Scenario: Show and hide
 - GIVEN a listed instance
 - WHEN the user taps show then hide
 - THEN the corresponding API calls are made and the state reflects each
 
+#### Scenario: Collapsed by default
+- GIVEN a listed instance
+- WHEN the page is rendered
+- THEN its section is collapsed, showing only its name and state
+- AND tapping the section header expands it in place to show its fields and actions
+
 #### Scenario: Edit text field
 - WHEN the user edits a text field
-- THEN an update is sent (debounced) and the overlay reflects the value
+- THEN no API call is made, the overlay is unchanged, and the section indicates unapplied changes
+
+#### Scenario: Apply edits
+- GIVEN an instance with unapplied edits
+- WHEN the user taps Update on a visible instance, or Show
+- THEN only the edited values are sent, the overlay reflects them, and the unapplied indicator clears
 
 #### Scenario: Apply preset
 - WHEN the user chooses a preset for an instance

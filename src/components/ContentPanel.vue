@@ -6,10 +6,8 @@ import { useConfirmClick } from "../composables/useConfirmClick";
 import { commandErrorMessage } from "../lib/errors";
 import { useInstanceStore } from "../stores/instances";
 import { usePresetStore } from "../stores/presets";
-import BooleanField from "./BooleanField.vue";
-import ColorField from "./ColorField.vue";
+import FieldEditor from "./FieldEditor.vue";
 import FileField from "./FileField.vue";
-import ProgressField from "./ProgressField.vue";
 
 const { t } = useI18n();
 const instanceStore = useInstanceStore();
@@ -38,7 +36,7 @@ const saveDisabled = computed(
 
 function updateField(key: string, value: string) {
   if (!activeInstance.value) return;
-  activeInstance.value.fields[key] = value;
+  instanceStore.setField(activeInstance.value.id, key, value);
 }
 
 async function handleSavePreset() {
@@ -75,58 +73,23 @@ async function handleApply(preset: { name: string }) {
     <div class="panel-header">{{ t("content.title") }}</div>
     <div class="panel-body">
       <template v-if="activeInstance && activeTemplate">
-        <div
-          v-for="field in activeTemplate.fields"
-          :key="field.key"
-          class="field"
+        <FieldEditor
+          :fields="activeTemplate.fields"
+          :values="activeInstance.fields"
+          :disabled="sending"
+          @update="updateField"
         >
-          <label class="field-label" :for="`field-${field.key}`"
-            >{{ field.label }}</label
-          >
-          <ColorField
-            v-if="field.type === 'color'"
-            :model-value="activeInstance.fields[field.key] ?? ''"
-            :input-id="`field-${field.key}`"
-            :disabled="sending"
-            @update:model-value="updateField(field.key, $event)"
-          />
-          <ProgressField
-            v-else-if="field.type === 'progress'"
-            :model-value="activeInstance.fields[field.key] ?? ''"
-            :input-id="`field-${field.key}`"
-            :disabled="sending"
-            :min="field.min"
-            :max="field.max"
-            :step="field.step"
-            @update:model-value="updateField(field.key, $event)"
-          />
-          <BooleanField
-            v-else-if="field.type === 'boolean'"
-            :model-value="activeInstance.fields[field.key] ?? 'false'"
-            :input-id="`field-${field.key}`"
-            :disabled="sending"
-            @update:model-value="updateField(field.key, $event)"
-          />
-          <FileField
-            v-else-if="field.type === 'file'"
-            :model-value="activeInstance.fields[field.key] ?? ''"
-            :input-id="`field-${field.key}`"
-            :disabled="sending"
-            :template-id="activeInstance.templateId"
-            :accept="field.accept"
-            @update:model-value="updateField(field.key, $event)"
-          />
-          <input
-            v-else
-            :id="`field-${field.key}`"
-            :value="activeInstance.fields[field.key] ?? ''"
-            class="field-input"
-            type="text"
-            :placeholder="field.label"
-            :disabled="sending"
-            @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
-          >
-        </div>
+          <template #file="{ field, value, inputId, disabled, update }">
+            <FileField
+              :model-value="value"
+              :input-id="inputId"
+              :disabled="disabled"
+              :template-id="activeInstance.templateId"
+              :accept="field.accept"
+              @update:model-value="update"
+            />
+          </template>
+        </FieldEditor>
 
         <p v-if="sendError" class="send-error">{{ sendError }}</p>
 

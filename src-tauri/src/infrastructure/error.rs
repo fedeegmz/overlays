@@ -18,6 +18,7 @@ pub struct CommandError {
 impl CommandError {
     pub const PRESET_EMPTY_NAME: &str = "preset.empty_name";
     pub const PRESET_SAVE_FAILED: &str = "preset.save_failed";
+    pub const PRESET_NOT_FOUND: &str = "preset.not_found";
     pub const GROUP_PRESET_EMPTY_NAME: &str = "group_preset.empty_name";
     pub const GROUP_PRESET_NO_ENTRIES: &str = "group_preset.no_entries";
     pub const GROUP_PRESET_INVALID_ENTRY: &str = "group_preset.invalid_entry";
@@ -34,6 +35,9 @@ impl CommandError {
     pub const CHECKLIST_LOAD_FAILED: &str = "checklist.load_failed";
     pub const CHECKLIST_SAVE_FAILED: &str = "checklist.save_failed";
     pub const TEMPLATE_DISCOVERY_FAILED: &str = "template.discovery_failed";
+    pub const TEMPLATE_NOT_FOUND: &str = "template.not_found";
+    pub const INSTANCE_NOT_FOUND: &str = "instance.not_found";
+    pub const INSTANCE_ID_TAKEN: &str = "instance.id_taken";
     pub const LANGUAGE_UNSUPPORTED: &str = "language.unsupported";
     pub const OVERLAYS_DIR_INVALID: &str = "overlays_dir.invalid";
     pub const CONFIG_SAVE_FAILED: &str = "config.save_failed";
@@ -47,6 +51,9 @@ impl CommandError {
     pub const UPLOAD_DESTINATION_UNAVAILABLE: &str = "upload.destination_unavailable";
     pub const UPLOAD_WRITE_FAILED: &str = "upload.write_failed";
     pub const UPLOAD_DIR_INVALID: &str = "upload_dir.invalid";
+    pub const REMOTE_DISABLED: &str = "remote.disabled";
+    pub const REMOTE_UNAUTHORIZED: &str = "remote.unauthorized";
+    pub const REMOTE_PAIRING_RATE_LIMITED: &str = "remote.pairing_rate_limited";
 
     pub fn new(code: &str) -> Self {
         Self {
@@ -67,6 +74,9 @@ impl From<DomainError> for CommandError {
             DomainError::PresetEmptyName => Self::new(Self::PRESET_EMPTY_NAME),
             DomainError::PresetSaveFailed { detail } => {
                 Self::new(Self::PRESET_SAVE_FAILED).param("detail", detail)
+            }
+            DomainError::PresetNotFound { name } => {
+                Self::new(Self::PRESET_NOT_FOUND).param("name", name)
             }
             DomainError::GroupPresetEmptyName => Self::new(Self::GROUP_PRESET_EMPTY_NAME),
             DomainError::GroupPresetNoEntries => Self::new(Self::GROUP_PRESET_NO_ENTRIES),
@@ -107,6 +117,15 @@ impl From<DomainError> for CommandError {
             DomainError::TemplateDiscoveryFailed { detail } => {
                 Self::new(Self::TEMPLATE_DISCOVERY_FAILED).param("detail", detail)
             }
+            DomainError::TemplateNotFound { template } => {
+                Self::new(Self::TEMPLATE_NOT_FOUND).param("template", template)
+            }
+            DomainError::InstanceNotFound { id } => {
+                Self::new(Self::INSTANCE_NOT_FOUND).param("id", id)
+            }
+            DomainError::InstanceIdTaken { id } => {
+                Self::new(Self::INSTANCE_ID_TAKEN).param("id", id)
+            }
             DomainError::LanguageUnsupported { lang } => {
                 Self::new(Self::LANGUAGE_UNSUPPORTED).param("lang", lang)
             }
@@ -138,6 +157,9 @@ impl From<DomainError> for CommandError {
             DomainError::UploadDirInvalid { path } => {
                 Self::new(Self::UPLOAD_DIR_INVALID).param("path", path)
             }
+            DomainError::RemoteDisabled => Self::new(Self::REMOTE_DISABLED),
+            DomainError::RemoteUnauthorized => Self::new(Self::REMOTE_UNAUTHORIZED),
+            DomainError::RemotePairingRateLimited => Self::new(Self::REMOTE_PAIRING_RATE_LIMITED),
         }
     }
 }
@@ -270,6 +292,46 @@ mod tests {
                 detail: "io".into()
             }),
             serde_json::json!({ "code": "checklist.save_failed", "params": { "detail": "io" } })
+        );
+    }
+
+    #[test]
+    fn maps_instance_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::InstanceNotFound { id: "a".into() }),
+            serde_json::json!({ "code": "instance.not_found", "params": { "id": "a" } })
+        );
+        assert_eq!(
+            code(DomainError::InstanceIdTaken { id: "a".into() }),
+            serde_json::json!({ "code": "instance.id_taken", "params": { "id": "a" } })
+        );
+        assert_eq!(
+            code(DomainError::PresetNotFound { name: "p".into() }),
+            serde_json::json!({ "code": "preset.not_found", "params": { "name": "p" } })
+        );
+        assert_eq!(
+            code(DomainError::TemplateNotFound {
+                template: "t".into()
+            }),
+            serde_json::json!({ "code": "template.not_found", "params": { "template": "t" } })
+        );
+    }
+
+    #[test]
+    fn maps_remote_errors_to_codes() {
+        let code = |e: DomainError| serde_json::to_value(CommandError::from(e)).unwrap();
+        assert_eq!(
+            code(DomainError::RemoteDisabled),
+            serde_json::json!({ "code": "remote.disabled" })
+        );
+        assert_eq!(
+            code(DomainError::RemoteUnauthorized),
+            serde_json::json!({ "code": "remote.unauthorized" })
+        );
+        assert_eq!(
+            code(DomainError::RemotePairingRateLimited),
+            serde_json::json!({ "code": "remote.pairing_rate_limited" })
         );
     }
 

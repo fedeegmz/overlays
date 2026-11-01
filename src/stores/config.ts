@@ -22,6 +22,7 @@ export const useConfigStore = defineStore("config", () => {
     language: null,
     uploads_enabled: true,
     upload_dir: null,
+    remote_enabled: false,
   });
   const configError = ref<string | null>(null);
   const lanUrls = ref<string[]>([]);
