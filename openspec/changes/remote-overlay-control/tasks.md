@@ -67,7 +67,7 @@ Depends on S1a-2.
 - [x] 3.3 Add commands in `infrastructure/tauri/commands.rs` (`client_id` arg; return snapshot): `list_instances`, `create_instance` -> `{id, snapshot}`, `remove_instance`, `rename_instance`, `move_instance`, `set_instance_fields`, `show_instance`, `update_instance`, `hide_instance`, `apply_preset`, `start_group_preset` -> `{results, snapshot}`; keep `send_overlay_update` for preview.
 - [x] 3.6 Add Tauri command `save_group_from_instances(name) -> GroupPreset[]` in `infrastructure/tauri/commands.rs` calling the 2.6 service method; register in `lib.rs`; keep the existing `save_group_preset(name, entries)` (`commands.rs:121`). Rust test for the command-to-service mapping where feasible (feasible part: result DTO serialization tests; `State`-based commands are thin delegations and are covered by the manual check).
 - [x] 3.4 Wire `InstanceService` into `lib.rs` and `infrastructure/http/state.rs` (share bus/broadcast; pass the same `Arc<TemplateCatalog>` already held by `HttpState.catalog` as its `TemplateLookup`).
-- [ ] 3.5 Manual check via `pnpm tauri dev` (command invocable, event emitted); verify (backend commands). Backend commands verified (cargo test 261 passed, fmt, clippy); manual `pnpm tauri dev` check pending (needs a GUI).
+- [x] 3.5 Manual check via `pnpm tauri dev` (command invocable, event emitted); verify (backend commands). Backend commands verified (cargo test 261 passed, fmt, clippy); manual check passed, reported by the user.
 
 ## S1c: Frontend thin client + vitest (~400 lines)
 
@@ -78,7 +78,7 @@ Depends on S1b.
 - [x] 4.3 Create `src/services/instancesApi.ts` (invoke wrappers + `instances-changed` listener + per-window `clientId`).
 - [x] 4.4 Refactor `src/stores/instances.ts` to event-fed client with revision guard and local drafts (`createInstance` routed via `create_instance`; delete `nextInstanceNumber`); refactor `src/stores/groupPresets.ts` to call `start_group_preset`; delete TS `startGroup`. In `src/stores/templates.ts` remove only `getDefaults` and preserve `templates`, `folders`, `refreshTemplates` and `getById`, which `src/stores/overlayExplorer.ts:13` and other consumers depend on.
 - [x] 4.5 Adjust consumers of removed or changed APIs minimally, including `src/stores/overlayExplorer.ts` (must keep working unchanged) and `src/components/OverlaysPage.vue` (`createInstance(id)`, lines 16 and 26-29), plus other `src/components/*`; map `GroupStartResult` conflicts to existing i18n strings (update `es.json`/`en.json` only if a string is removed or added).
-- [ ] 4.6 GREEN + verify (frontend commands incl. `pnpm test`); Automated: biome, vue-tsc and vitest (17 tests) pass. Manual desktop parity check against OBS overlay and the overlay folder explorer: pending (needs `pnpm tauri dev` and OBS; not run).
+- [x] 4.6 GREEN + verify (frontend commands incl. `pnpm test`); Automated: biome, vue-tsc and vitest (17 tests) pass. Manual desktop parity check against OBS overlay and the overlay folder explorer: passed, reported by the user.
 - [x] 4.7 RED + GREEN: switch `saveFromInstances` in `src/stores/groupPresets.ts` to the `save_group_from_instances` command (entries no longer assembled in TS); test in colocated `src/stores/groupPresets.test.ts` (`save_calls_backend_with_name_only`).
 - [x] 4.8 Docs: update the AGENTS.md "Frontend tests" row (currently "pure logic in `src/lib/`") to mention colocated store tests.
 
@@ -111,7 +111,7 @@ Depends on S2a.
 - [x] 7.2 Create `src/services/remoteApi.ts` and `src/stores/remote.ts` (no direct `invoke` in components); add colocated `src/stores/remote.test.ts` for store state.
 - [x] 7.3 Create `src/components/RemoteSettingsSection.vue` (toggle, QR of `http://<lan>:<port>/remote/#pin=NNNNNN`, PIN display, URL selector, revoke with confirmation); mount in Settings; add QR dependency only if none present (added `qrcode-generator`).
 - [x] 7.4 i18n: add all new strings to `src/i18n/locales/es.json` and `en.json` (error codes `remote.*` included).
-- [ ] 7.5 Verify (frontend + backend commands); manual: toggle, pair, revoke. Automated verified (cargo test 328 passed, fmt, clippy, biome, vue-tsc, vitest 25 passed, pnpm build); manual toggle/pair/revoke check pending (needs `pnpm tauri dev` and a phone; not run).
+- [x] 7.5 Verify (frontend + backend commands); manual: toggle, pair, revoke. Automated verified (cargo test 328 passed, fmt, clippy, biome, vue-tsc, vitest 25 passed, pnpm build); manual toggle/pair/revoke check passed, reported by the user.
 
 ## S2d-1: Vite multipage + shared FieldEditor (~250 lines)
 
@@ -119,7 +119,7 @@ Depends on S1c.
 
 - [x] 8.1 Update `vite.config.ts`: multipage inputs (`index.html`, `remote.html`), `base: "./"`; create `remote.html` entry stub.
 - [x] 8.2 Create `src/components/FieldEditor.vue` (field rendering + `#file` slot, no Tauri imports); refactor `src/components/ContentPanel.vue` to use it, passing `FileField` in the slot.
-- [ ] 8.3 Verify `pnpm build` emits both entries, `pnpm test` still discovers and passes all tests with the multipage `vite.config.ts`, and desktop behavior is unchanged (manual); frontend commands. Automated verified: `pnpm build` emits `dist/index.html` and `dist/remote.html` (relative asset URLs), vitest 28 passed, biome, vue-tsc, vite dev serves both pages; manual desktop parity check (ContentPanel fields, file picker) pending (needs `pnpm tauri dev`; not run).
+- [x] 8.3 Verify `pnpm build` emits both entries, `pnpm test` still discovers and passes all tests with the multipage `vite.config.ts`, and desktop behavior is unchanged (manual); frontend commands. Automated verified: `pnpm build` emits `dist/index.html` and `dist/remote.html` (relative asset URLs), vitest 28 passed, biome, vue-tsc, vite dev serves both pages; manual desktop parity check (ContentPanel fields, file picker) passed, reported by the user.
 
 ## S2d-2: Remote phone app + static serving (~450 lines)
 
@@ -129,4 +129,4 @@ Depends on S2b, S2d-1. Forecast may exceed budget; split static serving into its
 - [x] 9.2 GREEN: `StaticAssets` port + Tauri `asset_resolver` adapter (treats Tauri's `index.html` fallback as a miss); add `/remote/` and `/remote/assets/*` routes; debug-only CORS middleware on `/remote/api` (allow `http://*:1420`, compiled out of release; `cargo clippy --release` passes).
 - [x] 9.3 Create `src/services/transport.ts` (absolute API base in dev, Bearer from localStorage, WS `?token=`, reconnect + resnapshot, `encodeURIComponent` on path segments such as group names).
 - [x] 9.4 Create `src/remote/` (main.ts, App.vue, PairView, ControlView): fragment `#pin` pairing, re-pair on 401, per-instance show/update/hide, preset apply, group start, read-only file fields, empty-state message, echo does not overwrite typing; colocated vitest (`*.test.ts`) for revision guard/transport, including group-name encoding.
-- [ ] 9.5 i18n es/en strings for the remote app (done, `remote.*` and `errors.remote.{unreachable,invalid_pin}`); verify (all commands). Automated verified: cargo test 340 passed, fmt, clippy (debug and `--release`), biome, vue-tsc, vitest 56 passed, pnpm build (remote chunks contain no Tauri code). Manual on phone (pair, control, revoke -> returns to pairing) and a built-app check that `/remote/` is served from the embedded assets: pending (needs `pnpm tauri build`/`dev` and a phone; not run).
+- [x] 9.5 i18n es/en strings for the remote app (done, `remote.*` and `errors.remote.{unreachable,invalid_pin}`); verify (all commands). Automated verified: cargo test 340 passed, fmt, clippy (debug and `--release`), biome, vue-tsc, vitest 56 passed, pnpm build (remote chunks contain no Tauri code). Manual on phone (pair, control, revoke -> returns to pairing) and a built-app check that `/remote/` is served from the embedded assets: passed, reported by the user.
