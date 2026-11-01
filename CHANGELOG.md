@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-01
+
 ### Added
 
 - Folder explorer on the Home page: overlays are now browsed like a file explorer that mirrors the overlays directory on disk. Folders (including empty ones) and loose overlays can live at any level; opening a folder shows its contents and a breadcrumb navigates back up. Folders are listed first and then overlays, both alphabetically, and each folder card shows how many overlays it contains directly. A directory with `overlay.json` is an overlay (its subdirectories are not scanned); any other directory is a folder. Scanning goes up to 5 levels deep and skips hidden directories. The current folder is kept in memory; if it no longer exists after a reload, the explorer falls back to the nearest existing parent. Template ids are unchanged (`meta.id` or the directory name), so existing overlay scripts, OBS URLs, presets and group presets keep working, and a flat overlays directory looks the same as before. If two overlays in different folders share an id, the first one found (alphabetical, depth-first) is kept and the other is skipped with a log warning. The template manifest gains additive `folder` (per template) and `folders` fields.
@@ -127,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable overlays directory and server port via Settings, persisted as JSON.
 - Release workflow (GitHub Actions) building installers for Linux, Windows, and macOS.
 
-[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/fedeegmz/overlays/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/fedeegmz/overlays/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/fedeegmz/overlays/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fedeegmz/overlays/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fedeegmz/overlays/compare/v0.4.0...v0.5.0
