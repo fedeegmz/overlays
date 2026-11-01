@@ -9,7 +9,7 @@ Operators can only drive overlays from the desktop window. Live instance state e
 - Pinia becomes an event-fed thin client; TS startGroup, save-entry assembly and defaults logic deleted; colocated vitest store tests (vitest is already set up); the overlay explorer keeps working unchanged
 - Global remote toggle (default off), QR/PIN pairing, token rotation, hashed token in config
 - `remote_auth` middleware (loopback OR valid token, enabled per request); authenticated `/remote` REST plus state WS
-- `remote.html` second Vite entry, shared `FieldEditor`, mobile UI
+- `remote.html` second Vite entry, shared `FieldEditor`, mobile UI with collapsible instance sections and edits applied on demand
 
 ### Out of Scope
 - Remote create/remove/rename/reorder of instances; preset/group CRUD remotely
@@ -67,7 +67,7 @@ Assumptions:
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
 | startGroup parity regression | Med | port with tests first (S1a-2) |
-| Typing lag or echo overwrite | Med | local draft, debounce, revision ids |
+| Typing lag or echo overwrite | Med | local draft, debounce on desktop, explicit Update on the phone, revision ids |
 | Token sniffed on plain-HTTP LAN | Med | default off, rotation, hashed storage, PIN rate limit |
 | Prod asset serving or dev origin mismatch | Med | asset_resolver; dev API base |
 | Multi-NIC or firewall confusion | Low | URL selector, docs |

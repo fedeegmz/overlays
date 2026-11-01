@@ -13,6 +13,7 @@ Approach C in two phases. **Phase 1** moves live instance state into a Rust `Ins
 | Event payload | deltas vs full snapshot | Deltas are smaller but can be missed or reordered. There are few instances | **Full snapshot + monotonic `revision`**. Clients drop `revision <= last`; `Lagged` resends the latest |
 | Command return | event only vs snapshot in the response | Event-only races the invoke response | Mutating commands **return the snapshot** (plus the id or results). The duplicate event is dropped by revision |
 | Echo vs typing | per-keystroke IPC vs draft | Per-keystroke IPC can overwrite text the user is still typing | Desktop keeps a **local draft** per instance and commits after **250 ms** of inactivity through `set_instance_fields`. Snapshot fields never overwrite a dirty draft. Last write wins |
+| Phone edits | debounced send vs explicit apply | Automatic sends pushed every edit to OBS while typing on the phone | The phone keeps edits as **local drafts** with no network call until the user presses Update or Show, and marks them as unapplied. Drafts are not visible on the desktop and do not survive a page reload. Presets still apply immediately, as an explicit action |
 | Source id | none vs `source{kind,client_id}` | Lets the UI recognize its own echoes | Snapshot carries `source: {kind:"desktop"\|"remote", client_id}`. `client_id` is random per window or tab |
 | DTO casing | snake vs camel | `src/types/instance.ts` is already camelCase | **camelCase** (`rename_all`) for instance DTOs, IPC and REST |
 | Display name | TS vs Rust | The remote needs it too | Port `instanceDefaultName` to the domain; snapshot carries `displayName` |
@@ -110,7 +111,8 @@ Phone WS ◄─ state snapshot (revision n)
 
 ```
 Remote edit
-Phone─►POST /instances/{id}/update {fields} ─► remote_auth ─► InstanceService(source=remote)
+Phone: type ─► session.drafts[id] (local, marked unapplied, no request)
+Update button ─► POST /instances/{id}/update {edited fields} ─► remote_auth ─► InstanceService(source=remote)
  ─► filter file/unknown keys ─► rev++ ─► bus.publish ─► OBS
  ─► FanOut ─► desktop event (applied unless draft dirty) + phone WS
 Phone ◄─ 200 snapshot
