@@ -67,7 +67,7 @@ function setup(opts: { token?: boolean } = {}) {
       return { close: vi.fn() };
     }),
   };
-  const session = createRemoteSession(transport as unknown as Transport, 250);
+  const session = createRemoteSession(transport as unknown as Transport);
   return {
     session,
     transport,
@@ -142,21 +142,84 @@ describe("remote session", () => {
     });
   });
 
-  it("edits_are_sent_debounced_as_one_update_with_only_edited_keys", async () => {
+  it("edits_never_call_update_on_their_own", async () => {
+    const t = setup();
+    await t.session.start("");
+    t.push(snap(1, [instance("a", { title: "" })]), true);
+    await vi.advanceTimersByTimeAsync(0);
+    t.session.setField("a", "title", "H");
+    t.session.setField("a", "title", "Hi");
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(t.transport.updateInstance).not.toHaveBeenCalled();
+    expect(t.session.instances.value[0].fields.title).toBe("Hi");
+  });
+
+  it("update_sends_only_edited_keys_with_the_latest_value", async () => {
     const t = setup();
     await t.session.start("");
     t.push(snap(1, [instance("a", { title: "", sub: "keep" })]), true);
     await vi.advanceTimersByTimeAsync(0);
     t.session.setField("a", "title", "H");
-    await vi.advanceTimersByTimeAsync(200);
     t.session.setField("a", "title", "Hi");
-    await vi.advanceTimersByTimeAsync(249);
-    expect(t.transport.updateInstance).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
+    // The instance stays in the reply: a snapshot without it would drop the
+    // draft by itself and hide a settle that did nothing.
+    t.transport.updateInstance.mockResolvedValueOnce(
+      snap(2, [instance("a", { title: "Hi", sub: "keep" })]),
+    );
+    await t.session.update("a");
     expect(t.transport.updateInstance).toHaveBeenCalledOnce();
     expect(t.transport.updateInstance).toHaveBeenCalledWith("a", {
       title: "Hi",
     });
+    expect(t.session.hasPendingEdits("a")).toBe(false);
+  });
+
+  it("has_pending_edits_after_an_edit_until_update_succeeds", async () => {
+    const t = setup();
+    await t.session.start("");
+    t.push(snap(1, [instance("a", { title: "" })]), true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(t.session.hasPendingEdits("a")).toBe(false);
+    t.session.setField("a", "title", "Hi");
+    expect(t.session.hasPendingEdits("a")).toBe(true);
+    t.transport.updateInstance.mockResolvedValueOnce(
+      snap(2, [instance("a", { title: "Hi" })]),
+    );
+    await t.session.update("a");
+    expect(t.session.hasPendingEdits("a")).toBe(false);
+  });
+
+  it("has_pending_edits_until_show_succeeds", async () => {
+    const t = setup();
+    await t.session.start("");
+    t.push(snap(1, [instance("a", { title: "" })]), true);
+    await vi.advanceTimersByTimeAsync(0);
+    t.session.setField("a", "title", "Hi");
+    expect(t.session.hasPendingEdits("a")).toBe(true);
+    t.transport.showInstance.mockResolvedValueOnce(
+      snap(2, [instance("a", { title: "Hi" })]),
+    );
+    await t.session.show("a");
+    expect(t.session.hasPendingEdits("a")).toBe(false);
+  });
+
+  it("failed_update_keeps_the_draft_and_reports_the_error", async () => {
+    const t = setup();
+    await t.session.start("");
+    t.push(snap(1, [instance("a", { title: "" })]), true);
+    await vi.advanceTimersByTimeAsync(0);
+    t.session.setField("a", "title", "Hi");
+    t.transport.updateInstance.mockRejectedValueOnce({
+      code: "remote.unreachable",
+    });
+    await t.session.update("a");
+    expect(t.session.hasPendingEdits("a")).toBe(true);
+    expect(t.session.actionError.value).toEqual({ code: "remote.unreachable" });
+    expect(t.session.instances.value[0].fields.title).toBe("Hi");
+    // The draft outlives later snapshots until an update finally lands.
+    t.push(snap(2, [instance("a", { title: "" })]));
+    expect(t.session.instances.value[0].fields.title).toBe("Hi");
+    expect(t.session.hasPendingEdits("a")).toBe(true);
   });
 
   it("file_fields_are_read_only", async () => {
@@ -166,6 +229,7 @@ describe("remote session", () => {
     await vi.advanceTimersByTimeAsync(0); // templates loaded
     t.session.setField("a", "logo", "evil.png");
     await vi.advanceTimersByTimeAsync(500);
+    expect(t.session.hasPendingEdits("a")).toBe(false);
     expect(t.transport.updateInstance).not.toHaveBeenCalled();
     expect(t.session.instances.value[0].fields.logo).toBe("x.png");
   });

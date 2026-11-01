@@ -2,7 +2,7 @@
 // tested without a DOM. Like everything under src/remote it must not import
 // Tauri: it runs in a phone browser.
 
-import { computed, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 import type { Connection, Transport } from "../services/transport";
 import type {
@@ -15,9 +15,6 @@ import type {
   TemplateInfo,
 } from "../types";
 import { isCommandError } from "../types";
-
-/** Idle time after the last keystroke before an edit is sent. */
-export const EDIT_DEBOUNCE_MS = 250;
 
 const PIN_PATTERN = /^\d{6}$/;
 
@@ -41,10 +38,7 @@ function asError(err: unknown): CommandError {
 
 export type RemoteSession = ReturnType<typeof createRemoteSession>;
 
-export function createRemoteSession(
-  transport: Transport,
-  debounceMs = EDIT_DEBOUNCE_MS,
-) {
+export function createRemoteSession(transport: Transport) {
   const phase = ref<"pair" | "control">("pair");
   const pairing = ref(false);
   const pairError = ref<CommandError | null>(null);
@@ -64,9 +58,9 @@ export function createRemoteSession(
 
   let revision = -1;
   let connection: Connection | null = null;
-  // Edited keys not yet confirmed by the server, per instance id.
-  const drafts: Record<string, Record<string, string>> = {};
-  const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  // Edited keys not yet confirmed by the server, per instance id. They stay
+  // local until the user sends them with update or show.
+  const drafts = reactive<Record<string, Record<string, string>>>({});
 
   function templateOf(instance: OverlayInstance): TemplateInfo | undefined {
     return templates.value.find((t) => t.id === instance.templateId);
@@ -80,15 +74,12 @@ export function createRemoteSession(
     return presets.value.filter((p) => p.template === templateId);
   }
 
-  function clearTimer(id: string): void {
-    const timer = timers.get(id);
-    if (timer) clearTimeout(timer);
-    timers.delete(id);
+  function clearDraft(id: string): void {
+    delete drafts[id];
   }
 
-  function clearDraft(id: string): void {
-    clearTimer(id);
-    delete drafts[id];
+  function hasPendingEdits(id: string): boolean {
+    return drafts[id] !== undefined;
   }
 
   /**
@@ -203,7 +194,6 @@ export function createRemoteSession(
     id: string,
     send: (fields: Record<string, string>) => Promise<InstancesSnapshot>,
   ): Promise<void> {
-    clearTimer(id);
     const sent = { ...(drafts[id] ?? {}) };
     try {
       const snapshot = await send(sent);
@@ -223,13 +213,10 @@ export function createRemoteSession(
     }
     drafts[id] = { ...(drafts[id] ?? {}), [key]: value };
     instance.fields = { ...instance.fields, [key]: value };
-    clearTimer(id);
-    timers.set(
-      id,
-      setTimeout(() => {
-        void commit(id, (fields) => transport.updateInstance(id, fields));
-      }, debounceMs),
-    );
+  }
+
+  async function update(id: string): Promise<void> {
+    await commit(id, (fields) => transport.updateInstance(id, fields));
   }
 
   async function show(id: string): Promise<void> {
@@ -289,10 +276,12 @@ export function createRemoteSession(
     actionError,
     fieldsOf,
     presetsFor,
+    hasPendingEdits,
     start,
     pairWithPin,
     handleUnauthorized,
     setField,
+    update,
     show,
     hide,
     applyPreset,

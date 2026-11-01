@@ -258,9 +258,11 @@
     "empty": "No instances are open on the desktop",
     "instance": {
       "show": "Show",
+      "update": "Update",
       "hide": "Hide",
       "live": "Live",
       "hidden": "Hidden",
+      "pending": "Unapplied changes",
       "preset": "Preset",
       "presetPlaceholder": "Apply a preset...",
       "fileReadonly": "File fields can only be changed on the desktop"

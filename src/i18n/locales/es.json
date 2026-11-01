@@ -258,9 +258,11 @@
     "empty": "No hay instancias abiertas en el escritorio",
     "instance": {
       "show": "Mostrar",
+      "update": "Actualizar",
       "hide": "Ocultar",
       "live": "En vivo",
       "hidden": "Oculto",
+      "pending": "Cambios sin aplicar",
       "preset": "Preset",
       "presetPlaceholder": "Aplicar un preset...",
       "fileReadonly": "Los campos de archivo solo se pueden cambiar en el escritorio"
