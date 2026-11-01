@@ -47,15 +47,15 @@ Verification legend: [Auto] = vitest, [Manual] = by hand in the Tauri app at 900
 
 Left unchecked until a person runs them.
 
-- [ ] 6.1 Long nested path and long title: no horizontal scrollbar, header fully visible. (No horizontal overflow)
-- [ ] 6.2 Unbroken long title and very long instance label wrap and do not push controls out. (No horizontal overflow)
-- [ ] 6.3 Copy button at the right end of the header with a visible gap from the edge. (Copy button placement)
-- [ ] 6.4 Another page's icon buttons (for example Settings) look unchanged. (Other screens unaffected)
-- [ ] 6.5 Tall settings: scrolling keeps the preview fully visible and settings are not covered; the header scrolls away. (Pinned preview)
-- [ ] 6.6 Short settings: page does not scroll and the preview stays in its normal position. (Short settings)
-- [ ] 6.7 At 550px height all preview controls are reachable, including with a `sendError` shown; shorter windows scroll inside the preview. (Preview usable in short windows)
-- [ ] 6.8 Spanish locale: action row wraps without a horizontal scrollbar inside the preview. (Design: Narrow actions)
-- [ ] 6.9 Confirm sticky `top` behaves as designed in WebKitGTK (no 68px stuck offset surprises). (Risk: sticky in WebKitGTK)
+- [x] 6.1 Long nested path and long title: no horizontal scrollbar, header fully visible. (No horizontal overflow)
+- [x] 6.2 Unbroken long title and very long instance label wrap and do not push controls out. (No horizontal overflow)
+- [x] 6.3 Copy button at the right end of the header with a visible gap from the edge. (Copy button placement)
+- [x] 6.4 Another page's icon buttons (for example Settings) look unchanged. (Other screens unaffected)
+- [x] 6.5 Tall settings: scrolling keeps the preview fully visible and settings are not covered; the header scrolls away. (Pinned preview)
+- [x] 6.6 Short settings: page does not scroll and the preview stays in its normal position. (Short settings)
+- [x] 6.7 At 550px height all preview controls are reachable, including with a `sendError` shown; shorter windows scroll inside the preview. (Preview usable in short windows)
+- [x] 6.8 Spanish locale: action row wraps without a horizontal scrollbar inside the preview. (Design: Narrow actions)
+- [x] 6.9 Confirm sticky `top` behaves as designed in WebKitGTK (no 68px stuck offset surprises). (Risk: sticky in WebKitGTK)
 
 ## Dependencies
 
