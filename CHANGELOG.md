@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Overlay detail screen layout: long titles, instance labels and nested folder paths no longer cause horizontal scrolling, the overlay URL is no longer shown as text (only the copy-link button remains, now with spacing from the right edge), and the preview stays pinned while the settings scroll, scrolling inside itself in very short windows.
 - File fields resolve the picked file relative to the overlay's real directory instead of assuming the template id matches the directory name, so they work for overlays inside folders and for overlays whose `overlay.json` sets an `id` different from the directory name.
 
 ## [0.7.0] - 2026-10-25

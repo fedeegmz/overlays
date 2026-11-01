@@ -70,62 +70,58 @@ async function handleCopyUrl() {
     </div>
 
     <div class="page-header">
-      <div>
+      <div class="page-header-main">
         <div class="page-title">
           {{ activeTemplate.name }}
           <span class="page-id">{{ instanceLabel }}</span>
-        </div>
-        <div v-if="overlayUrl" class="page-subtitle">
-          <span class="page-subtitle-url">{{ overlayUrl }}</span>
-          <button
-            type="button"
-            class="icon-btn copy-btn"
-            :class="{ 'copy-success': copied }"
-            :title="copied ? t('overlayDetail.copied') : t('overlayDetail.copyUrl')"
-            :aria-label="copied ? t('overlayDetail.copied') : t('overlayDetail.copyUrl')"
-            @click="handleCopyUrl"
-          >
-            <svg
-              v-if="copied"
-              aria-hidden="true"
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-            <svg
-              v-else
-              aria-hidden="true"
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path
-                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-              />
-            </svg>
-          </button>
         </div>
         <p v-if="copyError" class="copy-error">
           {{ t("overlayDetail.copyFailed") }}
         </p>
       </div>
+      <button
+        v-if="overlayUrl"
+        type="button"
+        class="icon-btn copy-btn"
+        :class="{ 'copy-success': copied }"
+        :title="copied ? t('overlayDetail.copied') : t('overlayDetail.copyUrl')"
+        :aria-label="copied ? t('overlayDetail.copied') : t('overlayDetail.copyUrl')"
+        @click="handleCopyUrl"
+      >
+        <svg
+          v-if="copied"
+          aria-hidden="true"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        <svg
+          v-else
+          aria-hidden="true"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      </button>
     </div>
 
     <div class="detail-layout">
-      <PreviewPanel />
+      <PreviewPanel class="preview-column" />
       <ContentPanel />
     </div>
   </div>
@@ -145,6 +141,7 @@ async function handleCopyUrl() {
   margin-bottom: 14px;
   cursor: pointer;
   width: fit-content;
+  overflow-wrap: anywhere;
 }
 
 .breadcrumb:hover {
@@ -164,7 +161,12 @@ async function handleCopyUrl() {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
+}
+
+.page-header-main {
+  min-width: 0;
 }
 
 .page-title {
@@ -174,6 +176,7 @@ async function handleCopyUrl() {
   display: flex;
   align-items: center;
   gap: 10px;
+  overflow-wrap: anywhere;
 }
 
 .page-id {
@@ -184,28 +187,12 @@ async function handleCopyUrl() {
   background: var(--surface-sunken);
   padding: 2px 7px;
   border-radius: 4px;
-}
-
-.page-subtitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  min-width: 0;
-  font-family: "SF Mono", "JetBrains Mono", monospace;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.page-subtitle-url {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
+  flex-shrink: 0;
 }
 
 .copy-btn {
   flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .copy-btn.copy-success {
@@ -223,5 +210,12 @@ async function handleCopyUrl() {
   grid-template-columns: 1.1fr 0.9fr;
   gap: 24px;
   align-items: start;
+}
+
+.preview-column {
+  position: sticky;
+  top: 34px;
+  max-height: calc(100vh - 68px);
+  overflow-y: auto;
 }
 </style>

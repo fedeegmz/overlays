@@ -244,6 +244,7 @@ onBeforeUnmount(() => {
 
 .action-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-top: 18px;

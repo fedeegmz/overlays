@@ -19,29 +19,29 @@ Verification legend: [Auto] = vitest, [Manual] = by hand in the Tauri app at 900
 
 ## Phase 2: Tests first (RED)
 
-- [ ] 2.1 Create `src/components/OverlayDetailPage.test.ts` with `// @vitest-environment jsdom`. Set up mocks: `./PreviewPanel.vue` and `./ContentPanel.vue` as empty components, `../stores/instances` returning `reactive({ activeInstance, activeTemplate, overlayUrl })`, `../services/clipboardApi`, real i18n via `createAppI18n("en")`, fake timers. (Design: Testing Strategy)
-- [ ] 2.2 Add test: URL string absent from `html()`, and a button with the `overlayDetail.copyUrl` name and title is present. Run `pnpm test` and observe RED. (Spec: URL text absent [Auto])
-- [ ] 2.3 Add test: clipboard resolves, click writes the full URL, label becomes `overlayDetail.copied`, and after `advanceTimersByTimeAsync(2000)` it returns to default. (Spec: Copy succeeds [Auto]) This may already pass, since the script is unchanged; record the observed result honestly.
-- [ ] 2.4 Add test: clipboard rejects, click shows `overlayDetail.copyFailed` and no copied state. (Spec: Copy fails [Auto]) Same note as 2.3.
-- [ ] 2.5 Add test: `overlayDetail` key set is identical in `en` and `es` and matches the pre-change set (import both JSON files). (Spec: Locales unchanged [Auto])
+- [x] 2.1 Create `src/components/OverlayDetailPage.test.ts` with `// @vitest-environment jsdom`. Set up mocks: `./PreviewPanel.vue` and `./ContentPanel.vue` as empty components, `../stores/instances` returning `reactive({ activeInstance, activeTemplate, overlayUrl })`, `../services/clipboardApi`, real i18n via `createAppI18n("en")`, fake timers. (Design: Testing Strategy)
+- [x] 2.2 Add test: URL string absent from `html()`, and a button with the `overlayDetail.copyUrl` name and title is present. Run `pnpm test` and observe RED. (Spec: URL text absent [Auto])
+- [x] 2.3 Add test: clipboard resolves, click writes the full URL, label becomes `overlayDetail.copied`, and after `advanceTimersByTimeAsync(2000)` it returns to default. (Spec: Copy succeeds [Auto]) This may already pass, since the script is unchanged; record the observed result honestly.
+- [x] 2.4 Add test: clipboard rejects, click shows `overlayDetail.copyFailed` and no copied state. (Spec: Copy fails [Auto]) Same note as 2.3.
+- [x] 2.5 Add test: `overlayDetail` key set is identical in `en` and `es` and matches the pre-change set (import both JSON files). (Spec: Locales unchanged [Auto])
 
 ## Phase 3: Implementation (GREEN)
 
-- [ ] 3.1 `OverlayDetailPage.vue` template: remove the `.page-subtitle` div and URL span; move the copy button to be a direct `.page-header` child; keep `copyError` under the title inside `.page-header-main`; give `<PreviewPanel>` `class="preview-column"`. (Spec: Copy-only URL access, Copy button placement)
-- [ ] 3.2 `OverlayDetailPage.vue` CSS: `.page-header` `gap: 16px`; `.page-header-main { min-width: 0 }`; `overflow-wrap: anywhere` on `.page-title` and `.breadcrumb`; `.page-id` and `.copy-btn` `flex-shrink: 0`; `.copy-btn { margin-right: 8px }` scoped; `.preview-column` sticky `top: 34px`, `max-height: calc(100vh - 68px)`, `overflow-y: auto`. Remove `.page-subtitle` and `.page-subtitle-url` rules from this file only. (Spec: No horizontal overflow, Pinned preview, Preview usable in short windows, No dead styles)
-- [ ] 3.3 `PreviewPanel.vue`: add `flex-wrap: wrap` to `.action-row` so the scroll container does not add a horizontal scrollbar at 900px wide. (Design: Narrow actions)
-- [ ] 3.4 Run `pnpm test` and observe GREEN for all Phase 2 tests.
+- [x] 3.1 `OverlayDetailPage.vue` template: remove the `.page-subtitle` div and URL span; move the copy button to be a direct `.page-header` child; keep `copyError` under the title inside `.page-header-main`; give `<PreviewPanel>` `class="preview-column"`. (Spec: Copy-only URL access, Copy button placement)
+- [x] 3.2 `OverlayDetailPage.vue` CSS: `.page-header` `gap: 16px`; `.page-header-main { min-width: 0 }`; `overflow-wrap: anywhere` on `.page-title` and `.breadcrumb`; `.page-id` and `.copy-btn` `flex-shrink: 0`; `.copy-btn { margin-right: 8px }` scoped; `.preview-column` sticky `top: 34px`, `max-height: calc(100vh - 68px)`, `overflow-y: auto`. Remove `.page-subtitle` and `.page-subtitle-url` rules from this file only. (Spec: No horizontal overflow, Pinned preview, Preview usable in short windows, No dead styles)
+- [x] 3.3 `PreviewPanel.vue`: add `flex-wrap: wrap` to `.action-row` so the scroll container does not add a horizontal scrollbar at 900px wide. (Design: Narrow actions)
+- [x] 3.4 Run `pnpm test` and observe GREEN for all Phase 2 tests.
 
 ## Phase 4: Documentation
 
-- [ ] 4.1 `CHANGELOG.md`: add an entry under `[Unreleased]` > `### Fixed` describing the detail screen layout (no horizontal overflow, copy-only URL, pinned preview). (Spec: Changelog entry)
+- [x] 4.1 `CHANGELOG.md`: add an entry under `[Unreleased]` > `### Fixed` describing the detail screen layout (no horizontal overflow, copy-only URL, pinned preview). (Spec: Changelog entry)
 
 ## Phase 5: Gates
 
-- [ ] 5.1 `pnpm check` passes (Biome; run `pnpm check:fix` first if formatting is flagged).
-- [ ] 5.2 `pnpm exec vue-tsc --noEmit` passes.
-- [ ] 5.3 `pnpm test` passes.
-- [ ] 5.4 `pnpm build` passes.
+- [x] 5.1 `pnpm check` passes (Biome; run `pnpm check:fix` first if formatting is flagged).
+- [x] 5.2 `pnpm exec vue-tsc --noEmit` passes.
+- [x] 5.3 `pnpm test` passes.
+- [x] 5.4 `pnpm build` passes.
 
 ## Phase 6: Manual verification (Tauri app, `pnpm tauri dev`, 900x550)
 
