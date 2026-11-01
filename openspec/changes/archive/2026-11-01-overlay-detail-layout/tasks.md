@@ -45,7 +45,7 @@ Verification legend: [Auto] = vitest, [Manual] = by hand in the Tauri app at 900
 
 ## Phase 6: Manual verification (Tauri app, `pnpm tauri dev`, 900x550)
 
-Left unchecked until a person runs them.
+Checked items are user-reported: a person ran them in the app and confirmed the result.
 
 - [x] 6.1 Long nested path and long title: no horizontal scrollbar, header fully visible. (No horizontal overflow)
 - [x] 6.2 Unbroken long title and very long instance label wrap and do not push controls out. (No horizontal overflow)
