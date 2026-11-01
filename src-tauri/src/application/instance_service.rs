@@ -450,7 +450,7 @@ impl InstanceService {
                 template: i.template_id.clone(),
                 fields: find_template(&manifest, &i.template_id)
                     .map(|t| fields_for(i, t))
-                    .unwrap_or_default(),
+                    .unwrap_or_else(|| i.fields.clone()),
                 instance_id: Some(i.id.clone()),
                 custom_name: i.custom_name.clone(),
             })
@@ -1579,6 +1579,20 @@ mod tests {
         );
         // Saving does not touch the registry.
         assert_eq!(f.svc.list(desktop()).revision, before);
+    }
+
+    #[test]
+    fn save_group_keeps_stored_fields_when_template_is_missing() {
+        let f = fixture();
+        let id = create(&f, "title");
+        let stored = payload_fields(&[("text", "Now"), ("stale", "x")]);
+        f.svc.set_fields(&id, stored.clone(), desktop()).unwrap();
+        remove_template_from_catalog(&f, "title");
+
+        let groups = f.svc.save_group_from_instances("G").unwrap();
+
+        assert_eq!(groups[0].entries[0].template, "title");
+        assert_eq!(groups[0].entries[0].fields, stored);
     }
 
     #[test]
